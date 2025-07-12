@@ -49,9 +49,7 @@ const Profile = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [activeItems, setActiveItems] = useState<any[]>([]);
   const [soldItems, setSoldItems] = useState<any[]>([]);
-  
-  // Get the tab from URL parameters, default to 'profile'
-  const defaultTab = searchParams.get('tab') || 'profile';
+  const [activeTab, setActiveTab] = useState('profile');
   
   const [formData, setFormData] = useState({
     display_name: profile?.display_name || '',
@@ -62,6 +60,12 @@ const Profile = () => {
     contact_email: profile?.contact_email || '',
     account_type: profile?.account_type || 'user'
   });
+
+  // Update active tab when URL parameter changes
+  useEffect(() => {
+    const tabParam = searchParams.get('tab') || 'profile';
+    setActiveTab(tabParam);
+  }, [searchParams]);
 
   useEffect(() => {
     if (profile) {
@@ -214,7 +218,7 @@ const Profile = () => {
           </div>
         </div>
 
-        <Tabs defaultValue={defaultTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
