@@ -40,6 +40,7 @@ const Marketplace = () => {
       const { data, error } = await supabase
         .from('marketplace_items')
         .select('*')
+        .eq('status', 'available')  // Only show available items
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -91,8 +92,6 @@ const Marketplace = () => {
   };
 
   const filteredItems = filterItems(items, searchTerm, locationFilter, categoryFilter, conditionFilter);
-  const availableItems = filteredItems.filter(item => item.status === 'available');
-  const soldItems = filteredItems.filter(item => item.status === 'sold');
 
   // Calculate stats
   const totalItems = items.length;
@@ -122,7 +121,7 @@ const Marketplace = () => {
               <div className="text-sm text-muted-foreground">Total Items</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">{availableItems.length}</div>
+              <div className="text-3xl font-bold text-primary">{filteredItems.length}</div>
               <div className="text-sm text-muted-foreground">Available</div>
             </div>
             <div className="text-center">
@@ -194,66 +193,30 @@ const Marketplace = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Tabs defaultValue="available" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="available">
-              Available Items ({availableItems.length})
-            </TabsTrigger>
-            <TabsTrigger value="sold">
-              Sold Items ({soldItems.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="available">
-            {loading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Loading items...</p>
-              </div>
-            ) : availableItems.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  {searchTerm || locationFilter || categoryFilter !== "all" || conditionFilter !== "all" 
-                    ? 'No available items match your filters.' 
-                    : 'No items available yet. List the first one!'
-                  }
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {availableItems.map((item) => (
-                  <MarketplaceCard
-                    key={item.id}
-                    item={item}
-                    onItemChanged={fetchItems}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="sold">
-            {loading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Loading items...</p>
-              </div>
-            ) : soldItems.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">No sold items found.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {soldItems.map((item) => (
-                  <MarketplaceCard
-                    key={item.id}
-                    item={item}
-                    onItemChanged={fetchItems}
-                    showActions={false}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading items...</p>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">
+              {searchTerm || locationFilter || categoryFilter !== "all" || conditionFilter !== "all" 
+                ? 'No available items match your filters.' 
+                : 'No items available yet. List the first one!'
+              }
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredItems.map((item) => (
+              <MarketplaceCard
+                key={item.id}
+                item={item}
+                onItemChanged={fetchItems}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <Footer />

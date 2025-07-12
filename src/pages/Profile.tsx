@@ -9,12 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { User, Mail, Phone, MapPin, Building2, Settings, MessageSquare, Bell, Save } from "lucide-react";
+import { User, Mail, Phone, MapPin, Building2, Settings, MessageSquare, Bell, Save, Store } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Link, Navigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import { MarketplaceCard } from "@/components/MarketplaceCard";
 import { formatDistanceToNow } from "date-fns";
 
 interface Message {
@@ -45,6 +46,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [activeItems, setActiveItems] = useState<any[]>([]);
+  const [soldItems, setSoldItems] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     display_name: profile?.display_name || '',
     bio: profile?.bio || '',
@@ -73,6 +76,7 @@ const Profile = () => {
     if (user) {
       fetchMessages();
       fetchNotifications();
+      fetchMarketplaceItems();
     }
   }, [user]);
 
@@ -108,6 +112,36 @@ const Profile = () => {
       setNotifications(data || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const fetchMarketplaceItems = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch active items
+      const { data: activeData, error: activeError } = await supabase
+        .from('marketplace_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'available')
+        .order('created_at', { ascending: false });
+
+      if (activeError) throw activeError;
+      setActiveItems(activeData || []);
+
+      // Fetch sold items
+      const { data: soldData, error: soldError } = await supabase
+        .from('marketplace_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'sold')
+        .order('created_at', { ascending: false });
+
+      if (soldError) throw soldError;
+      setSoldItems(soldData || []);
+    } catch (error) {
+      console.error('Error fetching marketplace items:', error);
     }
   };
 
@@ -176,7 +210,7 @@ const Profile = () => {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Profile
@@ -188,6 +222,10 @@ const Profile = () => {
             <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Bell className="h-4 w-4" />
               Notifications
+            </TabsTrigger>
+            <TabsTrigger value="marketplace" className="flex items-center gap-2">
+              <Store className="h-4 w-4" />
+              Marketplace
             </TabsTrigger>
           </TabsList>
 
@@ -387,6 +425,67 @@ const Profile = () => {
                 </ScrollArea>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="marketplace">
+            <div className="space-y-6">
+              {/* Active Items */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Active Listings ({activeItems.length})</CardTitle>
+                  <CardDescription>
+                    Your items currently available for sale
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {activeItems.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Store className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No active listings</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {activeItems.map((item) => (
+                        <MarketplaceCard
+                          key={item.id}
+                          item={item}
+                          onItemChanged={fetchMarketplaceItems}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Sold Items */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sold Items ({soldItems.length})</CardTitle>
+                  <CardDescription>
+                    Your items that have been sold
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {soldItems.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Store className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No sold items yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {soldItems.map((item) => (
+                        <MarketplaceCard
+                          key={item.id}
+                          item={item}
+                          onItemChanged={fetchMarketplaceItems}
+                          showActions={false}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

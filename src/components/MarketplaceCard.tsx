@@ -24,9 +24,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Trash2, MessageCircle, Package } from "lucide-react";
+import { MapPin, Trash2, MessageCircle, Package, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { MarketplaceDialog } from "./MarketplaceDialog";
 import { FullAdDialog } from "./FullAdDialog";
 
@@ -46,6 +47,10 @@ export function MarketplaceCard({ item, onItemChanged, showActions = true }: Mar
     message: ''
   });
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Check if current user is the owner of this item
+  const isOwner = user && item.user_id === user.id;
 
   const handleDelete = async () => {
     try {
@@ -111,6 +116,34 @@ export function MarketplaceCard({ item, onItemChanged, showActions = true }: Mar
       console.error('Error sending inquiry:', error);
       toast({
         title: "Error sending inquiry",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMarkAsSold = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('marketplace_items')
+        .update({ status: 'sold' })
+        .eq('id', item.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Item marked as sold",
+        description: "The item has been marked as sold and removed from active listings.",
+      });
+
+      onItemChanged();
+    } catch (error) {
+      console.error('Error marking item as sold:', error);
+      toast({
+        title: "Error updating item",
         description: "Please try again later.",
         variant: "destructive",
       });
@@ -204,105 +237,134 @@ export function MarketplaceCard({ item, onItemChanged, showActions = true }: Mar
               </div>
 
               {/* Actions Section */}
-              {showActions && item.status === 'available' ? (
+              {showActions ? (
                 <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                  <Dialog open={inquiryDialogOpen} onOpenChange={setInquiryDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm">
-                        <MessageCircle className="h-4 w-4 mr-1" />
-                        Contact
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Contact Seller</DialogTitle>
-                        <DialogDescription>
-                          Send an inquiry about "{item.title}" to {item.seller_name}.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="inquirer_name">Your Name</Label>
-                          <Input
-                            id="inquirer_name"
-                            value={inquiryData.inquirer_name}
-                            onChange={(e) => setInquiryData(prev => ({ ...prev, inquirer_name: e.target.value }))}
-                            placeholder="Enter your name"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="inquirer_contact">Your Contact Info</Label>
-                          <Input
-                            id="inquirer_contact"
-                            value={inquiryData.inquirer_contact}
-                            onChange={(e) => setInquiryData(prev => ({ ...prev, inquirer_contact: e.target.value }))}
-                            placeholder="Email or phone number"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="message">Message</Label>
-                          <Textarea
-                            id="message"
-                            value={inquiryData.message}
-                            onChange={(e) => setInquiryData(prev => ({ ...prev, message: e.target.value }))}
-                            placeholder="Your message to the seller..."
-                            rows={3}
-                          />
-                        </div>
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="outline" onClick={() => setInquiryDialogOpen(false)}>
-                            Cancel
+                  {isOwner ? (
+                    // Owner actions
+                    <>
+                      {item.status === 'available' && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="default">
+                              <Check className="h-4 w-4 mr-1" />
+                              Mark as Sold
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Mark as Sold</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to mark "{item.title}" as sold? This will remove it from active listings.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleMarkAsSold}>
+                                Mark as Sold
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                      
+                      {item.status === 'available' && (
+                        <MarketplaceDialog
+                          item={item}
+                          onItemSaved={onItemChanged}
+                          mode="edit"
+                        />
+                      )}
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Trash2 className="h-4 w-4" />
                           </Button>
-                          <Button onClick={handleInquiry} disabled={loading}>
-                            {loading ? 'Sending...' : 'Send Inquiry'}
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Item</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{item.title}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </>
+                  ) : (
+                    // Non-owner actions (only contact if available)
+                    item.status === 'available' && (
+                      <Dialog open={inquiryDialogOpen} onOpenChange={setInquiryDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button size="sm">
+                            <MessageCircle className="h-4 w-4 mr-1" />
+                            Contact
                           </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Contact Seller</DialogTitle>
+                            <DialogDescription>
+                              Send an inquiry about "{item.title}" to {item.seller_name}.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <Label htmlFor="inquirer_name">Your Name</Label>
+                              <Input
+                                id="inquirer_name"
+                                value={inquiryData.inquirer_name}
+                                onChange={(e) => setInquiryData(prev => ({ ...prev, inquirer_name: e.target.value }))}
+                                placeholder="Enter your name"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="inquirer_contact">Your Contact Info</Label>
+                              <Input
+                                id="inquirer_contact"
+                                value={inquiryData.inquirer_contact}
+                                onChange={(e) => setInquiryData(prev => ({ ...prev, inquirer_contact: e.target.value }))}
+                                placeholder="Email or phone number"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="message">Message</Label>
+                              <Textarea
+                                id="message"
+                                value={inquiryData.message}
+                                onChange={(e) => setInquiryData(prev => ({ ...prev, message: e.target.value }))}
+                                placeholder="Your message to the seller..."
+                                rows={3}
+                              />
+                            </div>
+                            <div className="flex justify-end space-x-2">
+                              <Button variant="outline" onClick={() => setInquiryDialogOpen(false)}>
+                                Cancel
+                              </Button>
+                              <Button onClick={handleInquiry} disabled={loading}>
+                                {loading ? 'Sending...' : 'Send Inquiry'}
+                              </Button>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )
+                  )}
                   
-                  <MarketplaceDialog
-                    item={item}
-                    onItemSaved={onItemChanged}
-                    mode="edit"
-                  />
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Item</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{item.title}"? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  {/* Show status for non-available items */}
+                  {!isOwner && item.status !== 'available' && (
+                    <Button size="sm" disabled>
+                      {item.status === 'sold' ? 'Sold' : 'Reserved'}
+                    </Button>
+                  )}
                 </div>
-              ) : (
-                <div onClick={(e) => e.stopPropagation()}>
-                  <Button size="sm" disabled={item.status !== 'available'}>
-                    {item.status === 'available' ? (
-                      <>
-                        <MessageCircle className="h-4 w-4 mr-1" />
-                        Contact
-                      </>
-                    ) : (
-                      item.status === 'sold' ? 'Sold' : 'Reserved'
-                    )}
-                  </Button>
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
