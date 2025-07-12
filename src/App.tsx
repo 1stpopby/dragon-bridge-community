@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Forum from "./pages/Forum";
 import Events from "./pages/Events";
 import Community from "./pages/Community";
+import Marketplace from "./pages/Marketplace";
 import Resources from "./pages/Resources";
 import Services from "./pages/Services";
 import Admin from "./pages/Admin";
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/forum" element={<Forum />} />
           <Route path="/events" element={<Events />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/services" element={<Services />} />
           <Route path="/admin" element={<Admin />} />

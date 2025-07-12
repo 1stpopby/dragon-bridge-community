@@ -207,6 +207,98 @@ export type Database = {
           },
         ]
       }
+      marketplace_inquiries: {
+        Row: {
+          created_at: string
+          id: string
+          inquirer_contact: string
+          inquirer_name: string
+          item_id: string
+          message: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inquirer_contact: string
+          inquirer_name: string
+          item_id: string
+          message: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inquirer_contact?: string
+          inquirer_name?: string
+          item_id?: string
+          message?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_inquiries_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_items: {
+        Row: {
+          category: string
+          condition: string
+          created_at: string
+          currency: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          location: string
+          price: number
+          seller_contact: string | null
+          seller_name: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          condition: string
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location: string
+          price: number
+          seller_contact?: string | null
+          seller_name: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          condition?: string
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string
+          price?: number
+          seller_contact?: string | null
+          seller_name?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
