@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit2 } from "lucide-react";
+import { Plus, Edit2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -31,6 +31,10 @@ interface EventDialogProps {
 export function EventDialog({ event, onEventSaved, mode = 'create' }: EventDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>(event?.image_url || '');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     title: event?.title || '',
     description: event?.description || '',
@@ -43,18 +47,69 @@ export function EventDialog({ event, onEventSaved, mode = 'create' }: EventDialo
   });
   const { toast } = useToast();
 
+  const uploadImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('event-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from('event-images')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewUrl(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedFile(null);
+    setPreviewUrl('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      let imageUrl = formData.image_url;
+
+      // Handle image upload if a new file is selected
+      if (selectedFile) {
+        setUploadingImage(true);
+        imageUrl = await uploadImage(selectedFile);
+      }
+
+      const eventData = {
+        ...formData,
+        image_url: imageUrl,
+        status: new Date(formData.date) >= new Date() ? 'upcoming' : 'past'
+      };
+
       if (mode === 'create') {
         const { error } = await supabase
           .from('events')
-          .insert([{
-            ...formData,
-            status: new Date(formData.date) >= new Date() ? 'upcoming' : 'past'
-          }]);
+          .insert([eventData]);
 
         if (error) throw error;
 
@@ -65,10 +120,7 @@ export function EventDialog({ event, onEventSaved, mode = 'create' }: EventDialo
       } else {
         const { error } = await supabase
           .from('events')
-          .update({
-            ...formData,
-            status: new Date(formData.date) >= new Date() ? 'upcoming' : 'past'
-          })
+          .update(eventData)
           .eq('id', event.id);
 
         if (error) throw error;
@@ -94,6 +146,11 @@ export function EventDialog({ event, onEventSaved, mode = 'create' }: EventDialo
           image_url: '',
           author_name: 'Community Member'
         });
+        setSelectedFile(null);
+        setPreviewUrl('');
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       }
     } catch (error) {
       console.error('Error saving event:', error);
@@ -104,6 +161,7 @@ export function EventDialog({ event, onEventSaved, mode = 'create' }: EventDialo
       });
     } finally {
       setLoading(false);
+      setUploadingImage(false);
     }
   };
 
@@ -216,13 +274,53 @@ export function EventDialog({ event, onEventSaved, mode = 'create' }: EventDialo
               />
             </div>
             <div className="col-span-2">
-              <Label htmlFor="image_url">Image URL (optional)</Label>
-              <Input
-                id="image_url"
-                value={formData.image_url}
-                onChange={(e) => handleInputChange('image_url', e.target.value)}
-                placeholder="https://example.com/image.jpg"
-              />
+              <Label htmlFor="image">Event Image (optional)</Label>
+              <div className="space-y-4">
+                {/* File Input */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Choose Image
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  {selectedFile && (
+                    <span className="text-sm text-muted-foreground">
+                      {selectedFile.name}
+                    </span>
+                  )}
+                </div>
+
+                {/* Image Preview */}
+                {previewUrl && (
+                  <div className="relative">
+                    <img
+                      src={previewUrl}
+                      alt="Event preview"
+                      className="w-full h-32 object-cover rounded-md border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={removeImage}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex justify-end space-x-2 pt-4">
