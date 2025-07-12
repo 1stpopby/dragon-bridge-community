@@ -40,7 +40,14 @@ const App = () => (
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/services" element={<Services />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/login" element={
+              <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center">
+                  <h1 className="text-2xl font-bold mb-4">Admin Login Test</h1>
+                  <p>If you see this, the route is working!</p>
+                </div>
+              </div>
+            } />
             <Route path="/admin" element={<AdminProtectedRoute><Admin /></AdminProtectedRoute>} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile" element={<Profile />} />
