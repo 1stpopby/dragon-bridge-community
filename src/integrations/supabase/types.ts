@@ -391,6 +391,69 @@ export type Database = {
         }
         Relationships: []
       }
+      resources: {
+        Row: {
+          author_name: string
+          category: string
+          content_url: string | null
+          created_at: string
+          description: string | null
+          download_count: number | null
+          duration: string | null
+          file_size: string | null
+          file_url: string | null
+          id: string
+          is_featured: boolean | null
+          resource_type: string
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string | null
+          view_count: number | null
+        }
+        Insert: {
+          author_name: string
+          category: string
+          content_url?: string | null
+          created_at?: string
+          description?: string | null
+          download_count?: number | null
+          duration?: string | null
+          file_size?: string | null
+          file_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          resource_type: string
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          author_name?: string
+          category?: string
+          content_url?: string | null
+          created_at?: string
+          description?: string | null
+          download_count?: number | null
+          duration?: string | null
+          file_size?: string | null
+          file_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          resource_type?: string
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           granted_at: string
