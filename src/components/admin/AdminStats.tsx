@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, MessageSquare, Calendar, RefreshCw } from "lucide-react";
+import { Users, MessageSquare, Calendar, RefreshCw, Store, FileText, UserCheck } from "lucide-react";
 
 interface AdminStatsProps {
   stats: {
@@ -8,6 +8,10 @@ interface AdminStatsProps {
     totalReplies: number;
     totalUsers: number;
     postsToday: number;
+    totalEvents: number;
+    totalMarketplaceItems: number;
+    totalGroups: number;
+    totalResources: number;
   };
   loading: boolean;
   onRefresh: () => void;
@@ -24,7 +28,7 @@ export const AdminStats = ({ stats, loading, onRefresh }: AdminStatsProps) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
@@ -73,6 +77,58 @@ export const AdminStats = ({ stats, loading, onRefresh }: AdminStatsProps) => {
             <div className="text-2xl font-bold">{loading ? '...' : stats.postsToday}</div>
             <p className="text-xs text-muted-foreground">
               New today
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Events</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{loading ? '...' : stats.totalEvents}</div>
+            <p className="text-xs text-muted-foreground">
+              Community events
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Marketplace</CardTitle>
+            <Store className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{loading ? '...' : stats.totalMarketplaceItems}</div>
+            <p className="text-xs text-muted-foreground">
+              Listed items
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Groups</CardTitle>
+            <UserCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{loading ? '...' : stats.totalGroups}</div>
+            <p className="text-xs text-muted-foreground">
+              Community groups
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Resources</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{loading ? '...' : stats.totalResources}</div>
+            <p className="text-xs text-muted-foreground">
+              Learning materials
             </p>
           </CardContent>
         </Card>

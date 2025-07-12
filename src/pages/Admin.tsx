@@ -13,20 +13,36 @@ import {
   Trash2,
   Edit,
   Eye,
-  BarChart3
+  BarChart3,
+  Store,
+  FileText,
+  Settings,
+  Shield,
+  Bell
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AdminPostsTable } from "@/components/admin/AdminPostsTable";
 import { AdminRepliesTable } from "@/components/admin/AdminRepliesTable";
 import { AdminStats } from "@/components/admin/AdminStats";
+import { AdminUsersTable } from "@/components/admin/AdminUsersTable";
+import { AdminEventsTable } from "@/components/admin/AdminEventsTable";
+import { AdminMarketplaceTable } from "@/components/admin/AdminMarketplaceTable";
+import { AdminGroupsTable } from "@/components/admin/AdminGroupsTable";
+import { AdminResourcesTable } from "@/components/admin/AdminResourcesTable";
+import { AdminUserRolesTable } from "@/components/admin/AdminUserRolesTable";
+import { AdminNotificationsTable } from "@/components/admin/AdminNotificationsTable";
 
 const Admin = () => {
   const [stats, setStats] = useState({
     totalPosts: 0,
     totalReplies: 0,
     totalUsers: 0,
-    postsToday: 0
+    postsToday: 0,
+    totalEvents: 0,
+    totalMarketplaceItems: 0,
+    totalGroups: 0,
+    totalResources: 0
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -35,15 +51,24 @@ const Admin = () => {
     try {
       setLoading(true);
       
-      // Fetch posts count
-      const { count: postsCount } = await supabase
-        .from('forum_posts')
-        .select('*', { count: 'exact', head: true });
-
-      // Fetch replies count
-      const { count: repliesCount } = await supabase
-        .from('forum_replies')
-        .select('*', { count: 'exact', head: true });
+      // Fetch all counts in parallel
+      const [
+        { count: postsCount },
+        { count: repliesCount },
+        { count: usersCount },
+        { count: eventsCount },
+        { count: marketplaceCount },
+        { count: groupsCount },
+        { count: resourcesCount }
+      ] = await Promise.all([
+        supabase.from('forum_posts').select('*', { count: 'exact', head: true }),
+        supabase.from('forum_replies').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('events').select('*', { count: 'exact', head: true }),
+        supabase.from('marketplace_items').select('*', { count: 'exact', head: true }),
+        supabase.from('community_groups').select('*', { count: 'exact', head: true }),
+        supabase.from('resources').select('*', { count: 'exact', head: true })
+      ]);
 
       // Fetch posts created today
       const today = new Date();
@@ -56,8 +81,12 @@ const Admin = () => {
       setStats({
         totalPosts: postsCount || 0,
         totalReplies: repliesCount || 0,
-        totalUsers: 15247, // Static for now, can be connected to auth later
-        postsToday: postsTodayCount || 0
+        totalUsers: usersCount || 0,
+        postsToday: postsTodayCount || 0,
+        totalEvents: eventsCount || 0,
+        totalMarketplaceItems: marketplaceCount || 0,
+        totalGroups: groupsCount || 0,
+        totalResources: resourcesCount || 0
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -95,15 +124,25 @@ const Admin = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="posts">Posts</TabsTrigger>
             <TabsTrigger value="replies">Replies</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="events">Events</TabsTrigger>
+            <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
+            <TabsTrigger value="groups">Groups</TabsTrigger>
+            <TabsTrigger value="resources">Resources</TabsTrigger>
+            <TabsTrigger value="roles">User Roles</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
             <AdminStats stats={stats} loading={loading} onRefresh={fetchStats} />
+          </TabsContent>
+
+          <TabsContent value="users">
+            <AdminUsersTable onDataChange={fetchStats} />
           </TabsContent>
 
           <TabsContent value="posts">
@@ -112,6 +151,30 @@ const Admin = () => {
 
           <TabsContent value="replies">
             <AdminRepliesTable onDataChange={fetchStats} />
+          </TabsContent>
+
+          <TabsContent value="events">
+            <AdminEventsTable onDataChange={fetchStats} />
+          </TabsContent>
+
+          <TabsContent value="marketplace">
+            <AdminMarketplaceTable onDataChange={fetchStats} />
+          </TabsContent>
+
+          <TabsContent value="groups">
+            <AdminGroupsTable onDataChange={fetchStats} />
+          </TabsContent>
+
+          <TabsContent value="resources">
+            <AdminResourcesTable onDataChange={fetchStats} />
+          </TabsContent>
+
+          <TabsContent value="roles">
+            <AdminUserRolesTable onDataChange={fetchStats} />
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <AdminNotificationsTable onDataChange={fetchStats} />
           </TabsContent>
 
           <TabsContent value="analytics">
