@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ export function EventCard({ event, onEventChanged, showActions = true }: EventCa
   const [registrationOpen, setRegistrationOpen] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingRegistration, setCheckingRegistration] = useState(false);
   const [registrationData, setRegistrationData] = useState({
     phone: '',
     special_requirements: ''
@@ -47,12 +48,48 @@ export function EventCard({ event, onEventChanged, showActions = true }: EventCa
   const { toast } = useToast();
   const { user, profile } = useAuth();
 
+  // Check if user is already registered for this event
+  const checkRegistrationStatus = async () => {
+    if (!user) return;
+    
+    setCheckingRegistration(true);
+    try {
+      const { data, error } = await supabase
+        .from('event_registrations')
+        .select('id')
+        .eq('event_id', event.id)
+        .eq('user_id', user.id)
+        .eq('registration_status', 'registered')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking registration:', error);
+      } else {
+        setIsRegistered(!!data);
+      }
+    } catch (error) {
+      console.error('Error checking registration:', error);
+    } finally {
+      setCheckingRegistration(false);
+    }
+  };
+
+  // Check registration status when component mounts or user changes
+  useEffect(() => {
+    if (user) {
+      checkRegistrationStatus();
+    } else {
+      setIsRegistered(false);
+    }
+  }, [user, event.id]);
+
   const handleRegisterForEvent = async () => {
     if (!user || !profile) return;
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      // Insert registration
+      const { error: registrationError } = await supabase
         .from('event_registrations')
         .insert({
           event_id: event.id,
@@ -63,17 +100,31 @@ export function EventCard({ event, onEventChanged, showActions = true }: EventCa
           special_requirements: registrationData.special_requirements
         });
 
-      if (error) {
-        if (error.code === '23505') {
+      if (registrationError) {
+        if (registrationError.code === '23505') {
           toast({
             title: "Already registered",
             description: "You are already registered for this event.",
             variant: "destructive",
           });
+          setIsRegistered(true);
         } else {
-          throw error;
+          throw registrationError;
         }
       } else {
+        // Update attendee count
+        const { error: updateError } = await supabase
+          .from('events')
+          .update({ 
+            attendees: (event.attendees || 0) + 1 
+          })
+          .eq('id', event.id);
+
+        if (updateError) {
+          console.error('Error updating attendee count:', updateError);
+          // Don't throw here - registration was successful
+        }
+
         toast({
           title: "Registration successful!",
           description: "You have been registered for this event.",
@@ -205,7 +256,7 @@ export function EventCard({ event, onEventChanged, showActions = true }: EventCa
                       {isRegistered ? (
                         <>
                           <Check className="h-4 w-4 mr-2" />
-                          Registered
+                          Joined
                         </>
                       ) : (
                         'Register Now'
