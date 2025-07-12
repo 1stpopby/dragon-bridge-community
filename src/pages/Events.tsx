@@ -1,59 +1,65 @@
+import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MapPin, Users, Clock, Plus, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { EventDialog } from "@/components/EventDialog";
+import { EventCard } from "@/components/EventCard";
+import { useToast } from "@/hooks/use-toast";
 
 const Events = () => {
-  const upcomingEvents = [
-    {
-      title: "Chinese New Year Celebration 2024",
-      date: "February 10, 2024",
-      time: "2:00 PM - 8:00 PM",
-      location: "Manchester Town Hall",
-      attendees: 250,
-      category: "Cultural",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Professional Networking Evening",
-      date: "January 25, 2024",
-      time: "6:00 PM - 9:00 PM",
-      location: "London Business Center",
-      attendees: 85,
-      category: "Professional",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Traditional Cooking Workshop",
-      date: "January 30, 2024",
-      time: "10:00 AM - 2:00 PM",
-      location: "Birmingham Community Center",
-      attendees: 45,
-      category: "Educational",
-      image: "/placeholder.svg"
-    }
-  ];
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
 
-  const pastEvents = [
-    {
-      title: "Mid-Autumn Festival Gathering",
-      date: "September 15, 2023",
-      location: "Edinburgh Castle Gardens",
-      attendees: 180,
-      category: "Cultural"
-    },
-    {
-      title: "Healthcare Information Session",
-      date: "November 20, 2023",
-      location: "Leeds Medical Center",
-      attendees: 95,
-      category: "Educational"
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
+
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      toast({
+        title: "Error loading events",
+        description: "Failed to load events from the database.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const filterEvents = (eventList: any[], searchTerm: string) => {
+    if (!searchTerm) return eventList;
+    return eventList.filter(event =>
+      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  const upcomingEvents = filterEvents(
+    events.filter(event => new Date(event.date) >= new Date() || event.status === 'upcoming'),
+    searchTerm
+  );
+
+  const pastEvents = filterEvents(
+    events.filter(event => new Date(event.date) < new Date() || event.status === 'past'),
+    searchTerm
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -78,12 +84,11 @@ const Events = () => {
               <Input 
                 placeholder="Search events..." 
                 className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button size="default" className="sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Event
-            </Button>
+            <EventDialog onEventSaved={fetchEvents} />
           </div>
         </div>
       </div>
@@ -91,78 +96,60 @@ const Events = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Tabs defaultValue="upcoming" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="upcoming">Upcoming Events</TabsTrigger>
-            <TabsTrigger value="past">Past Events</TabsTrigger>
+            <TabsTrigger value="upcoming">
+              Upcoming Events ({upcomingEvents.length})
+            </TabsTrigger>
+            <TabsTrigger value="past">
+              Past Events ({pastEvents.length})
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="upcoming">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {upcomingEvents.map((event, index) => (
-                <Card key={index} className="border-border hover:shadow-lg transition-shadow">
-                  <div className="aspect-video bg-muted rounded-t-lg"></div>
-                  <CardHeader>
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge variant="secondary">{event.category}</Badge>
-                      <span className="text-sm text-muted-foreground flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        {event.attendees}
-                      </span>
-                    </div>
-                    <CardTitle className="text-lg">{event.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        {event.date}
-                      </div>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4 mr-2" />
-                        {event.time}
-                      </div>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        {event.location}
-                      </div>
-                    </div>
-                    <Button className="w-full mt-4">Register Now</Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Loading events...</p>
+              </div>
+            ) : upcomingEvents.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  {searchTerm ? 'No upcoming events match your search.' : 'No upcoming events yet. Create the first one!'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {upcomingEvents.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    onEventChanged={fetchEvents}
+                  />
+                ))}
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="past">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pastEvents.map((event, index) => (
-                <Card key={index} className="border-border hover:shadow-lg transition-shadow opacity-75">
-                  <div className="aspect-video bg-muted/50 rounded-t-lg"></div>
-                  <CardHeader>
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge variant="outline">{event.category}</Badge>
-                      <span className="text-sm text-muted-foreground flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        {event.attendees}
-                      </span>
-                    </div>
-                    <CardTitle className="text-lg">{event.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        {event.date}
-                      </div>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        {event.location}
-                      </div>
-                    </div>
-                    <Button variant="outline" className="w-full mt-4">View Details</Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Loading events...</p>
+              </div>
+            ) : pastEvents.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  {searchTerm ? 'No past events match your search.' : 'No past events found.'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {pastEvents.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    onEventChanged={fetchEvents}
+                  />
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

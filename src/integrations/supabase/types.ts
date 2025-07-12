@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      events: {
+        Row: {
+          attendees: number | null
+          author_name: string
+          category: string
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          image_url: string | null
+          location: string
+          status: string
+          time: string | null
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          attendees?: number | null
+          author_name: string
+          category: string
+          created_at?: string
+          date: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location: string
+          status?: string
+          time?: string | null
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          attendees?: number | null
+          author_name?: string
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string
+          status?: string
+          time?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       forum_posts: {
         Row: {
           author_name: string
