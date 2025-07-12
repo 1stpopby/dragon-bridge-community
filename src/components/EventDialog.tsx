@@ -228,12 +228,7 @@ export function EventDialog({ event, onEventSaved, mode = 'create' }: EventDialo
                 Sign in to Create Events
               </Link>
             </Button>
-          ) : !canCreateEvents ? (
-            <Button size="default" className="sm:w-auto" disabled>
-              <Lock className="h-4 w-4 mr-2" />
-              {profile.account_type === 'user' ? 'Company/Admin Only' : 'Permission Required'}
-            </Button>
-          ) : (
+          ) : canCreateEvents ? (
             <Button size="default" className="sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               {isAdmin ? (
@@ -248,7 +243,7 @@ export function EventDialog({ event, onEventSaved, mode = 'create' }: EventDialo
                 </>
               )}
             </Button>
-          )
+          ) : null
         ) : (
           <Button variant="outline" size="sm">
             <Edit2 className="h-4 w-4 mr-1" />
