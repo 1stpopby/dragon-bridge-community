@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Home, MessageSquare, Calendar, Users, ShoppingBag, BookOpen, MapPin, Settings } from "lucide-react";
 import { UserButton } from "./UserButton";
+import { NotificationSystem } from "./NotificationSystem";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,11 +52,13 @@ const Navigation = () => {
                 <span>{item.name}</span>
               </Link>
             ))}
+            <NotificationSystem />
             <UserButton />
           </div>
 
           {/* Mobile Navigation */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center space-x-2">
+            <NotificationSystem />
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="sm">

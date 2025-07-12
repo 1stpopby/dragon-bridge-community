@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SendMessageDialog } from "./SendMessageDialog";
 
 interface ResourceViewDialogProps {
   resource: any;
@@ -23,14 +24,7 @@ interface ResourceViewDialogProps {
 
 export function ResourceViewDialog({ resource, children }: ResourceViewDialogProps) {
   const [open, setOpen] = useState(false);
-  const [showContactForm, setShowContactForm] = useState(false);
-  const [contactForm, setContactForm] = useState({
-    name: '',
-    email: '',
-    message: ''
-  });
-  const [sending, setSending] = useState(false);
-  const { toast } = useToast();
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
 
   const getIcon = () => {
     switch (resource.resource_type) {
@@ -53,51 +47,6 @@ export function ResourceViewDialog({ resource, children }: ResourceViewDialogPro
     }
   };
 
-  const handleContactAuthor = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!contactForm.name || !contactForm.email || !contactForm.message) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSending(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('send-contact-email', {
-        body: {
-          authorName: resource.author_name,
-          resourceTitle: resource.title,
-          fromName: contactForm.name,
-          fromEmail: contactForm.email,
-          message: contactForm.message,
-        },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Message sent!",
-        description: "Your message has been sent to the author.",
-      });
-
-      setContactForm({ name: '', email: '', message: '' });
-      setShowContactForm(false);
-    } catch (error) {
-      console.error('Error sending email:', error);
-      toast({
-        title: "Error sending message",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setSending(false);
-    }
-  };
 
   const renderContent = () => {
     if (resource.resource_type === 'video' && resource.content_url) {
@@ -295,71 +244,27 @@ export function ResourceViewDialog({ resource, children }: ResourceViewDialogPro
           
           {/* Contact Author Section */}
           <div className="mt-6 pt-4 border-t border-border">
-            {!showContactForm ? (
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-semibold text-sm">Need more help?</h4>
-                  <p className="text-xs text-muted-foreground">Contact the author directly</p>
-                </div>
-                <Button size="sm" variant="outline" onClick={() => setShowContactForm(true)}>
-                  <Mail className="h-4 w-4 mr-2" />
-                  Contact Author
-                </Button>
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold text-sm">Need more help?</h4>
+                <p className="text-xs text-muted-foreground">Send a message to the author</p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-sm">Contact {resource.author_name}</h4>
-                  <Button size="sm" variant="ghost" onClick={() => setShowContactForm(false)}>
-                    Cancel
-                  </Button>
-                </div>
-                
-                <form onSubmit={handleContactAuthor} className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label htmlFor="contact-name" className="text-xs">Your Name</Label>
-                      <Input
-                        id="contact-name"
-                        value={contactForm.name}
-                        onChange={(e) => setContactForm(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Your name"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="contact-email" className="text-xs">Your Email</Label>
-                      <Input
-                        id="contact-email"
-                        type="email"
-                        value={contactForm.email}
-                        onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
-                        placeholder="your@email.com"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="contact-message" className="text-xs">Message</Label>
-                    <Textarea
-                      id="contact-message"
-                      value={contactForm.message}
-                      onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
-                      placeholder={`Hi ${resource.author_name}, I have a question about "${resource.title}"...`}
-                      rows={3}
-                      className="text-sm"
-                    />
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <Button type="submit" size="sm" disabled={sending}>
-                      {sending ? "Sending..." : "Send Message"}
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            )}
+              <Button size="sm" variant="outline" onClick={() => setShowMessageDialog(true)}>
+                <Mail className="h-4 w-4 mr-2" />
+                Message Author
+              </Button>
+            </div>
           </div>
         </ScrollArea>
+        
+        <SendMessageDialog
+          open={showMessageDialog}
+          onOpenChange={setShowMessageDialog}
+          recipientName={resource.author_name}
+          recipientId={resource.user_id}
+          subject={`Question about: ${resource.title}`}
+          prefilledMessage={`Hi ${resource.author_name},\n\nI have a question about your resource "${resource.title}".\n\n`}
+        />
       </DialogContent>
     </Dialog>
   );
