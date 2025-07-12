@@ -28,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { EventDialog } from "./EventDialog";
+import { FullEventDialog } from "./FullEventDialog";
 import { Link } from "react-router-dom";
 
 interface EventCardProps {
@@ -38,6 +39,7 @@ interface EventCardProps {
 
 export function EventCard({ event, onEventChanged, showActions = true }: EventCardProps) {
   const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [fullEventOpen, setFullEventOpen] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkingRegistration, setCheckingRegistration] = useState(false);
@@ -225,244 +227,261 @@ export function EventCard({ event, onEventChanged, showActions = true }: EventCa
   };
 
   return (
-    <Card className="border-border hover:shadow-lg transition-shadow">
-      <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
-        {event.image_url ? (
-          <img
-            src={event.image_url}
-            alt={event.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center">
-            <Calendar className="h-12 w-12 text-muted-foreground" />
-          </div>
-        )}
-      </div>
-      <CardHeader>
-        <div className="flex justify-between items-start mb-2">
-          <Badge variant={getVariantForCategory(event.category)}>
-            {event.category}
-          </Badge>
-          <span className="text-sm text-muted-foreground flex items-center">
-            <Users className="h-4 w-4 mr-1" />
-            {event.attendees || 0}
-          </span>
-        </div>
-        <CardTitle className="text-lg">{event.title}</CardTitle>
-        {event.description && (
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {event.description}
-          </p>
-        )}
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4 mr-2" />
-            {formatDate(event.date)}
-          </div>
-          {event.time && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Clock className="h-4 w-4 mr-2" />
-              {event.time}
-            </div>
-          )}
-          <div className="flex items-center text-sm text-muted-foreground">
-            <MapPin className="h-4 w-4 mr-2" />
-            {event.location}
-          </div>
-        </div>
-        
-        {showActions ? (
-          <div className="flex gap-2 mt-4">
-            {event.status === 'upcoming' ? (
-              !user || !profile ? (
-                <Button asChild className="flex-1">
-                  <Link to="/auth" className="flex items-center justify-center gap-2">
-                    <Lock className="h-4 w-4" />
-                    Sign in to Register
-                  </Link>
-                </Button>
-              ) : (
-                <Dialog open={registrationOpen} onOpenChange={setRegistrationOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="flex-1">
-                      {isRegistered ? (
-                        <>
-                          <Check className="h-4 w-4 mr-2" />
-                          Joined
-                        </>
-                      ) : (
-                        'Register Now'
-                      )}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>Register for {event.title}</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Name</Label>
-                        <div className="p-3 bg-muted rounded-md">
-                          <p className="text-sm font-medium">{profile.display_name}</p>
-                          {profile.company_name && (
-                            <p className="text-xs text-muted-foreground">{profile.company_name}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <Label>Email</Label>
-                        <div className="p-3 bg-muted rounded-md">
-                          <p className="text-sm">{profile.contact_email || user.email}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="phone">Phone (Optional)</Label>
-                        <Input
-                          id="phone"
-                          placeholder="Your phone number"
-                          value={registrationData.phone}
-                          onChange={(e) => setRegistrationData(prev => ({ ...prev, phone: e.target.value }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="requirements">Special Requirements (Optional)</Label>
-                        <Textarea
-                          id="requirements"
-                          placeholder="Any dietary requirements, accessibility needs, etc."
-                          value={registrationData.special_requirements}
-                          onChange={(e) => setRegistrationData(prev => ({ ...prev, special_requirements: e.target.value }))}
-                          rows={3}
-                        />
-                      </div>
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setRegistrationOpen(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button onClick={handleRegisterForEvent} disabled={loading}>
-                          {loading ? "Registering..." : "Register"}
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )
+    <>
+      <Card className="border-border hover:shadow-lg transition-shadow cursor-pointer">
+        <div onClick={() => setFullEventOpen(true)}>
+          <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
+            {event.image_url ? (
+              <img
+                src={event.image_url}
+                alt={event.title}
+                className="w-full h-full object-cover"
+              />
             ) : (
-              <Button variant="outline" className="flex-1">View Details</Button>
-            )}
-            {canManageEvents && (
-              <>
-                <EventDialog
-                  event={event}
-                  onEventSaved={onEventChanged}
-                  mode="edit"
-                />
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Event</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete "{event.title}"? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </>
+              <div className="w-full h-full bg-muted flex items-center justify-center">
+                <Calendar className="h-12 w-12 text-muted-foreground" />
+              </div>
             )}
           </div>
-        ) : (
-          !user || !profile ? (
-            <Button asChild className="w-full mt-4">
-              <Link to="/auth" className="flex items-center justify-center gap-2">
-                <Lock className="h-4 w-4" />
-                Sign in to Register
-              </Link>
-            </Button>
-          ) : (
-            <Dialog open={registrationOpen} onOpenChange={setRegistrationOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full mt-4">
-                  {event.status === 'upcoming' ? 'Register Now' : 'View Details'}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Register for {event.title}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Name</Label>
-                    <div className="p-3 bg-muted rounded-md">
-                      <p className="text-sm font-medium">{profile.display_name}</p>
-                      {profile.company_name && (
-                        <p className="text-xs text-muted-foreground">{profile.company_name}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Email</Label>
-                    <div className="p-3 bg-muted rounded-md">
-                      <p className="text-sm">{profile.contact_email || user.email}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Phone (Optional)</Label>
-                    <Input
-                      id="phone"
-                      placeholder="Your phone number"
-                      value={registrationData.phone}
-                      onChange={(e) => setRegistrationData(prev => ({ ...prev, phone: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="requirements">Special Requirements (Optional)</Label>
-                    <Textarea
-                      id="requirements"
-                      placeholder="Any dietary requirements, accessibility needs, etc."
-                      value={registrationData.special_requirements}
-                      onChange={(e) => setRegistrationData(prev => ({ ...prev, special_requirements: e.target.value }))}
-                      rows={3}
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setRegistrationOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button onClick={handleRegisterForEvent} disabled={loading}>
-                      {loading ? "Registering..." : "Register"}
-                    </Button>
-                  </div>
+          <CardHeader>
+            <div className="flex justify-between items-start mb-2">
+              <Badge variant={getVariantForCategory(event.category)}>
+                {event.category}
+              </Badge>
+              <span className="text-sm text-muted-foreground flex items-center">
+                <Users className="h-4 w-4 mr-1" />
+                {event.attendees || 0}
+              </span>
+            </div>
+            <CardTitle className="text-lg">{event.title}</CardTitle>
+            {event.description && (
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                {event.description}
+              </p>
+            )}
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4 mr-2" />
+                {formatDate(event.date)}
+              </div>
+              {event.time && (
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4 mr-2" />
+                  {event.time}
                 </div>
-              </DialogContent>
-            </Dialog>
-          )
-        )}
-        
-        <div className="text-xs text-muted-foreground mt-2 text-center">
-          Organized by {event.author_name}
+              )}
+              <div className="flex items-center text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4 mr-2" />
+                {event.location}
+              </div>
+            </div>
+            
+            <div className="text-xs text-muted-foreground text-center">
+              Organized by {event.author_name}
+            </div>
+          </CardContent>
         </div>
-      </CardContent>
-    </Card>
+        
+        {/* Action buttons (not clickable for full event) */}
+        <CardContent className="pt-0">
+          {showActions ? (
+            <div className="flex gap-2">
+              {event.status === 'upcoming' ? (
+                !user || !profile ? (
+                  <Button asChild className="flex-1" onClick={(e) => e.stopPropagation()}>
+                    <Link to="/auth" className="flex items-center justify-center gap-2">
+                      <Lock className="h-4 w-4" />
+                      Sign in to Register
+                    </Link>
+                  </Button>
+                ) : (
+                  <Dialog open={registrationOpen} onOpenChange={setRegistrationOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="flex-1" onClick={(e) => e.stopPropagation()}>
+                        {isRegistered ? (
+                          <>
+                            <Check className="h-4 w-4 mr-2" />
+                            Joined
+                          </>
+                        ) : (
+                          'Register Now'
+                        )}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Register for {event.title}</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Name</Label>
+                          <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm font-medium">{profile.display_name}</p>
+                            {profile.company_name && (
+                              <p className="text-xs text-muted-foreground">{profile.company_name}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <Label>Email</Label>
+                          <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm">{profile.contact_email || user.email}</p>
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="phone">Phone (Optional)</Label>
+                          <Input
+                            id="phone"
+                            placeholder="Your phone number"
+                            value={registrationData.phone}
+                            onChange={(e) => setRegistrationData(prev => ({ ...prev, phone: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="requirements">Special Requirements (Optional)</Label>
+                          <Textarea
+                            id="requirements"
+                            placeholder="Any dietary requirements, accessibility needs, etc."
+                            value={registrationData.special_requirements}
+                            onChange={(e) => setRegistrationData(prev => ({ ...prev, special_requirements: e.target.value }))}
+                            rows={3}
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setRegistrationOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button onClick={handleRegisterForEvent} disabled={loading}>
+                            {loading ? "Registering..." : "Register"}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )
+              ) : (
+                <Button variant="outline" className="flex-1" onClick={() => setFullEventOpen(true)}>
+                  View Details
+                </Button>
+              )}
+              {canManageEvents && (
+                <>
+                  <EventDialog
+                    event={event}
+                    onEventSaved={onEventChanged}
+                    mode="edit"
+                  />
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{event.title}"? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              )}
+            </div>
+          ) : (
+            !user || !profile ? (
+              <Button asChild className="w-full" onClick={(e) => e.stopPropagation()}>
+                <Link to="/auth" className="flex items-center justify-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Sign in to Register
+                </Link>
+              </Button>
+            ) : (
+              <Dialog open={registrationOpen} onOpenChange={setRegistrationOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full" onClick={(e) => e.stopPropagation()}>
+                    {event.status === 'upcoming' ? 'Register Now' : 'View Details'}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Register for {event.title}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Name</Label>
+                      <div className="p-3 bg-muted rounded-md">
+                        <p className="text-sm font-medium">{profile.display_name}</p>
+                        {profile.company_name && (
+                          <p className="text-xs text-muted-foreground">{profile.company_name}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <div className="p-3 bg-muted rounded-md">
+                        <p className="text-sm">{profile.contact_email || user.email}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone (Optional)</Label>
+                      <Input
+                        id="phone"
+                        placeholder="Your phone number"
+                        value={registrationData.phone}
+                        onChange={(e) => setRegistrationData(prev => ({ ...prev, phone: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="requirements">Special Requirements (Optional)</Label>
+                      <Textarea
+                        id="requirements"
+                        placeholder="Any dietary requirements, accessibility needs, etc."
+                        value={registrationData.special_requirements}
+                        onChange={(e) => setRegistrationData(prev => ({ ...prev, special_requirements: e.target.value }))}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setRegistrationOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button onClick={handleRegisterForEvent} disabled={loading}>
+                        {loading ? "Registering..." : "Register"}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Full Event Details Dialog */}
+      <FullEventDialog
+        event={event}
+        open={fullEventOpen}
+        onOpenChange={setFullEventOpen}
+        onEventChanged={onEventChanged}
+      />
+    </>
   );
 }
