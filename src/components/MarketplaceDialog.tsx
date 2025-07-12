@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,9 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit2, Upload, X } from "lucide-react";
+import { Plus, Edit2, Upload, X, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 
 interface MarketplaceDialogProps {
   item?: any;
@@ -35,6 +37,10 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(item?.image_url || '');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  const { user, profile } = useAuth();
+  
+  // Initialize form data with user profile information when creating new items
   const [formData, setFormData] = useState({
     title: item?.title || '',
     description: item?.description || '',
@@ -42,12 +48,23 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
     currency: item?.currency || 'GBP',
     category: item?.category || 'Electronics',
     condition: item?.condition || 'good',
-    location: item?.location || '',
-    seller_name: item?.seller_name || 'Community Member',
-    seller_contact: item?.seller_contact || '',
+    location: item?.location || profile?.location || '',
+    seller_name: item?.seller_name || profile?.display_name || '',
+    seller_contact: item?.seller_contact || profile?.contact_email || '',
     image_url: item?.image_url || ''
   });
-  const { toast } = useToast();
+
+  // Update form data when profile changes (for create mode)
+  useEffect(() => {
+    if (mode === 'create' && profile) {
+      setFormData(prev => ({
+        ...prev,
+        location: prev.location || profile.location || '',
+        seller_name: prev.seller_name || profile.display_name || '',
+        seller_contact: prev.seller_contact || profile.contact_email || ''
+      }));
+    }
+  }, [profile, mode]);
 
   const uploadImage = async (file: File): Promise<string> => {
     const fileExt = file.name.split('.').pop();
@@ -91,6 +108,17 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check authentication for create mode
+    if (mode === 'create' && !user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to list items on the marketplace.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -106,6 +134,8 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
         ...formData,
         price: parseFloat(formData.price),
         image_url: imageUrl,
+        // CRITICAL FIX: Include user_id when creating items
+        ...(mode === 'create' && { user_id: user?.id })
       };
 
       if (mode === 'create') {
@@ -177,10 +207,19 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {mode === 'create' ? (
-          <Button size="default" className="sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            List Item
-          </Button>
+          !user ? (
+            <Button asChild size="default" className="sm:w-auto">
+              <Link to="/auth">
+                <Lock className="h-4 w-4 mr-2" />
+                Sign in to List Item
+              </Link>
+            </Button>
+          ) : (
+            <Button size="default" className="sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              List Item
+            </Button>
+          )
         ) : (
           <Button variant="outline" size="sm">
             <Edit2 className="h-4 w-4 mr-1" />
