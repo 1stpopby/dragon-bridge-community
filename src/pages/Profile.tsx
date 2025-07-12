@@ -13,7 +13,7 @@ import { User, Mail, Phone, MapPin, Building2, Settings, MessageSquare, Bell, Sa
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { MarketplaceCard } from "@/components/MarketplaceCard";
 import { formatDistanceToNow } from "date-fns";
@@ -43,11 +43,16 @@ interface Notification {
 const Profile = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [activeItems, setActiveItems] = useState<any[]>([]);
   const [soldItems, setSoldItems] = useState<any[]>([]);
+  
+  // Get the tab from URL parameters, default to 'profile'
+  const defaultTab = searchParams.get('tab') || 'profile';
+  
   const [formData, setFormData] = useState({
     display_name: profile?.display_name || '',
     bio: profile?.bio || '',
@@ -209,7 +214,7 @@ const Profile = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="profile" className="space-y-6">
+        <Tabs defaultValue={defaultTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />

@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, Building2, Settings } from "lucide-react";
+import { User, LogOut, Building2, Settings, MessageSquare, Bell, Store } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const UserButton = () => {
@@ -52,7 +52,7 @@ export const UserButton = () => {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64" align="end">
+      <DropdownMenuContent className="w-64 bg-background border border-border shadow-lg z-50" align="end">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <div className="flex items-center gap-2">
@@ -75,14 +75,42 @@ export const UserButton = () => {
             </p>
           </div>
         </DropdownMenuLabel>
+        
         <DropdownMenuSeparator />
+        
+        {/* Quick Access Links */}
+        <DropdownMenuItem asChild>
+          <Link to="/profile?tab=messages" className="cursor-pointer">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Messages
+          </Link>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem asChild>
+          <Link to="/profile?tab=notifications" className="cursor-pointer">
+            <Bell className="mr-2 h-4 w-4" />
+            Notifications
+          </Link>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem asChild>
+          <Link to="/profile?tab=marketplace" className="cursor-pointer">
+            <Store className="mr-2 h-4 w-4" />
+            My Marketplace
+          </Link>
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
         <DropdownMenuItem asChild>
           <Link to="/profile" className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
             Profile Settings
           </Link>
         </DropdownMenuItem>
+        
         <DropdownMenuSeparator />
+        
         <DropdownMenuItem 
           onClick={handleSignOut} 
           disabled={isLoggingOut}
