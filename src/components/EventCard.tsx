@@ -41,12 +41,44 @@ export function EventCard({ event, onEventChanged, showActions = true }: EventCa
   const [isRegistered, setIsRegistered] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkingRegistration, setCheckingRegistration] = useState(false);
+  const [canManageEvents, setCanManageEvents] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [registrationData, setRegistrationData] = useState({
     phone: '',
     special_requirements: ''
   });
   const { toast } = useToast();
   const { user, profile } = useAuth();
+
+  // Check if user can manage events (admin or company profile)
+  const checkEventManagementPermissions = async () => {
+    if (!user) {
+      setCanManageEvents(false);
+      setIsAdmin(false);
+      return;
+    }
+
+    try {
+      // Check if user is admin
+      const { data: adminData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      const userIsAdmin = !!adminData;
+      setIsAdmin(userIsAdmin);
+
+      // Check if user can manage events (admin or company profile)
+      const canManage = userIsAdmin || (profile?.account_type === 'company');
+      setCanManageEvents(canManage);
+    } catch (error) {
+      console.error('Error checking event management permissions:', error);
+      setCanManageEvents(false);
+      setIsAdmin(false);
+    }
+  };
 
   // Check if user is already registered for this event
   const checkRegistrationStatus = async () => {
@@ -74,14 +106,17 @@ export function EventCard({ event, onEventChanged, showActions = true }: EventCa
     }
   };
 
-  // Check registration status when component mounts or user changes
+  // Check registration status and permissions when component mounts or user changes
   useEffect(() => {
     if (user) {
       checkRegistrationStatus();
+      checkEventManagementPermissions();
     } else {
       setIsRegistered(false);
+      setCanManageEvents(false);
+      setIsAdmin(false);
     }
-  }, [user, event.id]);
+  }, [user, profile, event.id]);
 
   const handleRegisterForEvent = async () => {
     if (!user || !profile) return;
@@ -321,32 +356,36 @@ export function EventCard({ event, onEventChanged, showActions = true }: EventCa
             ) : (
               <Button variant="outline" className="flex-1">View Details</Button>
             )}
-            <EventDialog
-              event={event}
-              onEventSaved={onEventChanged}
-              mode="edit"
-            />
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Event</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete "{event.title}"? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {canManageEvents && (
+              <>
+                <EventDialog
+                  event={event}
+                  onEventSaved={onEventChanged}
+                  mode="edit"
+                />
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{event.title}"? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            )}
           </div>
         ) : (
           !user || !profile ? (
