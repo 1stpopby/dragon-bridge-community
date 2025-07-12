@@ -552,6 +552,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_admin_role_to_email: {
+        Args: { user_email: string }
+        Returns: undefined
+      }
       can_create_events: {
         Args: { _user_id: string }
         Returns: boolean
