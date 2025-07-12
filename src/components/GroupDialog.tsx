@@ -18,9 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit2, Upload, X } from "lucide-react";
+import { Plus, Edit2, Upload, X, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 
 interface GroupDialogProps {
   group?: any;
@@ -44,6 +46,7 @@ export function GroupDialog({ group, onGroupSaved, mode = 'create' }: GroupDialo
     organizer_name: group?.organizer_name || 'Community Member'
   });
   const { toast } = useToast();
+  const { user, profile } = useAuth();
 
   const uploadImage = async (file: File): Promise<string> => {
     const fileExt = file.name.split('.').pop();
@@ -100,6 +103,8 @@ export function GroupDialog({ group, onGroupSaved, mode = 'create' }: GroupDialo
 
       const groupData = {
         ...formData,
+        organizer_name: mode === 'create' && profile ? profile.display_name : formData.organizer_name,
+        user_id: mode === 'create' && user ? user.id : group?.user_id,
         image_url: imageUrl,
       };
 
@@ -168,10 +173,19 @@ export function GroupDialog({ group, onGroupSaved, mode = 'create' }: GroupDialo
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {mode === 'create' ? (
-          <Button size="default" className="sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Group
-          </Button>
+          !user || !profile ? (
+            <Button asChild size="default" className="sm:w-auto">
+              <Link to="/auth" className="flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Sign in to Create Group
+              </Link>
+            </Button>
+          ) : (
+            <Button size="default" className="sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Group
+            </Button>
+          )
         ) : (
           <Button variant="outline" size="sm">
             <Edit2 className="h-4 w-4 mr-1" />
@@ -241,14 +255,23 @@ export function GroupDialog({ group, onGroupSaved, mode = 'create' }: GroupDialo
               </Select>
             </div>
             <div className="col-span-2">
-              <Label htmlFor="organizer_name">Organizer Name</Label>
-              <Input
-                id="organizer_name"
-                value={formData.organizer_name}
-                onChange={(e) => handleInputChange('organizer_name', e.target.value)}
-                placeholder="Your name"
-                required
-              />
+              <Label>Organizer</Label>
+              {mode === 'create' && profile ? (
+                <div className="p-3 bg-muted rounded-md">
+                  <p className="text-sm font-medium">{profile.display_name}</p>
+                  {profile.company_name && (
+                    <p className="text-xs text-muted-foreground">{profile.company_name}</p>
+                  )}
+                </div>
+              ) : (
+                <Input
+                  id="organizer_name"
+                  value={formData.organizer_name}
+                  onChange={(e) => handleInputChange('organizer_name', e.target.value)}
+                  placeholder="Organizer name"
+                  required
+                />
+              )}
             </div>
             <div className="col-span-2">
               <Label htmlFor="image">Group Image (optional)</Label>

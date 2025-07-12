@@ -6,7 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Plus, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface ForumPostDialogProps {
   onPostCreated: () => void;
@@ -16,14 +18,26 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [authorName, setAuthorName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { user, profile } = useAuth();
+
+  // If user is not logged in, show login prompt
+  if (!user || !profile) {
+    return (
+      <Button asChild size="default" className="sm:w-auto">
+        <Link to="/auth" className="flex items-center gap-2">
+          <Lock className="h-4 w-4" />
+          Sign in to Post
+        </Link>
+      </Button>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title.trim() || !content.trim() || !authorName.trim()) {
+    if (!title.trim() || !content.trim()) {
       toast({
         title: "Missing information",
         description: "Please fill in all fields",
@@ -40,7 +54,8 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
         .insert({
           title: title.trim(),
           content: content.trim(),
-          author_name: authorName.trim(),
+          author_name: profile.display_name,
+          user_id: user.id,
         });
 
       if (error) throw error;
@@ -52,7 +67,6 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
 
       setTitle("");
       setContent("");
-      setAuthorName("");
       setOpen(false);
       onPostCreated();
     } catch (error) {
@@ -81,14 +95,13 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="author">Your Name</Label>
-            <Input
-              id="author"
-              value={authorName}
-              onChange={(e) => setAuthorName(e.target.value)}
-              placeholder="Enter your name"
-              required
-            />
+            <Label>Posting as</Label>
+            <div className="p-3 bg-muted rounded-md">
+              <p className="text-sm font-medium">{profile.display_name}</p>
+              {profile.company_name && (
+                <p className="text-xs text-muted-foreground">{profile.company_name}</p>
+              )}
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>

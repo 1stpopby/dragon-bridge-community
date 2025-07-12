@@ -23,10 +23,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Users, Trash2, UserPlus, UserMinus } from "lucide-react";
+import { MapPin, Users, Trash2, UserPlus, UserMinus, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { GroupDialog } from "./GroupDialog";
+import { Link } from "react-router-dom";
 
 interface GroupCardProps {
   group: any;
@@ -39,6 +41,7 @@ export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCa
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [memberName, setMemberName] = useState("");
   const { toast } = useToast();
+  const { user, profile } = useAuth();
 
   const handleDelete = async () => {
     try {
@@ -69,14 +72,7 @@ export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCa
   };
 
   const handleJoinGroup = async () => {
-    if (!memberName.trim()) {
-      toast({
-        title: "Name required",
-        description: "Please enter your name to join the group.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!user || !profile) return;
 
     try {
       setLoading(true);
@@ -84,11 +80,12 @@ export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCa
         .from('group_memberships')
         .insert([{
           group_id: group.id,
-          member_name: memberName.trim()
+          member_name: profile.display_name,
+          user_id: user.id
         }]);
 
       if (error) {
-        if (error.code === '23505') { // Unique constraint violation
+        if (error.code === '23505') {
           toast({
             title: "Already a member",
             description: "You are already a member of this group.",
@@ -170,10 +167,19 @@ export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCa
           <div className="flex gap-2">
             <Dialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="flex-1">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Join Group
-                </Button>
+                {!user || !profile ? (
+                  <Button asChild className="flex-1">
+                    <Link to="/auth" className="flex items-center justify-center gap-2">
+                      <Lock className="h-4 w-4" />
+                      Sign in to Join
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button className="flex-1">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Join Group
+                  </Button>
+                )}
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>

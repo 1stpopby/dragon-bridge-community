@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Home, MessageSquare, Calendar, Users, ShoppingBag, BookOpen, MapPin, Settings } from "lucide-react";
+import { UserButton } from "./UserButton";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,9 +51,7 @@ const Navigation = () => {
                 <span>{item.name}</span>
               </Link>
             ))}
-            <Button variant="default" size="sm">
-              Join Community
-            </Button>
+            <UserButton />
           </div>
 
           {/* Mobile Navigation */}
@@ -80,9 +79,9 @@ const Navigation = () => {
                       <span>{item.name}</span>
                     </Link>
                   ))}
-                  <Button variant="default" className="mt-4">
-                    Join Community
-                  </Button>
+                  <div className="pt-4 border-t">
+                    <UserButton />
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>

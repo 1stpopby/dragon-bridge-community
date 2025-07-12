@@ -299,6 +299,51 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          account_type: string
+          avatar_url: string | null
+          bio: string | null
+          company_name: string | null
+          contact_email: string | null
+          created_at: string
+          display_name: string
+          id: string
+          location: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_type: string
+          avatar_url?: string | null
+          bio?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          location?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_type?: string
+          avatar_url?: string | null
+          bio?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          location?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
