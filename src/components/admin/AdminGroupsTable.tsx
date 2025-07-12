@@ -211,7 +211,7 @@ export const AdminGroupsTable = ({ onDataChange }: AdminGroupsTableProps) => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => window.open('/community', '_blank')}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         <AlertDialog>

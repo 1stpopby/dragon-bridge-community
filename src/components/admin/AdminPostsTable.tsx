@@ -84,6 +84,13 @@ export const AdminPostsTable = ({ onDataChange }: AdminPostsTableProps) => {
 
   const deletePost = async (postId: string) => {
     try {
+      // First delete all replies to this post
+      await supabase
+        .from('forum_replies')
+        .delete()
+        .eq('post_id', postId);
+
+      // Then delete the post
       const { error } = await supabase
         .from('forum_posts')
         .delete()
@@ -93,7 +100,7 @@ export const AdminPostsTable = ({ onDataChange }: AdminPostsTableProps) => {
 
       toast({
         title: "Post deleted",
-        description: "The post has been successfully deleted.",
+        description: "The post and all its replies have been successfully deleted.",
       });
 
       fetchPosts();
@@ -106,6 +113,10 @@ export const AdminPostsTable = ({ onDataChange }: AdminPostsTableProps) => {
         variant: "destructive",
       });
     }
+  };
+
+  const editPost = (postId: string) => {
+    window.open(`/forum`, '_blank');
   };
 
   useEffect(() => {
@@ -207,7 +218,7 @@ export const AdminPostsTable = ({ onDataChange }: AdminPostsTableProps) => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => editPost(post.id)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         <AlertDialog>

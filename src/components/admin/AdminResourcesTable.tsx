@@ -286,9 +286,9 @@ export const AdminResourcesTable = ({ onDataChange }: AdminResourcesTableProps) 
                         >
                           <Star className={`h-4 w-4 ${resource.is_featured ? 'text-yellow-500 fill-current' : 'text-gray-400'}`} />
                         </Button>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                          <Button variant="ghost" size="sm" onClick={() => window.open('/resources', '_blank')}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="sm">

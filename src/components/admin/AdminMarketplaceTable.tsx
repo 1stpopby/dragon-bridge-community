@@ -251,7 +251,7 @@ export const AdminMarketplaceTable = ({ onDataChange }: AdminMarketplaceTablePro
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => window.open('/marketplace', '_blank')}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         <AlertDialog>
