@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,9 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit2, Upload, X } from "lucide-react";
+import { Plus, Edit2, Upload, X, Lock, Building2, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 
 interface EventDialogProps {
   event?: any;
@@ -34,6 +36,8 @@ export function EventDialog({ event, onEventSaved, mode = 'create' }: EventDialo
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(event?.image_url || '');
+  const [canCreateEvents, setCanCreateEvents] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     title: event?.title || '',
@@ -43,9 +47,53 @@ export function EventDialog({ event, onEventSaved, mode = 'create' }: EventDialo
     location: event?.location || '',
     category: event?.category || 'Cultural',
     image_url: event?.image_url || '',
-    author_name: event?.author_name || 'Community Member'
+    author_name: event?.author_name || ''
   });
   const { toast } = useToast();
+  const { user, profile } = useAuth();
+
+  // Check if user can create events (admin or company profile)
+  const checkPermissions = async () => {
+    if (!user) {
+      setCanCreateEvents(false);
+      setIsAdmin(false);
+      return;
+    }
+
+    try {
+      // Check if user is admin
+      const { data: adminData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      const userIsAdmin = !!adminData;
+      setIsAdmin(userIsAdmin);
+
+      // Check if user can create events (admin or company profile)
+      const canCreate = userIsAdmin || (profile?.account_type === 'company');
+      setCanCreateEvents(canCreate);
+
+      // Set default author name based on user profile
+      if (mode === 'create' && profile && !formData.author_name) {
+        setFormData(prev => ({
+          ...prev,
+          author_name: profile.display_name
+        }));
+      }
+    } catch (error) {
+      console.error('Error checking permissions:', error);
+      setCanCreateEvents(false);
+      setIsAdmin(false);
+    }
+  };
+
+  // Check permissions when user or profile changes
+  useEffect(() => {
+    checkPermissions();
+  }, [user, profile]);
 
   const uploadImage = async (file: File): Promise<string> => {
     const fileExt = file.name.split('.').pop();
@@ -173,10 +221,34 @@ export function EventDialog({ event, onEventSaved, mode = 'create' }: EventDialo
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {mode === 'create' ? (
-          <Button size="default" className="sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Event
-          </Button>
+          !user || !profile ? (
+            <Button asChild size="default" className="sm:w-auto">
+              <Link to="/auth" className="flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Sign in to Create Events
+              </Link>
+            </Button>
+          ) : !canCreateEvents ? (
+            <Button size="default" className="sm:w-auto" disabled>
+              <Lock className="h-4 w-4 mr-2" />
+              {profile.account_type === 'user' ? 'Company/Admin Only' : 'Permission Required'}
+            </Button>
+          ) : (
+            <Button size="default" className="sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              {isAdmin ? (
+                <>
+                  <Shield className="h-4 w-4 mr-1" />
+                  Create Event
+                </>
+              ) : (
+                <>
+                  <Building2 className="h-4 w-4 mr-1" />
+                  Create Event
+                </>
+              )}
+            </Button>
+          )
         ) : (
           <Button variant="outline" size="sm">
             <Edit2 className="h-4 w-4 mr-1" />
