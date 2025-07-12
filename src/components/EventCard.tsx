@@ -1,6 +1,17 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,10 +23,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Calendar, MapPin, Users, Clock, Trash2 } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Trash2, Lock, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { EventDialog } from "./EventDialog";
+import { Link } from "react-router-dom";
 
 interface EventCardProps {
   event: any;
@@ -24,7 +37,63 @@ interface EventCardProps {
 }
 
 export function EventCard({ event, onEventChanged, showActions = true }: EventCardProps) {
+  const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [registrationData, setRegistrationData] = useState({
+    phone: '',
+    special_requirements: ''
+  });
   const { toast } = useToast();
+  const { user, profile } = useAuth();
+
+  const handleRegisterForEvent = async () => {
+    if (!user || !profile) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('event_registrations')
+        .insert({
+          event_id: event.id,
+          user_id: user.id,
+          attendee_name: profile.display_name,
+          attendee_email: profile.contact_email,
+          phone: registrationData.phone || profile.phone,
+          special_requirements: registrationData.special_requirements
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          toast({
+            title: "Already registered",
+            description: "You are already registered for this event.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Registration successful!",
+          description: "You have been registered for this event.",
+        });
+        setIsRegistered(true);
+        setRegistrationOpen(false);
+        setRegistrationData({ phone: '', special_requirements: '' });
+        onEventChanged();
+      }
+    } catch (error) {
+      console.error('Error registering for event:', error);
+      toast({
+        title: "Registration failed",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = async () => {
     try {
@@ -122,7 +191,82 @@ export function EventCard({ event, onEventChanged, showActions = true }: EventCa
         {showActions ? (
           <div className="flex gap-2 mt-4">
             {event.status === 'upcoming' ? (
-              <Button className="flex-1">Register Now</Button>
+              !user || !profile ? (
+                <Button asChild className="flex-1">
+                  <Link to="/auth" className="flex items-center justify-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    Sign in to Register
+                  </Link>
+                </Button>
+              ) : (
+                <Dialog open={registrationOpen} onOpenChange={setRegistrationOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="flex-1">
+                      {isRegistered ? (
+                        <>
+                          <Check className="h-4 w-4 mr-2" />
+                          Registered
+                        </>
+                      ) : (
+                        'Register Now'
+                      )}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Register for {event.title}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Name</Label>
+                        <div className="p-3 bg-muted rounded-md">
+                          <p className="text-sm font-medium">{profile.display_name}</p>
+                          {profile.company_name && (
+                            <p className="text-xs text-muted-foreground">{profile.company_name}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Email</Label>
+                        <div className="p-3 bg-muted rounded-md">
+                          <p className="text-sm">{profile.contact_email || user.email}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="phone">Phone (Optional)</Label>
+                        <Input
+                          id="phone"
+                          placeholder="Your phone number"
+                          value={registrationData.phone}
+                          onChange={(e) => setRegistrationData(prev => ({ ...prev, phone: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="requirements">Special Requirements (Optional)</Label>
+                        <Textarea
+                          id="requirements"
+                          placeholder="Any dietary requirements, accessibility needs, etc."
+                          value={registrationData.special_requirements}
+                          onChange={(e) => setRegistrationData(prev => ({ ...prev, special_requirements: e.target.value }))}
+                          rows={3}
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setRegistrationOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button onClick={handleRegisterForEvent} disabled={loading}>
+                          {loading ? "Registering..." : "Register"}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )
             ) : (
               <Button variant="outline" className="flex-1">View Details</Button>
             )}
@@ -154,9 +298,75 @@ export function EventCard({ event, onEventChanged, showActions = true }: EventCa
             </AlertDialog>
           </div>
         ) : (
-          <Button className="w-full mt-4">
-            {event.status === 'upcoming' ? 'Register Now' : 'View Details'}
-          </Button>
+          !user || !profile ? (
+            <Button asChild className="w-full mt-4">
+              <Link to="/auth" className="flex items-center justify-center gap-2">
+                <Lock className="h-4 w-4" />
+                Sign in to Register
+              </Link>
+            </Button>
+          ) : (
+            <Dialog open={registrationOpen} onOpenChange={setRegistrationOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full mt-4">
+                  {event.status === 'upcoming' ? 'Register Now' : 'View Details'}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Register for {event.title}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Name</Label>
+                    <div className="p-3 bg-muted rounded-md">
+                      <p className="text-sm font-medium">{profile.display_name}</p>
+                      {profile.company_name && (
+                        <p className="text-xs text-muted-foreground">{profile.company_name}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <div className="p-3 bg-muted rounded-md">
+                      <p className="text-sm">{profile.contact_email || user.email}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone (Optional)</Label>
+                    <Input
+                      id="phone"
+                      placeholder="Your phone number"
+                      value={registrationData.phone}
+                      onChange={(e) => setRegistrationData(prev => ({ ...prev, phone: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="requirements">Special Requirements (Optional)</Label>
+                    <Textarea
+                      id="requirements"
+                      placeholder="Any dietary requirements, accessibility needs, etc."
+                      value={registrationData.special_requirements}
+                      onChange={(e) => setRegistrationData(prev => ({ ...prev, special_requirements: e.target.value }))}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setRegistrationOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleRegisterForEvent} disabled={loading}>
+                      {loading ? "Registering..." : "Register"}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )
         )}
         
         <div className="text-xs text-muted-foreground mt-2 text-center">
