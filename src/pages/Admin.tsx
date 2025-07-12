@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -104,9 +103,27 @@ const Admin = () => {
     fetchStats();
   }, []);
 
+  const { signOut } = useAdminAuth();
+
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
+      {/* Admin Header */}
+      <div className="bg-destructive text-destructive-foreground py-2 px-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <Shield className="h-4 w-4" />
+            <span className="text-sm font-medium">Administrator Panel</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={signOut}
+            className="text-destructive-foreground hover:bg-destructive-foreground/10"
+          >
+            Sign Out
+          </Button>
+        </div>
+      </div>
       
       {/* Header */}
       <div className="bg-muted/30 py-16">
@@ -258,8 +275,6 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </div>
-
-      <Footer />
     </div>
   );
 };

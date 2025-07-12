@@ -18,6 +18,9 @@ import Notifications from "./pages/Notifications";
 import MyMarketplace from "./pages/MyMarketplace";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./hooks/useAuth";
+import { AdminAuthProvider } from "./hooks/useAdminAuth";
+import { AdminProtectedRoute } from "./components/AdminProtectedRoute";
+import AdminLogin from "./pages/AdminLogin";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +28,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
+        <AdminAuthProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -36,7 +40,8 @@ const App = () => (
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/services" element={<Services />} />
-            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminProtectedRoute><Admin /></AdminProtectedRoute>} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/messages" element={<Messages />} />
@@ -46,6 +51,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </AdminAuthProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

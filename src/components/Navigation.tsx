@@ -18,7 +18,6 @@ const Navigation = () => {
     { name: "Marketplace", href: "/marketplace", icon: ShoppingBag },
     { name: "Resources", href: "/resources", icon: BookOpen },
     { name: "Local Services", href: "/services", icon: MapPin },
-    { name: "Admin", href: "/admin", icon: Settings },
   ];
 
   const isActive = (href: string) => location.pathname === href;
