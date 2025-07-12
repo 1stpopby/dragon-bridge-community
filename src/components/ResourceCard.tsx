@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ResourceDialog } from "./ResourceDialog";
+import { ResourceViewDialog } from "./ResourceViewDialog";
 
 interface ResourceCardProps {
   resource: any;
@@ -89,39 +90,22 @@ export function ResourceCard({ resource, onResourceChanged }: ResourceCardProps)
     }
   };
 
-  const handleResourceClick = async () => {
-    // Increment view count for videos and websites
-    if (resource.resource_type === 'video' || resource.resource_type === 'website') {
-      try {
+  const handleViewResource = async () => {
+    // Increment view count for all resources when opened
+    try {
+      if (resource.resource_type === 'video' || resource.resource_type === 'website') {
         await supabase
           .from('resources')
           .update({ view_count: (resource.view_count || 0) + 1 })
           .eq('id', resource.id);
-      } catch (error) {
-        console.error('Error updating view count:', error);
+      } else {
+        await supabase
+          .from('resources')
+          .update({ download_count: (resource.download_count || 0) + 1 })
+          .eq('id', resource.id);
       }
-    }
-
-    // Open link for websites and videos
-    if (resource.content_url) {
-      window.open(resource.content_url, '_blank');
-    }
-  };
-
-  const handleDownload = async () => {
-    // Increment download count
-    try {
-      await supabase
-        .from('resources')
-        .update({ download_count: (resource.download_count || 0) + 1 })
-        .eq('id', resource.id);
     } catch (error) {
-      console.error('Error updating download count:', error);
-    }
-
-    // Open download link if available
-    if (resource.content_url) {
-      window.open(resource.content_url, '_blank');
+      console.error('Error updating view/download count:', error);
     }
   };
 
@@ -239,22 +223,12 @@ export function ResourceCard({ resource, onResourceChanged }: ResourceCardProps)
             By {resource.author_name}
           </span>
           
-          {resource.resource_type === 'website' ? (
-            <Button size="sm" variant="outline" onClick={handleResourceClick}>
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Visit
+          <ResourceViewDialog resource={resource}>
+            <Button size="sm" onClick={handleViewResource}>
+              <Eye className="h-4 w-4 mr-2" />
+              Read
             </Button>
-          ) : resource.resource_type === 'video' ? (
-            <Button size="sm" onClick={handleResourceClick}>
-              <Video className="h-4 w-4 mr-2" />
-              Watch
-            </Button>
-          ) : (
-            <Button size="sm" onClick={handleDownload}>
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-          )}
+          </ResourceViewDialog>
         </div>
       </CardContent>
     </Card>
