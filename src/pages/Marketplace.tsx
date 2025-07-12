@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MarketplaceDialog } from "@/components/MarketplaceDialog";
 import { MarketplaceCard } from "@/components/MarketplaceCard";
@@ -20,6 +20,7 @@ const Marketplace = () => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [conditionFilter, setConditionFilter] = useState("all");
   const { toast } = useToast();
@@ -59,15 +60,22 @@ const Marketplace = () => {
     fetchItems();
   }, []);
 
-  const filterItems = (itemList: any[], searchTerm: string, category: string, condition: string) => {
+  const filterItems = (itemList: any[], searchTerm: string, locationTerm: string, category: string, condition: string) => {
     let filtered = itemList;
 
+    // Main search (excluding location since we have dedicated location search)
     if (searchTerm) {
       filtered = filtered.filter(item =>
         item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.seller_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Dedicated location search (city, postcode, area)
+    if (locationTerm) {
+      filtered = filtered.filter(item =>
+        item.location.toLowerCase().includes(locationTerm.toLowerCase())
       );
     }
 
@@ -82,7 +90,7 @@ const Marketplace = () => {
     return filtered;
   };
 
-  const filteredItems = filterItems(items, searchTerm, categoryFilter, conditionFilter);
+  const filteredItems = filterItems(items, searchTerm, locationFilter, categoryFilter, conditionFilter);
   const availableItems = filteredItems.filter(item => item.status === 'available');
   const soldItems = filteredItems.filter(item => item.status === 'sold');
 
@@ -133,10 +141,19 @@ const Marketplace = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Search items..." 
+                  placeholder="Search by title, description, seller..." 
                   className="pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="relative sm:w-60">
+                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search by location, city, postcode..." 
+                  className="pl-10"
+                  value={locationFilter}
+                  onChange={(e) => setLocationFilter(e.target.value)}
                 />
               </div>
               <MarketplaceDialog onItemSaved={fetchItems} />
@@ -195,7 +212,7 @@ const Marketplace = () => {
             ) : availableItems.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
-                  {searchTerm || categoryFilter !== "all" || conditionFilter !== "all" 
+                  {searchTerm || locationFilter || categoryFilter !== "all" || conditionFilter !== "all" 
                     ? 'No available items match your filters.' 
                     : 'No items available yet. List the first one!'
                   }
