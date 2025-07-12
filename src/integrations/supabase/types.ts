@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      community_groups: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          location: string
+          member_count: number | null
+          name: string
+          organizer_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location: string
+          member_count?: number | null
+          name: string
+          organizer_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string
+          member_count?: number | null
+          name?: string
+          organizer_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           attendees: number | null
@@ -129,6 +171,38 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_memberships: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          member_name: string
+          user_id: string | null
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          member_name: string
+          user_id?: string | null
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          member_name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_memberships_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "community_groups"
             referencedColumns: ["id"]
           },
         ]
