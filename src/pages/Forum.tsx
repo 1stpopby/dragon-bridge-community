@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,8 +6,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Plus, Search, TrendingUp, Clock, Users } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { ForumPostDialog } from "@/components/ForumPostDialog";
+import { ForumPostCard } from "@/components/ForumPostCard";
 
 const Forum = () => {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [repliesMap, setRepliesMap] = useState<Record<string, any[]>>({});
+  const [loading, setLoading] = useState(true);
+
   const categories = [
     { name: "General Discussion", posts: 1250, color: "bg-blue-100 text-blue-800" },
     { name: "Food & Dining", posts: 890, color: "bg-orange-100 text-orange-800" },
@@ -16,32 +24,44 @@ const Forum = () => {
     { name: "Jobs & Careers", posts: 321, color: "bg-pink-100 text-pink-800" }
   ];
 
-  const recentPosts = [
-    {
-      title: "Best Chinese restaurants in Manchester city center?",
-      author: "Li Wei",
-      category: "Food & Dining",
-      replies: 24,
-      time: "2 hours ago",
-      trending: true
-    },
-    {
-      title: "NHS GP registration - what documents do I need?",
-      author: "Chen Ming",
-      category: "Healthcare",
-      replies: 18,
-      time: "4 hours ago",
-      trending: false
-    },
-    {
-      title: "University of Edinburgh Chinese student association",
-      author: "Wang Xiao",
-      category: "Education",
-      replies: 33,
-      time: "6 hours ago",
-      trending: true
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const { data: postsData, error: postsError } = await supabase
+        .from('forum_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (postsError) throw postsError;
+
+      const { data: repliesData, error: repliesError } = await supabase
+        .from('forum_replies')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (repliesError) throw repliesError;
+
+      // Group replies by post_id
+      const repliesByPost: Record<string, any[]> = {};
+      repliesData?.forEach((reply) => {
+        if (!repliesByPost[reply.post_id]) {
+          repliesByPost[reply.post_id] = [];
+        }
+        repliesByPost[reply.post_id].push(reply);
+      });
+
+      setPosts(postsData || []);
+      setRepliesMap(repliesByPost);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,10 +89,7 @@ const Forum = () => {
                 className="pl-10"
               />
             </div>
-            <Button size="default" className="sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              New Post
-            </Button>
+            <ForumPostDialog onPostCreated={fetchPosts} />
           </div>
         </div>
       </div>
@@ -90,41 +107,25 @@ const Forum = () => {
               </div>
             </div>
 
-            <div className="space-y-4">
-              {recentPosts.map((post, index) => (
-                <Card key={index} className="border-border hover:shadow-md transition-shadow cursor-pointer">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-lg font-semibold line-clamp-2 flex-1 mr-4">
-                        {post.title}
-                      </h3>
-                      {post.trending && (
-                        <TrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center justify-between mb-3">
-                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                        {post.category}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">by {post.author}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-1">
-                          <MessageSquare className="h-4 w-4" />
-                          <span>{post.replies} replies</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Clock className="h-4 w-4" />
-                          <span>{post.time}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="space-y-6">
+              {loading ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading posts...</p>
+                </div>
+              ) : posts.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No posts yet. Be the first to start a discussion!</p>
+                </div>
+              ) : (
+                posts.map((post) => (
+                  <ForumPostCard
+                    key={post.id}
+                    post={post}
+                    replies={repliesMap[post.id] || []}
+                    onReplyAdded={fetchPosts}
+                  />
+                ))
+              )}
             </div>
           </div>
 
