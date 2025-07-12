@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Home, MessageSquare, Calendar, Users, BookOpen, MapPin } from "lucide-react";
+import { Menu, Home, MessageSquare, Calendar, Users, BookOpen, MapPin, Settings } from "lucide-react";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +15,7 @@ const Navigation = () => {
     { name: "Community", href: "/community", icon: Users },
     { name: "Resources", href: "/resources", icon: BookOpen },
     { name: "Local Services", href: "/services", icon: MapPin },
+    { name: "Admin", href: "/admin", icon: Settings },
   ];
 
   const isActive = (href: string) => location.pathname === href;
