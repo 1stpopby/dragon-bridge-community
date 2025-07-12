@@ -80,21 +80,21 @@ export const UserButton = () => {
         
         {/* Quick Access Links */}
         <DropdownMenuItem asChild>
-          <Link to="/profile?tab=messages" className="cursor-pointer">
+          <Link to="/messages" className="cursor-pointer">
             <MessageSquare className="mr-2 h-4 w-4" />
             Messages
           </Link>
         </DropdownMenuItem>
         
         <DropdownMenuItem asChild>
-          <Link to="/profile?tab=notifications" className="cursor-pointer">
+          <Link to="/notifications" className="cursor-pointer">
             <Bell className="mr-2 h-4 w-4" />
             Notifications
           </Link>
         </DropdownMenuItem>
         
         <DropdownMenuItem asChild>
-          <Link to="/profile?tab=marketplace" className="cursor-pointer">
+          <Link to="/my-marketplace" className="cursor-pointer">
             <Store className="mr-2 h-4 w-4" />
             My Marketplace
           </Link>
