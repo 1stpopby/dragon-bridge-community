@@ -81,7 +81,7 @@ export const UserButton = () => {
         {/* My Page for company accounts */}
         {profile.account_type === 'company' && (
           <DropdownMenuItem asChild>
-            <Link to="/feed" className="cursor-pointer">
+            <Link to={`/company/${profile.id}`} className="cursor-pointer">
               <Home className="mr-2 h-4 w-4" />
               My Page
             </Link>
