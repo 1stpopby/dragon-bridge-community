@@ -10,8 +10,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, Building2, Settings, MessageSquare, Bell, Store, Home } from "lucide-react";
+import { User, LogOut, Building2, Settings, MessageSquare, Bell, Store, Home, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ServiceRequestDialog } from "@/components/ServiceRequestDialog";
 
 export const UserButton = () => {
   const { user, profile, signOut } = useAuth();
@@ -108,9 +109,21 @@ export const UserButton = () => {
             <Store className="mr-2 h-4 w-4" />
             My Marketplace
           </Link>
-        </DropdownMenuItem>
-        
-        <DropdownMenuSeparator />
+         </DropdownMenuItem>
+         
+         {/* Service Request for non-company accounts */}
+         {profile.account_type !== 'company' && (
+           <ServiceRequestDialog
+             triggerButton={
+               <DropdownMenuItem className="cursor-pointer">
+                 <HelpCircle className="mr-2 h-4 w-4" />
+                 Request Service
+               </DropdownMenuItem>
+             }
+           />
+         )}
+         
+         <DropdownMenuSeparator />
         
         <DropdownMenuItem asChild>
           <Link to="/profile" className="cursor-pointer">
