@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Users, Trash2, UserPlus, UserMinus, Lock } from "lucide-react";
+import { MapPin, Users, Trash2, UserPlus, UserMinus, Lock, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -249,6 +249,15 @@ export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCa
             Join Group
           </Button>
         )}
+        
+        <div className="flex gap-2 mt-3">
+          <Button asChild variant="outline" size="sm" className="flex-1">
+            <Link to={`/group/${group.id}`}>
+              <MessageSquare className="h-4 w-4 mr-2" />
+              {user ? 'View Forum' : 'Private Forum'}
+            </Link>
+          </Button>
+        </div>
         
         <div className="text-xs text-muted-foreground mt-2 text-center">
           Organized by {group.organizer_name}

@@ -8,6 +8,7 @@ import Forum from "./pages/Forum";
 import Feed from "./pages/Feed";
 import Events from "./pages/Events";
 import Community from "./pages/Community";
+import GroupForum from "./pages/GroupForum";
 import Marketplace from "./pages/Marketplace";
 import Resources from "./pages/Resources";
 import Services from "./pages/Services";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/feed" element={<Feed />} />
             <Route path="/events" element={<Events />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/group/:groupId" element={<GroupForum />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/services" element={<Services />} />
