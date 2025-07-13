@@ -1100,6 +1100,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_bans: {
+        Row: {
+          ban_type: string
+          banned_at: string
+          banned_by: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          reason: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ban_type?: string
+          banned_at?: string
+          banned_by: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          reason: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ban_type?: string
+          banned_at?: string
+          banned_by?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          reason?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           granted_at: string
@@ -1147,6 +1189,10 @@ export type Database = {
       }
       is_group_member: {
         Args: { group_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_user_banned: {
+        Args: { check_user_id: string }
         Returns: boolean
       }
     }

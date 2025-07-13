@@ -11,6 +11,7 @@ import { AdminPostsTable } from "@/components/admin/AdminPostsTable";
 import { AdminRepliesTable } from "@/components/admin/AdminRepliesTable";
 import { AdminNotificationsTable } from "@/components/admin/AdminNotificationsTable";
 import { AdminUserRolesTable } from "@/components/admin/AdminUserRolesTable";
+import { AdminUserBansTable } from "@/components/admin/AdminUserBansTable";
 import { AdminCategoriesTable } from "@/components/admin/AdminCategoriesTable";
 import { AdminSettingsTable } from "@/components/admin/AdminSettingsTable";
 import { AdminAnnouncementsTable } from "@/components/admin/AdminAnnouncementsTable";
@@ -139,6 +140,8 @@ const Admin = () => {
         return <AdminNotificationsTable onDataChange={handleDataChange} />;
       case "roles":
         return <AdminUserRolesTable onDataChange={handleDataChange} />;
+      case "bans":
+        return <AdminUserBansTable onDataChange={handleDataChange} />;
       case "settings":
         return <AdminSettingsTable onDataChange={handleDataChange} />;
       default:

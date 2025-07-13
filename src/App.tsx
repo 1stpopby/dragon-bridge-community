@@ -19,10 +19,12 @@ import CompanyProfile from "./pages/CompanyProfile";
 import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import MyMarketplace from "./pages/MyMarketplace";
+import Banned from "./pages/Banned";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./hooks/useAuth";
 import { AdminAuthProvider } from "./hooks/useAdminAuth";
 import { AdminProtectedRoute } from "./components/AdminProtectedRoute";
+import { BanCheckWrapper } from "./components/BanCheckWrapper";
 import AdminLogin from "./pages/AdminLogin";
 
 const queryClient = new QueryClient();
@@ -35,27 +37,30 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/forum" element={<Forum />} />
-            <Route path="/feed" element={<Feed />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/group/:groupId" element={<GroupForum />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/resources" element={<Resources />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/admin" element={<AdminProtectedRoute><Admin /></AdminProtectedRoute>} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/company/:companyId" element={<CompanyProfile />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/my-marketplace" element={<MyMarketplace />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <BanCheckWrapper>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/forum" element={<Forum />} />
+              <Route path="/feed" element={<Feed />} />
+              <Route path="/events" element={<Events />} />
+              <Route path="/community" element={<Community />} />
+              <Route path="/group/:groupId" element={<GroupForum />} />
+              <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/admin" element={<AdminProtectedRoute><Admin /></AdminProtectedRoute>} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/company/:companyId" element={<CompanyProfile />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/my-marketplace" element={<MyMarketplace />} />
+              <Route path="/banned" element={<Banned />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BanCheckWrapper>
         </BrowserRouter>
         </AdminAuthProvider>
       </AuthProvider>

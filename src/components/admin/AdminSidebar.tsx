@@ -75,6 +75,12 @@ const menuGroups = [
         value: "roles",
         icon: UserCog,
         description: "Manage permissions"
+      },
+      {
+        title: "User Bans",
+        value: "bans",
+        icon: Shield,
+        description: "Banned users"
       }
     ]
   },

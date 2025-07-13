@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { BanUserDialog } from "./BanUserDialog";
 
 interface AdminUsersTableProps {
   onDataChange: () => void;
@@ -55,20 +56,37 @@ export const AdminUsersTable = ({ onDataChange }: AdminUsersTableProps) => {
 
       if (profilesError) throw profilesError;
 
-      // Fetch user roles separately and then combine
+      // Fetch user roles separately
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('*');
 
       if (rolesError) throw rolesError;
 
-      // Combine profiles with their roles
-      const usersWithRoles = profilesData?.map(profile => ({
-        ...profile,
-        user_roles: rolesData?.filter(role => role.user_id === profile.user_id) || []
-      })) || [];
+      // Fetch active bans
+      const { data: bansData, error: bansError } = await supabase
+        .from('user_bans')
+        .select('user_id, is_active, expires_at')
+        .eq('is_active', true);
 
-      setUsers(usersWithRoles);
+      if (bansError) throw bansError;
+
+      // Combine profiles with their roles and ban status
+      const usersWithData = profilesData?.map(profile => {
+        const userRoles = rolesData?.filter(role => role.user_id === profile.user_id) || [];
+        const userBan = bansData?.find(ban => ban.user_id === profile.user_id);
+        const isBanned = userBan && (
+          !userBan.expires_at || new Date(userBan.expires_at) > new Date()
+        );
+
+        return {
+          ...profile,
+          user_roles: userRoles,
+          is_banned: isBanned
+        };
+      }) || [];
+
+      setUsers(usersWithData);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
@@ -229,6 +247,11 @@ export const AdminUsersTable = ({ onDataChange }: AdminUsersTableProps) => {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-1">
+                          {user.is_banned && (
+                            <Badge variant="destructive" className="text-xs">
+                              Banned
+                            </Badge>
+                          )}
                           {isAdmin && (
                             <Badge variant="destructive" className="text-xs">
                               Admin
@@ -308,6 +331,14 @@ export const AdminUsersTable = ({ onDataChange }: AdminUsersTableProps) => {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
+
+                          {!user.is_banned && (
+                            <BanUserDialog
+                              userId={user.user_id}
+                              userName={user.display_name}
+                              onBanComplete={fetchUsers}
+                            />
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
