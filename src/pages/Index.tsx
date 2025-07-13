@@ -62,21 +62,30 @@ const Index = () => {
             variant: "destructive",
           });
         }
+        setIsSubmitting(false);
       } else {
-        // Close dialog and let the automatic redirect handle navigation
-        setShowAdminLogin(false);
+        // Success - show toast but keep loading until redirect happens
         toast({
           title: "Login successful",
           description: "Redirecting to admin panel...",
         });
+        
+        // Wait a bit for auth state to update, then close dialog
+        setTimeout(() => {
+          setShowAdminLogin(false);
+          setIsSubmitting(false);
+          // Clear form
+          setEmail("");
+          setPassword("");
+        }, 1000);
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
