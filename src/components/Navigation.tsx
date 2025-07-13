@@ -24,7 +24,7 @@ const Navigation = () => {
   const isActive = (href: string) => location.pathname === href;
 
   return (
-    <nav className="bg-background border-b sticky top-0 z-50">
+    <nav className="bg-background border-b sticky top-0 z-50 backdrop-blur-sm bg-background/95">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -32,7 +32,12 @@ const Navigation = () => {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-sm">中</span>
               </div>
-              <span className="font-bold text-xl text-foreground">UK Chinese Community</span>
+              <span className="font-bold text-lg sm:text-xl text-foreground hidden xs:block">
+                UK Chinese Community
+              </span>
+              <span className="font-bold text-base text-foreground xs:hidden">
+                Dragon Bridge
+              </span>
             </Link>
           </div>
 
@@ -65,24 +70,36 @@ const Navigation = () => {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px]">
-                <div className="flex flex-col space-y-4 mt-6">
+              <SheetContent side="right" className="w-[300px] p-0">
+                <div className="flex flex-col h-full">
+                  <div className="p-6 border-b">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <span className="text-primary-foreground font-bold text-sm">中</span>
+                      </div>
+                      <span className="font-bold text-lg text-foreground">Dragon Bridge</span>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-4">
+                    <div className="space-y-2">
                   {navItems.map((item) => (
                     <Link
                       key={item.name}
                       to={item.href}
                       onClick={() => setIsOpen(false)}
-                      className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                        isActive(item.href)
-                          ? "text-primary bg-primary/10"
-                          : "text-foreground hover:text-primary hover:bg-muted"
-                      }`}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.name}</span>
-                    </Link>
-                  ))}
-                  <div className="pt-4 border-t">
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-colors touch-manipulation ${
+                          isActive(item.href)
+                            ? "text-primary bg-primary/10"
+                            : "text-foreground hover:text-primary hover:bg-muted"
+                        }`}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        <span>{item.name}</span>
+                      </Link>
+                    ))}
+                    </div>
+                  </div>
+                  <div className="p-4 border-t bg-muted/30">
                     <UserButton />
                   </div>
                 </div>

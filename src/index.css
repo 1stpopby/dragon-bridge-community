@@ -145,4 +145,28 @@ All colors MUST be HSL.
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  
+  /* Mobile-specific optimizations */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  /* Improve tap targets on mobile */
+  @media (max-width: 768px) {
+    button, a, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+  
+  /* Prevent zoom on double tap */
+  * {
+    touch-action: manipulation;
+  }
+  
+  /* Smooth scrolling for mobile */
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
 }
