@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Home, MessageSquare, Calendar, Users, ShoppingBag, BookOpen, MapPin, Settings } from "lucide-react";
+import { Menu, Home, MessageSquare, Calendar, Users, ShoppingBag, BookOpen, MapPin, Settings, Rss } from "lucide-react";
 import { UserButton } from "./UserButton";
 import { NotificationSystem } from "./NotificationSystem";
 
@@ -12,6 +12,7 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Home", href: "/", icon: Home },
+    { name: "Feed", href: "/feed", icon: Rss },
     { name: "Forum", href: "/forum", icon: MessageSquare },
     { name: "Events", href: "/events", icon: Calendar },
     { name: "Community", href: "/community", icon: Users },
