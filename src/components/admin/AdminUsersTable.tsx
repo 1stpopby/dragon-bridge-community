@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Table,
   TableBody,
@@ -11,13 +13,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Users, 
   Search, 
   Shield,
   Building2,
   UserCheck,
-  UserX
+  UserX,
+  CheckCircle,
+  XCircle,
+  Eye,
+  Verified
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +56,9 @@ export const AdminUsersTable = ({ onDataChange }: AdminUsersTableProps) => {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState<any>(null);
+  const [verificationNotes, setVerificationNotes] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
   const { toast } = useToast();
 
   const fetchUsers = async () => {
@@ -141,6 +158,51 @@ export const AdminUsersTable = ({ onDataChange }: AdminUsersTableProps) => {
     }
   };
 
+  const handleVerification = async (companyId: string, action: 'approve' | 'reject') => {
+    try {
+      setActionLoading(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const updateData: any = {
+        verification_notes: verificationNotes.trim() || null,
+      };
+
+      if (action === 'approve') {
+        updateData.is_verified = true;
+        updateData.verified_at = new Date().toISOString();
+        updateData.verified_by = user.id;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', companyId);
+
+      if (error) throw error;
+
+      toast({
+        title: `Company ${action === 'approve' ? 'verified' : 'rejected'}`,
+        description: `Company has been ${action === 'approve' ? 'verified successfully' : 'rejected'}`,
+      });
+
+      setSelectedCompany(null);
+      setVerificationNotes("");
+      fetchUsers();
+      onDataChange();
+    } catch (error) {
+      console.error('Error updating verification:', error);
+      toast({
+        title: "Error updating verification",
+        description: "Failed to update company verification status",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -234,7 +296,19 @@ export const AdminUsersTable = ({ onDataChange }: AdminUsersTableProps) => {
                           {user.account_type === 'company' && (
                             <Building2 className="h-4 w-4 text-blue-500" />
                           )}
-                          <span className="font-medium">{user.display_name}</span>
+                          {user.account_type === 'company' ? (
+                            <button
+                              onClick={() => setSelectedCompany(user)}
+                              className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
+                            >
+                              {user.company_name || user.display_name}
+                            </button>
+                          ) : (
+                            <span className="font-medium">{user.display_name}</span>
+                          )}
+                          {user.account_type === 'company' && user.is_verified && (
+                            <Verified className="h-4 w-4 text-green-600" />
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-sm">
@@ -348,6 +422,157 @@ export const AdminUsersTable = ({ onDataChange }: AdminUsersTableProps) => {
             </TableBody>
           </Table>
         </div>
+
+        {/* Company Details Dialog */}
+        {selectedCompany && (
+          <Dialog open={!!selectedCompany} onOpenChange={() => setSelectedCompany(null)}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Company Details</DialogTitle>
+                <DialogDescription>
+                  Review company information and manage verification status.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid gap-4 py-4 max-h-96 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Company Name</Label>
+                    <p className="text-sm">{selectedCompany.company_name || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Contact Person</Label>
+                    <p className="text-sm">{selectedCompany.display_name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Email</Label>
+                    <p className="text-sm">{selectedCompany.contact_email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Phone</Label>
+                    <p className="text-sm">{selectedCompany.phone || 'Not provided'}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Website</Label>
+                  <p className="text-sm">
+                    {selectedCompany.company_website ? (
+                      <a 
+                        href={selectedCompany.company_website} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {selectedCompany.company_website}
+                      </a>
+                    ) : (
+                      'Not provided'
+                    )}
+                  </p>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Address</Label>
+                  <p className="text-sm">{selectedCompany.company_address || 'Not provided'}</p>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Company Size</Label>
+                  <p className="text-sm">{selectedCompany.company_size || 'Not provided'}</p>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Founded</Label>
+                  <p className="text-sm">
+                    {selectedCompany.company_founded 
+                      ? new Date(selectedCompany.company_founded).getFullYear()
+                      : 'Not provided'
+                    }
+                  </p>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Description</Label>
+                  <p className="text-sm">{selectedCompany.company_description || 'Not provided'}</p>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Services</Label>
+                  <p className="text-sm">
+                    {selectedCompany.company_services?.length > 0 
+                      ? selectedCompany.company_services.join(', ')
+                      : 'Not provided'
+                    }
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div>
+                    <Label className="text-sm font-medium">Verification Status</Label>
+                    <div className="flex items-center space-x-2 mt-1">
+                      {selectedCompany.is_verified ? (
+                        <Badge variant="default" className="bg-green-600">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Unverified
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  {selectedCompany.verified_at && (
+                    <div className="text-right">
+                      <Label className="text-sm font-medium">Verified On</Label>
+                      <p className="text-sm">{formatDate(selectedCompany.verified_at)}</p>
+                    </div>
+                  )}
+                </div>
+
+                {!selectedCompany.is_verified && (
+                  <div>
+                    <Label htmlFor="notes">Verification Notes</Label>
+                    <Textarea
+                      id="notes"
+                      placeholder="Add notes about this verification..."
+                      value={verificationNotes}
+                      onChange={(e) => setVerificationNotes(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter className="flex justify-between">
+                <div className="flex space-x-2">
+                  {!selectedCompany.is_verified && (
+                    <>
+                      <Button 
+                        variant="destructive" 
+                        onClick={() => handleVerification(selectedCompany.id, 'reject')}
+                        disabled={actionLoading}
+                      >
+                        <XCircle className="h-4 w-4 mr-1" />
+                        Reject
+                      </Button>
+                      <Button 
+                        onClick={() => handleVerification(selectedCompany.id, 'approve')}
+                        disabled={actionLoading}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Verify Company
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </CardContent>
     </Card>
   );
