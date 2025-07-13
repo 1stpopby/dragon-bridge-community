@@ -8,11 +8,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import { MessageDialog } from "@/components/MessageDialog";
 import { formatDistanceToNow } from "date-fns";
 
 interface Message {
   id: string;
   sender_id: string;
+  recipient_id: string;
   subject: string;
   content: string;
   is_read: boolean;
@@ -35,12 +37,47 @@ const Messages = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [serviceResponses, setServiceResponses] = useState<ServiceInquiry[]>([]);
   const [myRequests, setMyRequests] = useState<ServiceInquiry[]>([]);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchMessages();
       fetchServiceResponses();
       fetchMyRequests();
+
+      // Set up real-time subscription for new messages
+      const channel = supabase
+        .channel('messages-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+          },
+          () => {
+            // Refresh messages when new ones arrive
+            fetchMessages();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'messages',
+          },
+          () => {
+            // Refresh messages when they're marked as read
+            fetchMessages();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
@@ -107,19 +144,16 @@ const Messages = () => {
     }
   };
 
-  const markMessageAsRead = async (messageId: string) => {
-    try {
-      await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('id', messageId);
+  const handleMessageClick = (message: Message) => {
+    setSelectedMessage(message);
+    setMessageDialogOpen(true);
+  };
 
-      setMessages(prev =>
-        prev.map(msg => msg.id === messageId ? { ...msg, is_read: true } : msg)
-      );
-    } catch (error) {
-      console.error('Error marking message as read:', error);
-    }
+  const handleMessageDialogClose = () => {
+    setMessageDialogOpen(false);
+    setSelectedMessage(null);
+    // Refresh messages to update read status
+    fetchMessages();
   };
 
   const parseResponseMessage = (message: string) => {
@@ -191,10 +225,10 @@ const Messages = () => {
                       {messages.map((message) => (
                         <div
                           key={message.id}
-                          className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                          className={`p-4 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
                             message.is_read ? 'bg-background' : 'bg-primary/5 border-primary/20'
                           }`}
-                          onClick={() => !message.is_read && markMessageAsRead(message.id)}
+                          onClick={() => handleMessageClick(message)}
                         >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -327,6 +361,16 @@ const Messages = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Message Dialog */}
+        {selectedMessage && (
+          <MessageDialog
+            open={messageDialogOpen}
+            onOpenChange={setMessageDialogOpen}
+            conversationPartnerId={selectedMessage.sender_id}
+            initialMessage={selectedMessage}
+          />
+        )}
       </div>
     </div>
   );
