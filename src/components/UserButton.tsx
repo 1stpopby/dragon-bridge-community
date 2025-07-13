@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, Building2, Settings, MessageSquare, Bell, Store } from "lucide-react";
+import { User, LogOut, Building2, Settings, MessageSquare, Bell, Store, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const UserButton = () => {
@@ -77,6 +77,16 @@ export const UserButton = () => {
         </DropdownMenuLabel>
         
         <DropdownMenuSeparator />
+        
+        {/* My Page for company accounts */}
+        {profile.account_type === 'company' && (
+          <DropdownMenuItem asChild>
+            <Link to="/feed" className="cursor-pointer">
+              <Home className="mr-2 h-4 w-4" />
+              My Page
+            </Link>
+          </DropdownMenuItem>
+        )}
         
         {/* Quick Access Links */}
         <DropdownMenuItem asChild>
