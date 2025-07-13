@@ -47,18 +47,28 @@ export const AdminUsersTable = ({ onDataChange }: AdminUsersTableProps) => {
     try {
       setLoading(true);
       
-      // Fetch users with their roles
+      // Fetch profiles first
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles(role)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
 
-      setUsers(profilesData || []);
+      // Fetch user roles separately and then combine
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+
+      if (rolesError) throw rolesError;
+
+      // Combine profiles with their roles
+      const usersWithRoles = profilesData?.map(profile => ({
+        ...profile,
+        user_roles: rolesData?.filter(role => role.user_id === profile.user_id) || []
+      })) || [];
+
+      setUsers(usersWithRoles);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
