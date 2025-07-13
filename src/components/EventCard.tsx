@@ -149,19 +149,6 @@ export function EventCard({ event, onEventChanged, showActions = true }: EventCa
           throw registrationError;
         }
       } else {
-        // Update attendee count
-        const { error: updateError } = await supabase
-          .from('events')
-          .update({ 
-            attendees: (event.attendees || 0) + 1 
-          })
-          .eq('id', event.id);
-
-        if (updateError) {
-          console.error('Error updating attendee count:', updateError);
-          // Don't throw here - registration was successful
-        }
-
         toast({
           title: "Registration successful!",
           description: "You have been registered for this event.",
