@@ -128,6 +128,53 @@ export type Database = {
         }
         Relationships: []
       }
+      company_reviews: {
+        Row: {
+          company_id: string
+          content: string
+          created_at: string
+          id: string
+          rating: number
+          reviewer_avatar: string | null
+          reviewer_id: string
+          reviewer_name: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          content: string
+          created_at?: string
+          id?: string
+          rating: number
+          reviewer_avatar?: string | null
+          reviewer_id: string
+          reviewer_name: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          reviewer_avatar?: string | null
+          reviewer_id?: string
+          reviewer_name?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_registrations: {
         Row: {
           attendee_email: string | null
@@ -601,7 +648,15 @@ export type Database = {
           account_type: string
           avatar_url: string | null
           bio: string | null
+          company_address: string | null
+          company_cover_image: string | null
+          company_description: string | null
+          company_founded: string | null
           company_name: string | null
+          company_phone: string | null
+          company_services: string[] | null
+          company_size: string | null
+          company_website: string | null
           contact_email: string | null
           created_at: string
           display_name: string
@@ -615,7 +670,15 @@ export type Database = {
           account_type: string
           avatar_url?: string | null
           bio?: string | null
+          company_address?: string | null
+          company_cover_image?: string | null
+          company_description?: string | null
+          company_founded?: string | null
           company_name?: string | null
+          company_phone?: string | null
+          company_services?: string[] | null
+          company_size?: string | null
+          company_website?: string | null
           contact_email?: string | null
           created_at?: string
           display_name: string
@@ -629,7 +692,15 @@ export type Database = {
           account_type?: string
           avatar_url?: string | null
           bio?: string | null
+          company_address?: string | null
+          company_cover_image?: string | null
+          company_description?: string | null
+          company_founded?: string | null
           company_name?: string | null
+          company_phone?: string | null
+          company_services?: string[] | null
+          company_size?: string | null
+          company_website?: string | null
           contact_email?: string | null
           created_at?: string
           display_name?: string

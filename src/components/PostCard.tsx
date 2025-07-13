@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
+import CompanyLink from "@/components/CompanyLink";
 import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Send } from "lucide-react";
 import {
   DropdownMenu,
@@ -231,7 +232,11 @@ const PostCard = ({ post, onUpdate, onDelete }: PostCardProps) => {
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium">{post.author_name}</p>
+              <CompanyLink 
+                authorName={post.author_name} 
+                userId={post.user_id}
+                className="font-medium"
+              />
               <p className="text-sm text-muted-foreground">
                 {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
               </p>
@@ -358,7 +363,12 @@ const PostCard = ({ post, onUpdate, onDelete }: PostCardProps) => {
                     </Avatar>
                     <div className="flex-1">
                       <div className="bg-muted rounded-lg p-3">
-                        <p className="font-medium text-sm">{comment.author_name}</p>
+                        <CompanyLink 
+                          authorName={comment.author_name} 
+                          userId={comment.user_id}
+                          className="font-medium text-sm"
+                          showBadge={false}
+                        />
                         <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">

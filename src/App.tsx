@@ -14,6 +14,7 @@ import Services from "./pages/Services";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import CompanyProfile from "./pages/CompanyProfile";
 import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import MyMarketplace from "./pages/MyMarketplace";
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/company/:companyId" element={<CompanyProfile />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/my-marketplace" element={<MyMarketplace />} />

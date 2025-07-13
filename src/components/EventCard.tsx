@@ -485,3 +485,5 @@ export function EventCard({ event, onEventChanged, showActions = true }: EventCa
     </>
   );
 }
+
+export default EventCard;

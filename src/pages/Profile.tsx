@@ -27,7 +27,14 @@ const Profile = () => {
     company_name: profile?.company_name || '',
     contact_email: profile?.contact_email || '',
     account_type: profile?.account_type || 'user',
-    avatar_url: profile?.avatar_url || ''
+    avatar_url: profile?.avatar_url || '',
+    // Company-specific fields
+    company_description: (profile as any)?.company_description || '',
+    company_website: (profile as any)?.company_website || '',
+    company_phone: (profile as any)?.company_phone || '',
+    company_address: (profile as any)?.company_address || '',
+    company_size: (profile as any)?.company_size || '',
+    company_founded: (profile as any)?.company_founded || ''
   });
 
   useEffect(() => {
@@ -40,7 +47,14 @@ const Profile = () => {
         company_name: profile.company_name || '',
         contact_email: profile.contact_email || '',
         account_type: profile.account_type || 'user',
-        avatar_url: profile.avatar_url || ''
+        avatar_url: profile.avatar_url || '',
+        // Company-specific fields
+        company_description: (profile as any)?.company_description || '',
+        company_website: (profile as any)?.company_website || '',
+        company_phone: (profile as any)?.company_phone || '',
+        company_address: (profile as any)?.company_address || '',
+        company_size: (profile as any)?.company_size || '',
+        company_founded: (profile as any)?.company_founded || ''
       });
     }
   }, [profile]);
@@ -262,15 +276,88 @@ const Profile = () => {
               </div>
 
               {formData.account_type === 'company' && (
-                <div className="space-y-2">
-                  <Label htmlFor="company_name">Company Name</Label>
-                  <Input
-                    id="company_name"
-                    value={formData.company_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
-                    placeholder="Your company name"
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="company_name">Company Name</Label>
+                    <Input
+                      id="company_name"
+                      value={formData.company_name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
+                      placeholder="Your company name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="company_description">Company Description</Label>
+                    <Textarea
+                      id="company_description"
+                      value={formData.company_description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, company_description: e.target.value }))}
+                      placeholder="Describe your company..."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="company_website">Website</Label>
+                      <Input
+                        id="company_website"
+                        value={formData.company_website}
+                        onChange={(e) => setFormData(prev => ({ ...prev, company_website: e.target.value }))}
+                        placeholder="https://yourcompany.com"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="company_phone">Company Phone</Label>
+                      <Input
+                        id="company_phone"
+                        value={formData.company_phone}
+                        onChange={(e) => setFormData(prev => ({ ...prev, company_phone: e.target.value }))}
+                        placeholder="Company phone number"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="company_address">Company Address</Label>
+                    <Input
+                      id="company_address"
+                      value={formData.company_address}
+                      onChange={(e) => setFormData(prev => ({ ...prev, company_address: e.target.value }))}
+                      placeholder="Full company address"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="company_size">Company Size</Label>
+                      <Select value={formData.company_size} onValueChange={(value) => setFormData(prev => ({ ...prev, company_size: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select company size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1-10">1-10 employees</SelectItem>
+                          <SelectItem value="11-50">11-50 employees</SelectItem>
+                          <SelectItem value="51-200">51-200 employees</SelectItem>
+                          <SelectItem value="201-500">201-500 employees</SelectItem>
+                          <SelectItem value="500+">500+ employees</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="company_founded">Founded Year</Label>
+                      <Input
+                        id="company_founded"
+                        type="date"
+                        value={formData.company_founded}
+                        onChange={(e) => setFormData(prev => ({ ...prev, company_founded: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               <div className="space-y-2">
