@@ -376,6 +376,41 @@ export type Database = {
           },
         ]
       }
+      group_discussion_reactions: {
+        Row: {
+          author_name: string
+          created_at: string
+          discussion_id: string
+          emoji: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          author_name: string
+          created_at?: string
+          discussion_id: string
+          emoji: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          author_name?: string
+          created_at?: string
+          discussion_id?: string
+          emoji?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_discussion_reactions_discussion_id_fkey"
+            columns: ["discussion_id"]
+            isOneToOne: false
+            referencedRelation: "group_discussions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_discussion_replies: {
         Row: {
           author_avatar: string | null

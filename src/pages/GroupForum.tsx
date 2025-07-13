@@ -18,7 +18,12 @@ import {
   Send,
   Lock,
   Loader2,
-  MapPin
+  MapPin,
+  Crown,
+  Heart,
+  ThumbsUp,
+  Smile,
+  Star
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -54,6 +59,13 @@ interface Reply {
   created_at: string;
 }
 
+interface Reaction {
+  id: string;
+  emoji: string;
+  author_name: string;
+  user_id: string | null;
+}
+
 const GroupForum = () => {
   const { groupId } = useParams();
   const { user, profile } = useAuth();
@@ -67,10 +79,21 @@ const GroupForum = () => {
   const [showNewDiscussion, setShowNewDiscussion] = useState(false);
   const [newDiscussionTitle, setNewDiscussionTitle] = useState("");
   const [newDiscussionContent, setNewDiscussionContent] = useState("");
+  const [reactions, setReactions] = useState<Record<string, Reaction[]>>({});
+
+  const availableEmojis = [
+    { emoji: "👍", name: "thumbs up" },
+    { emoji: "❤️", name: "heart" },
+    { emoji: "😊", name: "smile" },
+    { emoji: "⭐", name: "star" },
+    { emoji: "🔥", name: "fire" },
+    { emoji: "👏", name: "clap" }
+  ];
 
   useEffect(() => {
     if (groupId) {
       fetchGroupData();
+      setTimeout(() => fetchReactions(), 500); // Fetch reactions after discussions are loaded
       if (user) {
         checkMembership();
       }
@@ -100,6 +123,8 @@ const GroupForum = () => {
           throw discussionsError;
         }
         setDiscussions(discussionsData || []);
+        // Fetch reactions after discussions are loaded
+        setTimeout(() => fetchReactions(), 100);
       }
     } catch (error) {
       console.error('Error fetching group data:', error);
@@ -128,6 +153,89 @@ const GroupForum = () => {
     } catch (error) {
       setIsMember(false);
     }
+  };
+
+  const fetchReactions = async () => {
+    if (!user || discussions.length === 0) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('group_discussion_reactions')
+        .select('*')
+        .in('discussion_id', discussions.map(d => d.id));
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      // Group reactions by discussion_id
+      const reactionsByDiscussion: Record<string, Reaction[]> = {};
+      (data || []).forEach((reaction) => {
+        if (!reactionsByDiscussion[reaction.discussion_id]) {
+          reactionsByDiscussion[reaction.discussion_id] = [];
+        }
+        reactionsByDiscussion[reaction.discussion_id].push(reaction);
+      });
+
+      setReactions(reactionsByDiscussion);
+    } catch (error) {
+      console.error('Error fetching reactions:', error);
+    }
+  };
+
+  const handleReaction = async (discussionId: string, emoji: string) => {
+    if (!user || !profile) return;
+
+    try {
+      const discussionReactions = reactions[discussionId] || [];
+      const existingReaction = discussionReactions.find(r => 
+        r.emoji === emoji && 
+        (user ? r.user_id === user.id : r.author_name === profile.display_name)
+      );
+
+      if (existingReaction) {
+        // Remove reaction
+        const { error } = await supabase
+          .from('group_discussion_reactions')
+          .delete()
+          .eq('id', existingReaction.id);
+
+        if (error) throw error;
+      } else {
+        // Add reaction
+        const { error } = await supabase
+          .from('group_discussion_reactions')
+          .insert({
+            discussion_id: discussionId,
+            user_id: user?.id || null,
+            author_name: profile?.display_name || 'Anonymous',
+            emoji: emoji
+          });
+
+        if (error) throw error;
+      }
+
+      // Refresh reactions
+      fetchReactions();
+    } catch (error) {
+      console.error('Error handling reaction:', error);
+      toast({
+        title: "Error updating reaction",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getReactionCount = (discussionId: string, emoji: string) => {
+    const discussionReactions = reactions[discussionId] || [];
+    return discussionReactions.filter(r => r.emoji === emoji).length;
+  };
+
+  const hasUserReacted = (discussionId: string, emoji: string) => {
+    const discussionReactions = reactions[discussionId] || [];
+    return discussionReactions.some(r => 
+      r.emoji === emoji && 
+      (user ? r.user_id === user.id : r.author_name === profile?.display_name)
+    );
   };
 
   const handleJoinGroup = async () => {
@@ -199,6 +307,7 @@ const GroupForum = () => {
       setNewDiscussionContent("");
       setShowNewDiscussion(false);
       fetchGroupData();
+      setTimeout(() => fetchReactions(), 500); // Fetch reactions after discussions are loaded
     } catch (error) {
       console.error('Error creating discussion:', error);
       toast({
@@ -225,93 +334,108 @@ const GroupForum = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
       <Navigation />
       
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        {/* Header */}
-        <div className="mb-6">
-          <Link to="/community" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Community
-          </Link>
-          
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-              {group.image_url ? (
-                <img src={group.image_url} alt={group.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Users className="h-8 w-8 text-muted-foreground" />
-                </div>
-              )}
-            </div>
+      <div className="max-w-5xl mx-auto py-8 px-4">
+        {/* Professional Header */}
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border-0 overflow-hidden mb-8">
+          <div className="p-6 border-b border-slate-100 dark:border-slate-700">
+            <Link to="/community" className="inline-flex items-center text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mb-6 transition-colors">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Community
+            </Link>
             
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold">{group.name}</h1>
-                <Badge variant="outline">{group.category}</Badge>
-                {isMember && (
-                  <Badge variant="default" className="bg-green-100 text-green-800">
-                    <Users className="h-3 w-3 mr-1" />
-                    Member
-                  </Badge>
+            <div className="flex items-start gap-6">
+              <div className="w-20 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0 shadow-lg">
+                {group?.image_url ? (
+                  <img src={group.image_url} alt={group.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Users className="h-10 w-10 text-primary" />
+                  </div>
                 )}
               </div>
               
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                <div className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  {group.location}
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{group?.name}</h1>
+                  <Badge variant="outline" className="bg-gradient-to-r from-primary/10 to-primary/20 text-primary border-primary/30">
+                    {group?.category}
+                  </Badge>
+                  {isMember && (
+                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg">
+                      <Crown className="h-3 w-3 mr-1" />
+                      Member
+                    </Badge>
+                  )}
                 </div>
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-1" />
-                  {group.member_count} members
+                
+                <div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400 mb-4">
+                  <div className="flex items-center">
+                    <MapPin className="h-4 w-4 mr-2 text-slate-400" />
+                    {group?.location}
+                  </div>
+                  <div className="flex items-center">
+                    <Users className="h-4 w-4 mr-2 text-slate-400" />
+                    {group?.member_count} members
+                  </div>
+                  <div className="flex items-center">
+                    <MessageSquare className="h-4 w-4 mr-2 text-slate-400" />
+                    {discussions.length} discussions
+                  </div>
                 </div>
+                
+                {group?.description && (
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{group.description}</p>
+                )}
               </div>
-              
-              {group.description && (
-                <p className="text-muted-foreground">{group.description}</p>
-              )}
             </div>
           </div>
         </div>
 
         {/* Access Control */}
         {!user ? (
-          <Card className="mb-6">
-            <CardContent className="flex items-center justify-center py-12">
+          <Card className="bg-white dark:bg-slate-900 border-0 shadow-lg rounded-xl mb-6">
+            <CardContent className="flex items-center justify-center py-16">
               <div className="text-center">
-                <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Private Group Forum</h3>
-                <p className="text-muted-foreground mb-4">
-                  Sign in to join this group and access private discussions.
+                <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Lock className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Private Group Forum</h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md">
+                  Join our exclusive community discussions. Sign in to access member-only conversations and connect with fellow members.
                 </p>
-                <Button asChild>
-                  <Link to="/auth">Sign In</Link>
+                <Button asChild size="lg" className="rounded-xl shadow-lg">
+                  <Link to="/auth">
+                    <Users className="h-5 w-5 mr-2" />
+                    Sign In to Join
+                  </Link>
                 </Button>
               </div>
             </CardContent>
           </Card>
         ) : !isMember ? (
-          <Card className="mb-6">
-            <CardContent className="flex items-center justify-center py-12">
+          <Card className="bg-white dark:bg-slate-900 border-0 shadow-lg rounded-xl mb-6">
+            <CardContent className="flex items-center justify-center py-16">
               <div className="text-center">
-                <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Members Only</h3>
-                <p className="text-muted-foreground mb-4">
-                  Join this group to access private discussions and connect with members.
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Crown className="h-8 w-8 text-amber-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Members Only</h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md">
+                  This is an exclusive space for group members. Join our community to access private discussions and connect with fellow members.
                 </p>
-                <Button onClick={handleJoinGroup} disabled={membershipLoading}>
+                <Button onClick={handleJoinGroup} disabled={membershipLoading} size="lg" className="rounded-xl shadow-lg">
                   {membershipLoading ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                       Joining...
                     </>
                   ) : (
                     <>
-                      <Users className="h-4 w-4 mr-2" />
-                      Join Group
+                      <Users className="h-5 w-5 mr-2" />
+                      Join This Group
                     </>
                   )}
                 </Button>
@@ -321,98 +445,139 @@ const GroupForum = () => {
         ) : (
           <>
             {/* Forum Content */}
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Group Discussions</h2>
-              <Button onClick={() => setShowNewDiscussion(!showNewDiscussion)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Discussion
-              </Button>
-            </div>
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border-0 overflow-hidden">
+              <div className="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Group Discussions</h2>
+                  <Button onClick={() => setShowNewDiscussion(!showNewDiscussion)} className="rounded-lg shadow-sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Discussion
+                  </Button>
+                </div>
+              </div>
 
-            {/* New Discussion Form */}
-            {showNewDiscussion && (
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Start a New Discussion</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Input
-                    placeholder="Discussion title..."
-                    value={newDiscussionTitle}
-                    onChange={(e) => setNewDiscussionTitle(e.target.value)}
-                  />
-                  <Textarea
-                    placeholder="What would you like to discuss?"
-                    value={newDiscussionContent}
-                    onChange={(e) => setNewDiscussionContent(e.target.value)}
-                    rows={4}
-                  />
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={handleCreateDiscussion}
-                      disabled={!newDiscussionTitle.trim() || !newDiscussionContent.trim()}
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      Post Discussion
-                    </Button>
-                    <Button variant="outline" onClick={() => setShowNewDiscussion(false)}>
-                      Cancel
-                    </Button>
+              {/* New Discussion Form */}
+              {showNewDiscussion && (
+                <div className="border-b border-slate-100 dark:border-slate-700 p-6 bg-slate-50 dark:bg-slate-800/50">
+                  <div className="space-y-4">
+                    <div>
+                      <Input
+                        placeholder="Discussion title..."
+                        value={newDiscussionTitle}
+                        onChange={(e) => setNewDiscussionTitle(e.target.value)}
+                        className="border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                    <div>
+                      <Textarea
+                        placeholder="What would you like to discuss with the group?"
+                        value={newDiscussionContent}
+                        onChange={(e) => setNewDiscussionContent(e.target.value)}
+                        rows={4}
+                        className="border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <Button 
+                        onClick={handleCreateDiscussion}
+                        disabled={!newDiscussionTitle.trim() || !newDiscussionContent.trim()}
+                        className="rounded-lg"
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        Start Discussion
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowNewDiscussion(false)} className="rounded-lg">
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                </div>
+              )}
 
-            {/* Discussions List */}
-            {discussions.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-12">
-                  <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No discussions yet</h3>
-                  <p className="text-muted-foreground">
-                    Be the first to start a discussion in this group!
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {discussions.map((discussion) => (
-                  <Card key={discussion.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <Avatar className="h-10 w-10">
+              {/* Discussions List */}
+              <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                {discussions.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <MessageSquare className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">No discussions yet</h3>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      Be the first to start a meaningful conversation in this group!
+                    </p>
+                  </div>
+                ) : (
+                  discussions.map((discussion) => (
+                    <div key={discussion.id} className="p-6 transition-all duration-200 hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                      <div className="flex space-x-4">
+                        <Avatar className="h-12 w-12 ring-2 ring-slate-100 dark:ring-slate-700">
                           <AvatarImage src={discussion.author_avatar || undefined} alt={discussion.author_name} />
-                          <AvatarFallback>
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-white font-semibold">
                             {discussion.author_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold">{discussion.title}</h3>
+                        <div className="flex-1 min-w-0">
+                          {/* Discussion Header */}
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1 leading-tight">
+                                {discussion.title}
+                              </h3>
+                              <div className="flex items-center space-x-3 text-sm text-slate-600 dark:text-slate-400">
+                                <span className="font-medium">{discussion.author_name}</span>
+                                <span>•</span>
+                                <span>{formatDistanceToNow(new Date(discussion.created_at), { addSuffix: true })}</span>
+                              </div>
+                            </div>
                           </div>
-                          
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                            <span>{discussion.author_name}</span>
-                            <span>•</span>
-                            <span>{formatDistanceToNow(new Date(discussion.created_at), { addSuffix: true })}</span>
+
+                          {/* Discussion Content */}
+                          <div className="mb-4">
+                            <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                              {discussion.content}
+                            </p>
                           </div>
-                          
-                          <p className="text-muted-foreground mb-4">{discussion.content}</p>
-                          
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+
+                          {/* Emoji Reactions */}
+                          <div className="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b border-slate-100 dark:border-slate-700">
+                            {availableEmojis.map(({ emoji, name }) => {
+                              const count = getReactionCount(discussion.id, emoji);
+                              const hasReacted = hasUserReacted(discussion.id, emoji);
+                              
+                              return (
+                                <Button
+                                  key={emoji}
+                                  variant={hasReacted ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => handleReaction(discussion.id, emoji)}
+                                  className={`h-8 px-3 rounded-full transition-all duration-200 ${
+                                    hasReacted 
+                                      ? 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20' 
+                                      : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-600'
+                                  }`}
+                                >
+                                  <span className="mr-1">{emoji}</span>
+                                  {count > 0 && <span className="text-xs font-medium">{count}</span>}
+                                </Button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Discussion Stats */}
+                          <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
                             <div className="flex items-center gap-1">
                               <MessageSquare className="h-4 w-4" />
-                              {discussion.replies_count} replies
+                              <span>{discussion.replies_count} replies</span>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    </div>
+                  ))
+                )}
               </div>
-            )}
+            </div>
           </>
         )}
       </div>
