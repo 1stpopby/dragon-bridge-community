@@ -199,7 +199,7 @@ export const ForumPostCard = ({ post, replies, onReplyAdded }: ForumPostCardProp
   };
 
   return (
-    <div className="p-6 transition-all duration-200 hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-6 transition-all duration-200 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 hover:border-primary/30 shadow-sm hover:shadow-md">
       <div className="flex space-x-4">
         <Avatar className="h-12 w-12 ring-2 ring-slate-100 dark:ring-slate-700">
           <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-white font-semibold">
