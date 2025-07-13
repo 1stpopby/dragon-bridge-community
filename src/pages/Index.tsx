@@ -51,11 +51,12 @@ const Index = () => {
           });
         }
       } else {
+        // Close dialog and let the automatic redirect handle navigation
+        setShowAdminLogin(false);
         toast({
           title: "Login successful",
-          description: "Welcome to the admin panel.",
+          description: "Redirecting to admin panel...",
         });
-        setShowAdminLogin(false);
       }
     } catch (error) {
       toast({

@@ -60,16 +60,13 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Check if user has admin role
-          setTimeout(async () => {
-            const adminStatus = await checkAdminRole(session.user.id);
-            setIsAdmin(adminStatus);
-            setLoading(false);
-          }, 0);
+          // Check if user has admin role - remove setTimeout to avoid timing issues
+          const adminStatus = await checkAdminRole(session.user.id);
+          setIsAdmin(adminStatus);
         } else {
           setIsAdmin(false);
-          setLoading(false);
         }
+        setLoading(false);
       }
     );
 
