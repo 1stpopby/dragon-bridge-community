@@ -16,6 +16,7 @@ interface ForumPost {
   title: string;
   content: string;
   author_name: string;
+  author_avatar?: string;
   created_at: string;
 }
 
@@ -23,6 +24,7 @@ interface ForumReply {
   id: string;
   content: string;
   author_name: string;
+  author_avatar?: string;
   created_at: string;
 }
 
@@ -202,6 +204,7 @@ export const ForumPostCard = ({ post, replies, onReplyAdded }: ForumPostCardProp
     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-6 transition-all duration-200 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 hover:border-primary/30 shadow-sm hover:shadow-md">
       <div className="flex space-x-4">
         <Avatar className="h-12 w-12 ring-2 ring-slate-100 dark:ring-slate-700">
+          <AvatarImage src={post.author_avatar} alt={post.author_name} />
           <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-white font-semibold">
             {post.author_name.split(' ').map(n => n[0]).join('').toUpperCase()}
           </AvatarFallback>
@@ -269,6 +272,7 @@ export const ForumPostCard = ({ post, replies, onReplyAdded }: ForumPostCardProp
                   <div key={reply.id} className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-100 dark:border-slate-700">
                     <div className="flex items-start space-x-3">
                       <Avatar className="h-8 w-8">
+                        <AvatarImage src={reply.author_avatar} alt={reply.author_name} />
                         <AvatarFallback className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs">
                           {reply.author_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                         </AvatarFallback>

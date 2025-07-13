@@ -108,6 +108,47 @@ const Forum = () => {
 
       let filteredPosts = postsData || [];
 
+      // Get all unique user_ids from posts and replies
+      const userIds = new Set<string>();
+      filteredPosts.forEach(post => {
+        if (post.user_id) userIds.add(post.user_id);
+      });
+      repliesData?.forEach(reply => {
+        if (reply.user_id) userIds.add(reply.user_id);
+      });
+
+      // Fetch profile data for all users
+      let profilesMap: Record<string, any> = {};
+      if (userIds.size > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, avatar_url')
+          .in('user_id', Array.from(userIds));
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+        } else {
+          profilesData?.forEach(profile => {
+            profilesMap[profile.user_id] = profile;
+          });
+        }
+      }
+
+      // Add avatar information to posts
+      filteredPosts = filteredPosts.map(post => ({
+        ...post,
+        author_avatar: post.user_id ? profilesMap[post.user_id]?.avatar_url : null
+      }));
+
+      // Add avatar information to replies
+      const enrichedRepliesByPost: Record<string, any[]> = {};
+      Object.keys(repliesByPost).forEach(postId => {
+        enrichedRepliesByPost[postId] = repliesByPost[postId].map(reply => ({
+          ...reply,
+          author_avatar: reply.user_id ? profilesMap[reply.user_id]?.avatar_url : null
+        }));
+      });
+
       // Additional filtering for unanswered posts
       if (filter === 'unanswered') {
         filteredPosts = filteredPosts.filter(post => !repliesByPost[post.id] || repliesByPost[post.id].length === 0);
@@ -130,7 +171,7 @@ const Forum = () => {
       }
 
       setPosts(filteredPosts);
-      setRepliesMap(repliesByPost);
+      setRepliesMap(enrichedRepliesByPost);
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {
