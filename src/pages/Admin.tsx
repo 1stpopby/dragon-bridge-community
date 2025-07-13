@@ -1,40 +1,26 @@
 import { useState, useEffect } from "react";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Users, 
-  MessageSquare, 
-  TrendingUp, 
-  Calendar,
-  Trash2,
-  Edit,
-  Eye,
-  BarChart3,
-  Store,
-  FileText,
-  Settings,
-  Shield,
-  Bell,
-  Tags
-} from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { AdminPostsTable } from "@/components/admin/AdminPostsTable";
-import { AdminRepliesTable } from "@/components/admin/AdminRepliesTable";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminStats } from "@/components/admin/AdminStats";
 import { AdminUsersTable } from "@/components/admin/AdminUsersTable";
 import { AdminEventsTable } from "@/components/admin/AdminEventsTable";
-import { AdminMarketplaceTable } from "@/components/admin/AdminMarketplaceTable";
 import { AdminGroupsTable } from "@/components/admin/AdminGroupsTable";
+import { AdminMarketplaceTable } from "@/components/admin/AdminMarketplaceTable";
 import { AdminResourcesTable } from "@/components/admin/AdminResourcesTable";
-import { AdminUserRolesTable } from "@/components/admin/AdminUserRolesTable";
+import { AdminPostsTable } from "@/components/admin/AdminPostsTable";
+import { AdminRepliesTable } from "@/components/admin/AdminRepliesTable";
 import { AdminNotificationsTable } from "@/components/admin/AdminNotificationsTable";
+import { AdminUserRolesTable } from "@/components/admin/AdminUserRolesTable";
 import { AdminCategoriesTable } from "@/components/admin/AdminCategoriesTable";
+import { AdminSettingsTable } from "@/components/admin/AdminSettingsTable";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp, Activity } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Admin = () => {
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [refreshKey, setRefreshKey] = useState(0);
   const [stats, setStats] = useState({
     totalPosts: 0,
     totalReplies: 0,
@@ -105,184 +91,84 @@ const Admin = () => {
     fetchStats();
   }, []);
 
-  const { signOut } = useAdminAuth();
+  const handleDataChange = () => {
+    setRefreshKey(prev => prev + 1);
+    fetchStats();
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
+                <p className="text-muted-foreground">
+                  Monitor community activity and manage platform content
+                </p>
+              </div>
+              <Badge variant="outline" className="flex items-center space-x-1">
+                <TrendingUp className="h-3 w-3" />
+                <span>Real-time Data</span>
+              </Badge>
+            </div>
+            <AdminStats stats={stats} loading={loading} onRefresh={fetchStats} />
+          </div>
+        );
+      case "users":
+        return <AdminUsersTable onDataChange={handleDataChange} />;
+      case "categories":
+        return <AdminCategoriesTable onDataChange={handleDataChange} />;
+      case "events":
+        return <AdminEventsTable onDataChange={handleDataChange} />;
+      case "groups":
+        return <AdminGroupsTable onDataChange={handleDataChange} />;
+      case "marketplace":
+        return <AdminMarketplaceTable onDataChange={handleDataChange} />;
+      case "resources":
+        return <AdminResourcesTable onDataChange={handleDataChange} />;
+      case "posts":
+        return <AdminPostsTable onDataChange={handleDataChange} />;
+      case "replies":
+        return <AdminRepliesTable onDataChange={handleDataChange} />;
+      case "notifications":
+        return <AdminNotificationsTable onDataChange={handleDataChange} />;
+      case "roles":
+        return <AdminUserRolesTable onDataChange={handleDataChange} />;
+      case "settings":
+        return <AdminSettingsTable onDataChange={handleDataChange} />;
+      default:
+        return <AdminStats stats={stats} loading={loading} onRefresh={fetchStats} />;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Admin Header */}
-      <div className="bg-destructive text-destructive-foreground py-2 px-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Shield className="h-4 w-4" />
-            <span className="text-sm font-medium">Administrator Panel</span>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={signOut}
-            className="text-destructive-foreground hover:bg-destructive-foreground/10"
-          >
-            Sign Out
-          </Button>
-        </div>
-      </div>
-      
-      {/* Header */}
-      <div className="bg-muted/30 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Admin Panel
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Manage your community forum, monitor activity, and maintain content quality.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-11">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="posts">Posts</TabsTrigger>
-            <TabsTrigger value="replies">Replies</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
-            <TabsTrigger value="groups">Groups</TabsTrigger>
-            <TabsTrigger value="resources">Resources</TabsTrigger>
-            <TabsTrigger value="roles">User Roles</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="dashboard">
-            <AdminStats stats={stats} loading={loading} onRefresh={fetchStats} />
-          </TabsContent>
-
-          <TabsContent value="users">
-            <AdminUsersTable onDataChange={fetchStats} />
-          </TabsContent>
-
-          <TabsContent value="categories">
-            <AdminCategoriesTable onDataChange={fetchStats} />
-          </TabsContent>
-
-          <TabsContent value="posts">
-            <AdminPostsTable onDataChange={fetchStats} />
-          </TabsContent>
-
-          <TabsContent value="replies">
-            <AdminRepliesTable onDataChange={fetchStats} />
-          </TabsContent>
-
-          <TabsContent value="events">
-            <AdminEventsTable onDataChange={fetchStats} />
-          </TabsContent>
-
-          <TabsContent value="marketplace">
-            <AdminMarketplaceTable onDataChange={fetchStats} />
-          </TabsContent>
-
-          <TabsContent value="groups">
-            <AdminGroupsTable onDataChange={fetchStats} />
-          </TabsContent>
-
-          <TabsContent value="resources">
-            <AdminResourcesTable onDataChange={fetchStats} />
-          </TabsContent>
-
-          <TabsContent value="roles">
-            <AdminUserRolesTable onDataChange={fetchStats} />
-          </TabsContent>
-
-          <TabsContent value="notifications">
-            <AdminNotificationsTable onDataChange={fetchStats} />
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Most Active Today
-                  </CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">12</div>
-                  <p className="text-xs text-muted-foreground">
-                    +20% from yesterday
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Avg Response Time
-                  </CardTitle>
-                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">2.3h</div>
-                  <p className="text-xs text-muted-foreground">
-                    -12% from last week
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Engagement Rate
-                  </CardTitle>
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">84%</div>
-                  <p className="text-xs text-muted-foreground">
-                    +5% from last month
-                  </p>
-                </CardContent>
-              </Card>
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full bg-background">
+        <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        
+        <main className="flex-1 overflow-auto">
+          {/* Mobile header with sidebar trigger */}
+          <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
+            <div className="flex h-14 items-center px-4">
+              <SidebarTrigger className="mr-2" />
+              <div className="flex items-center space-x-2">
+                <Badge variant="secondary" className="flex items-center space-x-1">
+                  <Activity className="h-3 w-3" />
+                  <span>Admin Panel</span>
+                </Badge>
+              </div>
             </div>
+          </header>
 
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <p className="font-medium">New post created</p>
-                      <p className="text-sm text-muted-foreground">By Li Wei - 2 minutes ago</p>
-                    </div>
-                    <Badge variant="secondary">New</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Reply added</p>
-                      <p className="text-sm text-muted-foreground">By Chen Ming - 5 minutes ago</p>
-                    </div>
-                    <Badge variant="outline">Reply</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Post edited</p>
-                      <p className="text-sm text-muted-foreground">By Wang Xiao - 8 minutes ago</p>
-                    </div>
-                    <Badge variant="outline">Edit</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          {/* Main content */}
+          <div className="container mx-auto p-6 space-y-6">
+            {renderTabContent()}
+          </div>
+        </main>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
