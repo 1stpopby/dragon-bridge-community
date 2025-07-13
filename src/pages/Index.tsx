@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
