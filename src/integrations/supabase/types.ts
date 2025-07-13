@@ -936,6 +936,122 @@ export type Database = {
         }
         Relationships: []
       }
+      service_inquiries: {
+        Row: {
+          created_at: string
+          id: string
+          inquirer_email: string
+          inquirer_name: string
+          inquirer_phone: string | null
+          inquiry_type: string
+          message: string
+          service_id: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inquirer_email: string
+          inquirer_name: string
+          inquirer_phone?: string | null
+          inquiry_type?: string
+          message: string
+          service_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inquirer_email?: string
+          inquirer_name?: string
+          inquirer_phone?: string | null
+          inquiry_type?: string
+          message?: string
+          service_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_inquiries_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          business_hours: Json | null
+          category: string
+          contact_person: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          featured: boolean | null
+          id: string
+          image_url: string | null
+          languages: string[] | null
+          location: string
+          name: string
+          phone: string | null
+          rating: number | null
+          reviews_count: number | null
+          specialty: string
+          updated_at: string
+          user_id: string | null
+          verified: boolean | null
+          website: string | null
+        }
+        Insert: {
+          business_hours?: Json | null
+          category: string
+          contact_person?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          languages?: string[] | null
+          location: string
+          name: string
+          phone?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+          specialty: string
+          updated_at?: string
+          user_id?: string | null
+          verified?: boolean | null
+          website?: string | null
+        }
+        Update: {
+          business_hours?: Json | null
+          category?: string
+          contact_person?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          languages?: string[] | null
+          location?: string
+          name?: string
+          phone?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+          specialty?: string
+          updated_at?: string
+          user_id?: string | null
+          verified?: boolean | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           granted_at: string
