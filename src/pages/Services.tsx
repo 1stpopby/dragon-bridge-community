@@ -10,10 +10,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MapPin, Phone, Globe, Star, Search, Filter, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { ServiceContactDialog } from "@/components/ServiceContactDialog";
 import { ServiceDetailsDialog } from "@/components/ServiceDetailsDialog";
 import { ServiceRequestDialog } from "@/components/ServiceRequestDialog";
 import { ListBusinessDialog } from "@/components/ListBusinessDialog";
+import { ServiceRequestsTab } from "@/components/ServiceRequestsTab";
 
 const Services = () => {
   const [services, setServices] = useState<any[]>([]);
@@ -21,6 +23,11 @@ const Services = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("legal");
   const { toast } = useToast();
+  const { user, profile } = useAuth();
+
+  // Check if user is a company or service provider who should see service requests
+  const canViewServiceRequests = profile?.account_type === 'company' || 
+    (user && services.some(service => service.user_id === user.id));
 
   const fetchServices = async () => {
     try {
@@ -165,7 +172,7 @@ const Services = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className={`grid w-full ${canViewServiceRequests ? 'grid-cols-5' : 'grid-cols-4'} mb-8`}>
             <TabsTrigger value="legal">
               Legal Services ({categoryCounts.legal})
             </TabsTrigger>
@@ -178,6 +185,11 @@ const Services = () => {
             <TabsTrigger value="education">
               Education ({categoryCounts.education})
             </TabsTrigger>
+            {canViewServiceRequests && (
+              <TabsTrigger value="requests">
+                Service Requests
+              </TabsTrigger>
+            )}
           </TabsList>
           
           {['legal', 'medical', 'financial', 'education'].map((category) => (
@@ -201,6 +213,12 @@ const Services = () => {
               )}
             </TabsContent>
           ))}
+          
+          {canViewServiceRequests && (
+            <TabsContent value="requests">
+              <ServiceRequestsTab searchTerm={searchTerm} />
+            </TabsContent>
+          )}
         </Tabs>
 
         {/* Call to Action */}
