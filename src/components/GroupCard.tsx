@@ -210,33 +210,38 @@ export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCa
               </DialogContent>
             </Dialog>
             
-            <GroupDialog
-              group={group}
-              onGroupSaved={onGroupChanged}
-              mode="edit"
-            />
-            
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Group</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete "{group.name}"? This action cannot be undone and will remove all members.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {/* Only show edit/delete buttons to group author */}
+            {user && group.user_id === user.id && (
+              <>
+                <GroupDialog
+                  group={group}
+                  onGroupSaved={onGroupChanged}
+                  mode="edit"
+                />
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Group</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{group.name}"? This action cannot be undone and will remove all members.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            )}
           </div>
         ) : (
           <Button className="w-full">
