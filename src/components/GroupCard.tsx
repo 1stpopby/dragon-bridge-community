@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,8 +39,37 @@ interface GroupCardProps {
 export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCardProps) {
   const [loading, setLoading] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const [membershipLoading, setMembershipLoading] = useState(false);
   const { toast } = useToast();
   const { user, profile } = useAuth();
+
+  // Check membership status when component mounts or user changes
+  useEffect(() => {
+    if (user) {
+      checkMembership();
+    } else {
+      setIsMember(false);
+    }
+  }, [user, group.id]);
+
+  const checkMembership = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('group_memberships')
+        .select('id')
+        .eq('group_id', group.id)
+        .eq('user_id', user.id)
+        .single();
+
+      setIsMember(!!data);
+    } catch (error) {
+      setIsMember(false);
+    }
+  };
 
   const handleDelete = async () => {
     try {
@@ -74,7 +103,7 @@ export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCa
     if (!user || !profile) return;
 
     try {
-      setLoading(true);
+      setMembershipLoading(true);
       const { error } = await supabase
         .from('group_memberships')
         .insert([{
@@ -99,6 +128,7 @@ export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCa
           description: `Welcome to ${group.name}!`,
         });
         setJoinDialogOpen(false);
+        setIsMember(true);
         onGroupChanged();
       }
     } catch (error) {
@@ -109,7 +139,40 @@ export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCa
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setMembershipLoading(false);
+    }
+  };
+
+  const handleLeaveGroup = async () => {
+    if (!user) return;
+
+    try {
+      setMembershipLoading(true);
+      const { error } = await supabase
+        .from('group_memberships')
+        .delete()
+        .eq('group_id', group.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Left group successfully",
+        description: `You have left ${group.name}.`,
+      });
+
+      setLeaveDialogOpen(false);
+      setIsMember(false);
+      onGroupChanged();
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      toast({
+        title: "Error leaving group",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setMembershipLoading(false);
     }
   };
 
@@ -163,52 +226,81 @@ export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCa
         
         {showActions ? (
           <div className="flex gap-2">
-            <Dialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>
-              <DialogTrigger asChild>
-                {!user || !profile ? (
-                  <Button asChild className="flex-1">
-                    <Link to="/auth" className="flex items-center justify-center gap-2">
-                      <Lock className="h-4 w-4" />
-                      Sign in to Join
-                    </Link>
+            {!user || !profile ? (
+              <Button asChild className="flex-1">
+                <Link to="/auth" className="flex items-center justify-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Sign in to Join
+                </Link>
+              </Button>
+            ) : isMember ? (
+              // Show Leave Group button for members
+              <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="flex-1">
+                    <UserMinus className="h-4 w-4 mr-2" />
+                    Leave Group
                   </Button>
-                ) : (
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Leave {group.name}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to leave this group? You will lose access to group discussions and need to rejoin to participate again.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleLeaveGroup} 
+                      disabled={membershipLoading}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {membershipLoading ? 'Leaving...' : 'Leave Group'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : (
+              // Show Join Group button for non-members
+              <Dialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>
+                <DialogTrigger asChild>
                   <Button className="flex-1">
                     <UserPlus className="h-4 w-4 mr-2" />
                     Join Group
                   </Button>
-                )}
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Join {group.name}</DialogTitle>
-                  <DialogDescription>
-                    Confirm to join this community group as {profile?.display_name}.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="p-4 bg-muted rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Users className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{profile?.display_name}</p>
-                        <p className="text-sm text-muted-foreground">Ready to join {group.name}</p>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Join {group.name}</DialogTitle>
+                    <DialogDescription>
+                      Confirm to join this community group as {profile?.display_name}.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-muted rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Users className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{profile?.display_name}</p>
+                          <p className="text-sm text-muted-foreground">Ready to join {group.name}</p>
+                        </div>
                       </div>
                     </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setJoinDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleJoinGroup} disabled={membershipLoading}>
+                        {membershipLoading ? 'Joining...' : 'Join Group'}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setJoinDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleJoinGroup} disabled={loading}>
-                      {loading ? 'Joining...' : 'Join Group'}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            )}
             
             {/* Only show edit/delete buttons to group author */}
             {user && group.user_id === user.id && (
