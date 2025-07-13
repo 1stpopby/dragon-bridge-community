@@ -17,7 +17,8 @@ import {
   FileText,
   Settings,
   Shield,
-  Bell
+  Bell,
+  Tags
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +32,7 @@ import { AdminGroupsTable } from "@/components/admin/AdminGroupsTable";
 import { AdminResourcesTable } from "@/components/admin/AdminResourcesTable";
 import { AdminUserRolesTable } from "@/components/admin/AdminUserRolesTable";
 import { AdminNotificationsTable } from "@/components/admin/AdminNotificationsTable";
+import { AdminCategoriesTable } from "@/components/admin/AdminCategoriesTable";
 
 const Admin = () => {
   const [stats, setStats] = useState({
@@ -141,9 +143,10 @@ const Admin = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
+          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-11">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="posts">Posts</TabsTrigger>
             <TabsTrigger value="replies">Replies</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
@@ -160,6 +163,10 @@ const Admin = () => {
 
           <TabsContent value="users">
             <AdminUsersTable onDataChange={fetchStats} />
+          </TabsContent>
+
+          <TabsContent value="categories">
+            <AdminCategoriesTable onDataChange={fetchStats} />
           </TabsContent>
 
           <TabsContent value="posts">
