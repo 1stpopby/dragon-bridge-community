@@ -39,7 +39,6 @@ interface GroupCardProps {
 export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCardProps) {
   const [loading, setLoading] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
-  const [memberName, setMemberName] = useState("");
   const { toast } = useToast();
   const { user, profile } = useAuth();
 
@@ -100,7 +99,6 @@ export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCa
           description: `Welcome to ${group.name}!`,
         });
         setJoinDialogOpen(false);
-        setMemberName("");
         onGroupChanged();
       }
     } catch (error) {
@@ -185,23 +183,20 @@ export function GroupCard({ group, onGroupChanged, showActions = true }: GroupCa
                 <DialogHeader>
                   <DialogTitle>Join {group.name}</DialogTitle>
                   <DialogDescription>
-                    Enter your name to join this community group.
+                    Confirm to join this community group as {profile?.display_name}.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="memberName">Your Name</Label>
-                    <Input
-                      id="memberName"
-                      value={memberName}
-                      onChange={(e) => setMemberName(e.target.value)}
-                      placeholder="Enter your full name"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleJoinGroup();
-                        }
-                      }}
-                    />
+                  <div className="p-4 bg-muted rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Users className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{profile?.display_name}</p>
+                        <p className="text-sm text-muted-foreground">Ready to join {group.name}</p>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex justify-end space-x-2">
                     <Button variant="outline" onClick={() => setJoinDialogOpen(false)}>
