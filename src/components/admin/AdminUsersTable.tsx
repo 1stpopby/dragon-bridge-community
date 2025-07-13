@@ -31,7 +31,7 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  Verified
+  ShieldCheck
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -307,7 +307,7 @@ export const AdminUsersTable = ({ onDataChange }: AdminUsersTableProps) => {
                             <span className="font-medium">{user.display_name}</span>
                           )}
                           {user.account_type === 'company' && user.is_verified && (
-                            <Verified className="h-4 w-4 text-green-600" />
+                            <ShieldCheck className="h-4 w-4 text-green-600" />
                           )}
                         </div>
                       </TableCell>
