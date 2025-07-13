@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +21,8 @@ import {
   Users, 
   Star,
   Loader2,
-  Mail
+  Mail,
+  User
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -215,6 +216,14 @@ const CompanyProfile = () => {
                   <Building2 className="h-3 w-3 mr-1" />
                   Company
                 </Badge>
+                {user && user.id === company.user_id && (
+                  <Link to="/feed">
+                    <Button variant="outline" size="sm">
+                      <User className="h-4 w-4 mr-2" />
+                      My Page
+                    </Button>
+                  </Link>
+                )}
               </div>
               
               {averageRating > 0 && (
