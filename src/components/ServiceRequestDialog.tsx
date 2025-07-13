@@ -25,11 +25,15 @@ import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
 
 interface ServiceRequestDialogProps {
-  triggerButton: React.ReactNode;
+  triggerButton?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function ServiceRequestDialog({ triggerButton }: ServiceRequestDialogProps) {
-  const [open, setOpen] = useState(false);
+export function ServiceRequestDialog({ triggerButton, open: controlledOpen, onOpenChange: controlledOnOpenChange }: ServiceRequestDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -145,9 +149,11 @@ ${formData.description}`,
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {triggerButton}
-      </DialogTrigger>
+      {triggerButton && (
+        <DialogTrigger asChild>
+          {triggerButton}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Request a Service</DialogTitle>

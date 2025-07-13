@@ -17,6 +17,7 @@ import { ServiceRequestDialog } from "@/components/ServiceRequestDialog";
 export const UserButton = () => {
   const { user, profile, signOut } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showServiceDialog, setShowServiceDialog] = useState(false);
 
   if (!user || !profile) {
     return (
@@ -113,14 +114,22 @@ export const UserButton = () => {
          
          {/* Service Request for non-company accounts */}
          {profile.account_type !== 'company' && (
-           <ServiceRequestDialog
-             triggerButton={
-               <DropdownMenuItem className="cursor-pointer">
-                 <HelpCircle className="mr-2 h-4 w-4" />
-                 Request Service
-               </DropdownMenuItem>
-             }
-           />
+           <>
+             <DropdownMenuItem 
+               className="cursor-pointer"
+               onClick={(e) => {
+                 e.preventDefault();
+                 setShowServiceDialog(true);
+               }}
+             >
+               <HelpCircle className="mr-2 h-4 w-4" />
+               Request Service
+             </DropdownMenuItem>
+             <ServiceRequestDialog 
+               open={showServiceDialog}
+               onOpenChange={setShowServiceDialog}
+             />
+           </>
          )}
          
          <DropdownMenuSeparator />
