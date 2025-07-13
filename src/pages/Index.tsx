@@ -157,7 +157,7 @@ const Index = () => {
               <Button 
                 type="submit" 
                 className="flex-1" 
-                disabled={isSubmitting || !email || !password}
+                disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
