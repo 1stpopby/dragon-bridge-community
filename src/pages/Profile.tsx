@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Save } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { User, Save, Camera, Upload } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +17,8 @@ const Profile = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     display_name: profile?.display_name || '',
     bio: profile?.bio || '',
@@ -23,7 +26,8 @@ const Profile = () => {
     phone: profile?.phone || '',
     company_name: profile?.company_name || '',
     contact_email: profile?.contact_email || '',
-    account_type: profile?.account_type || 'user'
+    account_type: profile?.account_type || 'user',
+    avatar_url: profile?.avatar_url || ''
   });
 
   useEffect(() => {
@@ -35,10 +39,78 @@ const Profile = () => {
         phone: profile.phone || '',
         company_name: profile.company_name || '',
         contact_email: profile.contact_email || '',
-        account_type: profile.account_type || 'user'
+        account_type: profile.account_type || 'user',
+        avatar_url: profile.avatar_url || ''
       });
     }
   }, [profile]);
+
+  const uploadAvatar = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    return data.publicUrl;
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const avatarUrl = await uploadAvatar(file);
+      setFormData(prev => ({ ...prev, avatar_url: avatarUrl }));
+      
+      // Update profile immediately
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: avatarUrl })
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Avatar updated",
+        description: "Your profile picture has been uploaded successfully.",
+      });
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload avatar. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,13 +149,48 @@ const Profile = () => {
       <Navigation />
       
       <div className="max-w-4xl mx-auto py-8 px-4">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-            <User className="h-6 w-6 text-primary-foreground" />
+        <div className="flex items-center gap-6 mb-8">
+          <div className="relative">
+            <Avatar className="w-20 h-20 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+              <AvatarImage src={formData.avatar_url} alt="Profile picture" />
+              <AvatarFallback className="text-lg">
+                {formData.display_name ? formData.display_name.charAt(0).toUpperCase() : <User className="h-8 w-8" />}
+              </AvatarFallback>
+            </Avatar>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="absolute -bottom-2 -right-2 rounded-full h-8 w-8 p-0"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingAvatar}
+            >
+              {uploadingAvatar ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-foreground" />
+              ) : (
+                <Camera className="h-4 w-4" />
+              )}
+            </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleAvatarChange}
+              accept="image/*"
+              className="hidden"
+            />
           </div>
           <div>
             <h1 className="text-3xl font-bold">Profile Settings</h1>
             <p className="text-muted-foreground">Manage your account and preferences</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingAvatar}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {uploadingAvatar ? "Uploading..." : "Change Photo"}
+            </Button>
           </div>
         </div>
 
