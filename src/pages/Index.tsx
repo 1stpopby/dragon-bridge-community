@@ -49,6 +49,7 @@ const Index = () => {
       const { error } = await signIn(email, password);
       
       if (error) {
+        console.error('Login error:', error);
         if (error.message.includes('Invalid login credentials')) {
           toast({
             title: "Login failed",
@@ -62,30 +63,24 @@ const Index = () => {
             variant: "destructive",
           });
         }
-        setIsSubmitting(false);
       } else {
-        // Success - show toast but keep loading until redirect happens
+        console.log('Login successful, waiting for auth state...');
         toast({
           title: "Login successful",
           description: "Redirecting to admin panel...",
         });
         
-        // Wait a bit for auth state to update, then close dialog
-        setTimeout(() => {
-          setShowAdminLogin(false);
-          setIsSubmitting(false);
-          // Clear form
-          setEmail("");
-          setPassword("");
-        }, 1000);
+        // Don't close dialog immediately, let the auth state change handle the redirect
+        // The useEffect with the Navigate component will handle the redirect
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Unexpected login error:', error);
       toast({
         title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+    } finally {
       setIsSubmitting(false);
     }
   };
