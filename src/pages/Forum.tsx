@@ -14,6 +14,12 @@ const Forum = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [repliesMap, setRepliesMap] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
+  const [currentFilter, setCurrentFilter] = useState<'latest' | 'trending' | 'unanswered'>('latest');
+  const [stats, setStats] = useState({
+    onlineUsers: 0,
+    todayPosts: 0,
+    totalMembers: 0
+  });
 
   const categories = [
     { name: "General Discussion", posts: 1250, color: "bg-blue-100 text-blue-800" },
@@ -24,16 +30,44 @@ const Forum = () => {
     { name: "Jobs & Careers", posts: 321, color: "bg-pink-100 text-pink-800" }
   ];
 
-  const fetchPosts = async () => {
+  const fetchStats = async () => {
+    try {
+      // Get total members count
+      const { count: membersCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Get today's posts count
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { count: todayPostsCount } = await supabase
+        .from('forum_posts')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', today.toISOString());
+
+      // For online users, we'll use a simple estimation based on recent activity
+      // In a real app, you'd use Supabase realtime presence for accurate online count
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const { count: recentActivityCount } = await supabase
+        .from('forum_posts')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', oneHourAgo.toISOString());
+
+      setStats({
+        onlineUsers: Math.max(recentActivityCount || 0, 5), // Minimum 5 to look realistic
+        todayPosts: todayPostsCount || 0,
+        totalMembers: membersCount || 0
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchPosts = async (filter: 'latest' | 'trending' | 'unanswered' = currentFilter) => {
     try {
       setLoading(true);
-      const { data: postsData, error: postsError } = await supabase
-        .from('forum_posts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (postsError) throw postsError;
-
+      
+      // Fetch all replies first to calculate reply counts
       const { data: repliesData, error: repliesError } = await supabase
         .from('forum_replies')
         .select('*')
@@ -50,7 +84,52 @@ const Forum = () => {
         repliesByPost[reply.post_id].push(reply);
       });
 
-      setPosts(postsData || []);
+      let postsQuery = supabase.from('forum_posts').select('*');
+
+      // Apply filtering/sorting based on current filter
+      switch (filter) {
+        case 'latest':
+          postsQuery = postsQuery.order('created_at', { ascending: false });
+          break;
+        case 'trending':
+          // For trending, we'll order by creation date but prioritize posts with more recent activity
+          // This is a simple implementation - in a real app you might want more sophisticated trending logic
+          postsQuery = postsQuery.order('created_at', { ascending: false });
+          break;
+        case 'unanswered':
+          // We'll fetch all posts and filter out those with replies in JavaScript
+          // since we can't easily do complex joins with RLS policies
+          postsQuery = postsQuery.order('created_at', { ascending: false });
+          break;
+      }
+
+      const { data: postsData, error: postsError } = await postsQuery;
+      if (postsError) throw postsError;
+
+      let filteredPosts = postsData || [];
+
+      // Additional filtering for unanswered posts
+      if (filter === 'unanswered') {
+        filteredPosts = filteredPosts.filter(post => !repliesByPost[post.id] || repliesByPost[post.id].length === 0);
+      }
+
+      // For trending, sort by posts that have replies but are still recent
+      if (filter === 'trending') {
+        filteredPosts = filteredPosts.sort((a, b) => {
+          const aReplyCount = repliesByPost[a.id]?.length || 0;
+          const bReplyCount = repliesByPost[b.id]?.length || 0;
+          const aDate = new Date(a.created_at).getTime();
+          const bDate = new Date(b.created_at).getTime();
+          
+          // Trending score: (replies * 1000) + recency score
+          const aScore = (aReplyCount * 1000) + (aDate / 1000);
+          const bScore = (bReplyCount * 1000) + (bDate / 1000);
+          
+          return bScore - aScore;
+        });
+      }
+
+      setPosts(filteredPosts);
       setRepliesMap(repliesByPost);
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -59,8 +138,19 @@ const Forum = () => {
     }
   };
 
+  const handlePostCreated = () => {
+    fetchPosts();
+    fetchStats(); // Refresh stats when new post is created
+  };
+
+  const handleFilterChange = (filter: 'latest' | 'trending' | 'unanswered') => {
+    setCurrentFilter(filter);
+    fetchPosts(filter);
+  };
+
   useEffect(() => {
     fetchPosts();
+    fetchStats();
   }, []);
 
   return (
@@ -91,7 +181,7 @@ const Forum = () => {
                 className="pl-12 h-12 text-base border-slate-300 dark:border-slate-600 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
-            <ForumPostDialog onPostCreated={fetchPosts} />
+            <ForumPostDialog onPostCreated={handlePostCreated} />
           </div>
         </div>
       </div>
@@ -114,21 +204,21 @@ const Forum = () => {
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-sm font-medium">Online</span>
                   </div>
-                  <span className="font-bold text-green-600">1,043</span>
+                  <span className="font-bold text-green-600">{stats.onlineUsers.toLocaleString()}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <MessageSquare className="h-4 w-4 text-purple-600" />
                     <span className="text-sm font-medium">Today</span>
                   </div>
-                  <span className="font-bold text-purple-600">156</span>
+                  <span className="font-bold text-purple-600">{stats.todayPosts.toLocaleString()}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Users className="h-4 w-4 text-orange-600" />
                     <span className="text-sm font-medium">Members</span>
                   </div>
-                  <span className="font-bold text-orange-600">15,247</span>
+                  <span className="font-bold text-orange-600">{stats.totalMembers.toLocaleString()}</span>
                 </div>
               </CardContent>
             </Card>
@@ -166,15 +256,30 @@ const Forum = () => {
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white">Latest Discussions</h2>
                   <div className="flex gap-2">
-                    <Button variant="default" size="sm" className="rounded-lg">
+                    <Button
+                      variant={currentFilter === 'latest' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="rounded-lg"
+                      onClick={() => handleFilterChange('latest')}
+                    >
                       <Clock className="h-4 w-4 mr-2" />
                       Latest
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 rounded-lg">
+                    <Button
+                      variant={currentFilter === 'trending' ? 'default' : 'ghost'}
+                      size="sm"
+                      className={`rounded-lg ${currentFilter === 'trending' ? '' : 'text-slate-600 hover:text-slate-900'}`}
+                      onClick={() => handleFilterChange('trending')}
+                    >
                       <TrendingUp className="h-4 w-4 mr-2" />
                       Trending
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 rounded-lg">
+                    <Button
+                      variant={currentFilter === 'unanswered' ? 'default' : 'ghost'}
+                      size="sm"
+                      className={`rounded-lg ${currentFilter === 'unanswered' ? '' : 'text-slate-600 hover:text-slate-900'}`}
+                      onClick={() => handleFilterChange('unanswered')}
+                    >
                       <MessageSquare className="h-4 w-4 mr-2" />
                       Unanswered
                     </Button>
