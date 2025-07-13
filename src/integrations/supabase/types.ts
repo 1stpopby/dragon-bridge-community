@@ -223,6 +223,50 @@ export type Database = {
           },
         ]
       }
+      company_verification_requests: {
+        Row: {
+          admin_notes: string | null
+          company_id: string
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_verification_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_registrations: {
         Row: {
           attendee_email: string | null
@@ -870,10 +914,14 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          is_verified: boolean | null
           location: string | null
           phone: string | null
           updated_at: string
           user_id: string
+          verification_notes: string | null
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           account_type: string
@@ -892,10 +940,14 @@ export type Database = {
           created_at?: string
           display_name: string
           id?: string
+          is_verified?: boolean | null
           location?: string | null
           phone?: string | null
           updated_at?: string
           user_id: string
+          verification_notes?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           account_type?: string
@@ -914,10 +966,14 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          is_verified?: boolean | null
           location?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string
+          verification_notes?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }
