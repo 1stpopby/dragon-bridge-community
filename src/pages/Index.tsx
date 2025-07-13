@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
@@ -23,6 +23,18 @@ const Index = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signIn, user, isAdmin, loading } = useAdminAuth();
   const { toast } = useToast();
+
+  // Secret key combination to show admin login (Ctrl+Shift+A)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        setShowAdminLogin(true);
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Redirect if already authenticated as admin
   if (!loading && user && isAdmin) {
@@ -68,18 +80,6 @@ const Index = () => {
       setIsSubmitting(false);
     }
   };
-
-  // Secret key combination to show admin login (Ctrl+Shift+A)
-  useState(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-        setShowAdminLogin(true);
-      }
-    };
-    
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  });
 
   return (
     <div className="min-h-screen bg-background">
