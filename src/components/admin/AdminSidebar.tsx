@@ -33,7 +33,8 @@ import {
   Activity,
   BarChart3,
   Package,
-  Globe
+  Globe,
+  Megaphone
 } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -115,6 +116,12 @@ const menuGroups = [
   {
     label: "Communication",
     items: [
+      {
+        title: "Announcements",
+        value: "announcements",
+        icon: Megaphone,
+        description: "Schedule announcements"
+      },
       {
         title: "Forum Posts",
         value: "posts",

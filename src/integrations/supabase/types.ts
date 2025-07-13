@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          notification_sent: boolean | null
+          priority: string
+          published_at: string | null
+          status: string
+          target_audience: string[] | null
+          title: string
+          updated_at: string
+          view_count: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          notification_sent?: boolean | null
+          priority?: string
+          published_at?: string | null
+          status?: string
+          target_audience?: string[] | null
+          title: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          notification_sent?: boolean | null
+          priority?: string
+          published_at?: string | null
+          status?: string
+          target_audience?: string[] | null
+          title?: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           created_at: string

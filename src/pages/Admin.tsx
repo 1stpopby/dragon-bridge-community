@@ -13,6 +13,7 @@ import { AdminNotificationsTable } from "@/components/admin/AdminNotificationsTa
 import { AdminUserRolesTable } from "@/components/admin/AdminUserRolesTable";
 import { AdminCategoriesTable } from "@/components/admin/AdminCategoriesTable";
 import { AdminSettingsTable } from "@/components/admin/AdminSettingsTable";
+import { AdminAnnouncementsTable } from "@/components/admin/AdminAnnouncementsTable";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -132,6 +133,8 @@ const Admin = () => {
         return <AdminPostsTable onDataChange={handleDataChange} />;
       case "replies":
         return <AdminRepliesTable onDataChange={handleDataChange} />;
+      case "announcements":
+        return <AdminAnnouncementsTable onDataChange={handleDataChange} />;
       case "notifications":
         return <AdminNotificationsTable onDataChange={handleDataChange} />;
       case "roles":

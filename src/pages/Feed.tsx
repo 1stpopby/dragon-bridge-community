@@ -6,6 +6,7 @@ import { Navigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import CreatePost from "@/components/CreatePost";
 import PostCard from "@/components/PostCard";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { Loader2 } from "lucide-react";
 
 interface Post {
@@ -96,6 +97,7 @@ const Feed = () => {
       
       <div className="max-w-2xl mx-auto py-8 px-4">
         <div className="space-y-6">
+          <AnnouncementBanner />
           <CreatePost onPostCreated={handlePostCreated} />
           
           {loading ? (

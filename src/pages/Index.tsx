@@ -6,6 +6,7 @@ import CommunityStats from "@/components/CommunityStats";
 import RecentDiscussions from "@/components/RecentDiscussions";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import Footer from "@/components/Footer";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,6 +90,12 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <HeroSection />
+      
+      {/* Announcements Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <AnnouncementBanner />
+      </div>
+      
       <CommunityStats />
       <RecentDiscussions />
       <UpcomingEvents />
