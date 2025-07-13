@@ -161,8 +161,8 @@ const Forum = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg border-0 overflow-hidden">
-              <div className="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+            <div className="bg-transparent rounded-xl overflow-hidden">
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-t-xl px-6 py-4 mb-6 shadow-sm">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white">Latest Discussions</h2>
                   <div className="flex gap-2">
