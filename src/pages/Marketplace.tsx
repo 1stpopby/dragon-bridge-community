@@ -220,49 +220,6 @@ const Marketplace = () => {
             great bargains, and connect with fellow members.
           </p>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12">
-            <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm hover-scale">
-              <CardContent className="p-6 text-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mx-auto mb-3">
-                  <Package className="h-6 w-6 text-primary" />
-                </div>
-                <div className="text-2xl font-bold text-primary mb-1">{totalItems}</div>
-                <div className="text-sm text-muted-foreground">Total Items</div>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm hover-scale">
-              <CardContent className="p-6 text-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mx-auto mb-3">
-                  <TrendingUp className="h-6 w-6 text-green-600" />
-                </div>
-                <div className="text-2xl font-bold text-green-600 mb-1">{filteredItems.length}</div>
-                <div className="text-sm text-muted-foreground">Available</div>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm hover-scale">
-              <CardContent className="p-6 text-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-3">
-                  <Users className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="text-2xl font-bold text-blue-600 mb-1">{uniqueSellers}</div>
-                <div className="text-sm text-muted-foreground">Active Sellers</div>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm hover-scale">
-              <CardContent className="p-6 text-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-full mx-auto mb-3">
-                  <span className="text-lg font-bold text-purple-600">£</span>
-                </div>
-                <div className="text-2xl font-bold text-purple-600 mb-1">{formatPrice(averagePrice)}</div>
-                <div className="text-sm text-muted-foreground">Avg. Price</div>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Search Section */}
           <div className="max-w-4xl mx-auto">
             <div className="bg-background/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border">
