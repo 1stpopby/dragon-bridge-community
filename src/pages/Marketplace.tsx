@@ -23,12 +23,8 @@ const Marketplace = () => {
   const [locationFilter, setLocationFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [conditionFilter, setConditionFilter] = useState("all");
+  const [categories, setCategories] = useState<any[]>([]);
   const { toast } = useToast();
-
-  const categories = [
-    "Electronics", "Furniture", "Clothing", "Books", 
-    "Kitchen", "Sports", "Tools", "Other"
-  ];
 
   const conditions = [
     "new", "like_new", "good", "fair", "poor"
@@ -57,8 +53,36 @@ const Marketplace = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('type', 'marketplace')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Fallback to hardcoded categories
+      setCategories([
+        { name: "Electronics" },
+        { name: "Furniture" },
+        { name: "Clothing" },
+        { name: "Books" },
+        { name: "Kitchen" },
+        { name: "Sports" },
+        { name: "Tools" },
+        { name: "Other" }
+      ]);
+    }
+  };
+
   useEffect(() => {
     fetchItems();
+    fetchCategories();
   }, []);
 
   const filterItems = (itemList: any[], searchTerm: string, locationTerm: string, category: string, condition: string) => {
@@ -168,7 +192,9 @@ const Marketplace = () => {
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
                     {categories.map(category => (
-                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                      <SelectItem key={category.name || category} value={category.name || category}>
+                        {category.name || category}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

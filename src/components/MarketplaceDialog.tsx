@@ -36,6 +36,7 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(item?.image_url || '');
+  const [categories, setCategories] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user, profile } = useAuth();
@@ -54,6 +55,34 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
     image_url: item?.image_url || ''
   });
 
+  // Fetch categories from database
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('type', 'marketplace')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Fallback to hardcoded categories
+      setCategories([
+        { name: "Electronics" },
+        { name: "Furniture" },
+        { name: "Clothing" },
+        { name: "Books" },
+        { name: "Kitchen" },
+        { name: "Sports" },
+        { name: "Tools" },
+        { name: "Other" }
+      ]);
+    }
+  };
+
   // Update form data when profile changes (for create mode)
   useEffect(() => {
     if (mode === 'create' && profile) {
@@ -65,6 +94,11 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
       }));
     }
   }, [profile, mode]);
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const uploadImage = async (file: File): Promise<string> => {
     const fileExt = file.name.split('.').pop();
@@ -293,14 +327,11 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Electronics">Electronics</SelectItem>
-                  <SelectItem value="Furniture">Furniture</SelectItem>
-                  <SelectItem value="Clothing">Clothing</SelectItem>
-                  <SelectItem value="Books">Books</SelectItem>
-                  <SelectItem value="Kitchen">Kitchen</SelectItem>
-                  <SelectItem value="Sports">Sports</SelectItem>
-                  <SelectItem value="Tools">Tools</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  {categories.map(category => (
+                    <SelectItem key={category.name || category} value={category.name || category}>
+                      {category.name || category}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
