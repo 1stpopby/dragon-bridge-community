@@ -51,7 +51,9 @@ import {
   Calendar,
   Users,
   FileText,
-  Palette
+  Palette,
+  MessageSquare,
+  Wrench
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -60,7 +62,7 @@ interface Category {
   id: string;
   name: string;
   description: string;
-  type: 'marketplace' | 'events' | 'groups' | 'resources';
+  type: 'marketplace' | 'events' | 'groups' | 'resources' | 'forum' | 'services';
   icon: string;
   color: string;
   is_active: boolean;
@@ -78,12 +80,15 @@ const categoryTypes = [
   { value: 'events', label: 'Events', icon: Calendar },
   { value: 'groups', label: 'Groups', icon: Users },
   { value: 'resources', label: 'Resources', icon: FileText },
+  { value: 'forum', label: 'Forum', icon: MessageSquare },
+  { value: 'services', label: 'Services', icon: Wrench },
 ];
 
 const iconOptions = [
   'package', 'smartphone', 'armchair', 'book', 'shirt', 'calendar', 'drama', 
   'graduation-cap', 'users', 'briefcase', 'heart', 'languages', 'crown', 
-  'palette', 'dumbbell', 'file-text', 'book-open', 'copy', 'gavel'
+  'palette', 'dumbbell', 'file-text', 'book-open', 'copy', 'gavel',
+  'message-circle', 'message-square', 'heart-handshake', 'help-circle'
 ];
 
 const colorOptions = [

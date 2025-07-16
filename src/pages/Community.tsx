@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, MapPin, Award, MessageSquare, Search, Plus } from "lucide-react";
+import { Users, MapPin, Award, MessageSquare, Search, Plus, Calendar, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { GroupDialog } from "@/components/GroupDialog";
 import { GroupCard } from "@/components/GroupCard";
@@ -17,31 +17,16 @@ const Community = () => {
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [eventsThisMonth, setEventsThisMonth] = useState(0);
   const { toast } = useToast();
 
-  const featuredMembers = [
-    {
-      name: "Dr. Wei Chen",
-      role: "Community Leader",
-      location: "London",
-      contributions: "Organized 15+ healthcare workshops",
-      avatar: "/placeholder.svg"
-    },
-    {
-      name: "Li Zhang",
-      role: "Event Coordinator", 
-      location: "Manchester",
-      contributions: "Led 20+ cultural celebrations",
-      avatar: "/placeholder.svg"
-    },
-    {
-      name: "Alex Wang",
-      role: "Youth Ambassador",
-      location: "Edinburgh", 
-      contributions: "Mentored 50+ students",
-      avatar: "/placeholder.svg"
-    }
-  ];
+  // Remove the fake featuredMembers array and replace with real community highlights
+  const [communityHighlights, setCommunityHighlights] = useState({
+    activeGroupsCount: 0,
+    totalMembersCount: 0,
+    recentEventsCount: 0,
+    topCategories: [] as string[]
+  });
 
   const fetchGroups = async () => {
     try {
@@ -65,9 +50,77 @@ const Community = () => {
     }
   };
 
+  const fetchEventsThisMonth = async () => {
+    try {
+      // Get the first and last day of current month
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      const { count: eventsCount } = await supabase
+        .from('events')
+        .select('*', { count: 'exact', head: true })
+        .gte('date', firstDay.toISOString().split('T')[0])
+        .lte('date', lastDay.toISOString().split('T')[0]);
+
+      setEventsThisMonth(eventsCount || 0);
+    } catch (error) {
+      console.error('Error fetching events count:', error);
+      setEventsThisMonth(0);
+    }
+  };
+
+  const fetchCommunityHighlights = async () => {
+    try {
+      // Get active groups count
+      const activeGroupsCount = groups.length;
+      
+      // Get total members count
+      const totalMembersCount = groups.reduce((sum, group) => sum + (group.member_count || 0), 0);
+      
+      // Get recent events count (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const { count: recentEventsCount } = await supabase
+        .from('events')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', thirtyDaysAgo.toISOString());
+      
+      // Get top categories
+      const categoryCount: { [key: string]: number } = {};
+      groups.forEach(group => {
+        if (group.category) {
+          categoryCount[group.category] = (categoryCount[group.category] || 0) + 1;
+        }
+      });
+      
+      const topCategories = Object.entries(categoryCount)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 3)
+        .map(([category]) => category);
+
+      setCommunityHighlights({
+        activeGroupsCount,
+        totalMembersCount,
+        recentEventsCount: recentEventsCount || 0,
+        topCategories
+      });
+    } catch (error) {
+      console.error('Error fetching community highlights:', error);
+    }
+  };
+
   useEffect(() => {
     fetchGroups();
+    fetchEventsThisMonth();
   }, []);
+
+  useEffect(() => {
+    if (groups.length > 0) {
+      fetchCommunityHighlights();
+    }
+  }, [groups]);
 
   const filterGroups = (groupList: any[], searchTerm: string) => {
     if (!searchTerm) return groupList;
@@ -113,7 +166,7 @@ const Community = () => {
               <div className="text-sm text-muted-foreground">Local Groups</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">156</div>
+              <div className="text-3xl font-bold text-primary">{eventsThisMonth}</div>
               <div className="text-sm text-muted-foreground">Events This Month</div>
             </div>
             <div className="text-center">
@@ -172,31 +225,71 @@ const Community = () => {
           </TabsContent>
 
           <TabsContent value="leaders">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {featuredMembers.map((member, index) => (
-                <Card key={index} className="border-border text-center">
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold mb-2">Community Highlights</h3>
+                <p className="text-muted-foreground">
+                  Discover what makes our community special across the UK
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <Card className="border-border text-center">
                   <CardContent className="pt-6">
-                    <Avatar className="w-20 h-20 mx-auto mb-4">
-                      <AvatarImage src={member.avatar} alt={member.name} />
-                      <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <h3 className="text-lg font-semibold mb-1">{member.name}</h3>
-                    <Badge variant="outline" className="mb-2">{member.role}</Badge>
-                    <div className="flex items-center justify-center text-sm text-muted-foreground mb-3">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      {member.location}
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Users className="h-8 w-8 text-primary" />
                     </div>
-                    <div className="flex items-center justify-center text-sm text-muted-foreground mb-4">
-                      <Award className="h-4 w-4 mr-1" />
-                      {member.contributions}
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Connect
-                    </Button>
+                    <h3 className="text-2xl font-bold mb-2">{communityHighlights.activeGroupsCount}</h3>
+                    <p className="text-muted-foreground">Active Groups</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Bringing together {communityHighlights.totalMembersCount} members
+                    </p>
                   </CardContent>
                 </Card>
-              ))}
+
+                <Card className="border-border text-center">
+                  <CardContent className="pt-6">
+                    <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Calendar className="h-8 w-8 text-green-500" />
+                    </div>
+                    <h3 className="text-2xl font-bold mb-2">{communityHighlights.recentEventsCount}</h3>
+                    <p className="text-muted-foreground">Recent Events</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      In the last 30 days
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border text-center">
+                  <CardContent className="pt-6">
+                    <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <TrendingUp className="h-8 w-8 text-purple-500" />
+                    </div>
+                    <h3 className="text-2xl font-bold mb-2">{communityHighlights.topCategories.length}</h3>
+                    <p className="text-muted-foreground">Top Categories</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {communityHighlights.topCategories.join(', ') || 'Various interests'}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="bg-muted/30 rounded-lg p-6 text-center">
+                <h4 className="text-lg font-semibold mb-2">Want to become a community leader?</h4>
+                <p className="text-muted-foreground mb-4">
+                  Start by creating a group, organizing events, or helping others in our community.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Group
+                  </Button>
+                  <Button variant="outline">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Join Discussion
+                  </Button>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>

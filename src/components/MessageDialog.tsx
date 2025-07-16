@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface Message {
   id: string;
@@ -42,18 +43,17 @@ interface MessageDialogProps {
 
 export function MessageDialog({ open, onOpenChange, conversationPartnerId, initialMessage }: MessageDialogProps) {
   const [conversation, setConversation] = useState<Message[]>([]);
-  const [replySubject, setReplySubject] = useState('');
   const [replyContent, setReplyContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [partnerProfile, setPartnerProfile] = useState<any>(null);
   const { toast } = useToast();
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (open && conversationPartnerId) {
       fetchConversation();
       fetchPartnerProfile();
-      setReplySubject(`Re: ${initialMessage.subject}`);
 
       // Set up real-time subscription for new messages
       const channel = supabase
@@ -135,7 +135,7 @@ export function MessageDialog({ open, onOpenChange, conversationPartnerId, initi
 
   const handleSendReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !replyContent.trim() || !replySubject.trim()) return;
+    if (!user || !replyContent.trim()) return;
 
     setLoading(true);
     try {
@@ -144,7 +144,7 @@ export function MessageDialog({ open, onOpenChange, conversationPartnerId, initi
         .insert({
           sender_id: user.id,
           recipient_id: conversationPartnerId,
-          subject: replySubject,
+          subject: `Reply from ${profile?.display_name || user.email?.split('@')[0] || 'User'}`,
           content: replyContent,
         });
 
@@ -203,19 +203,27 @@ export function MessageDialog({ open, onOpenChange, conversationPartnerId, initi
                         : 'bg-muted'
                     }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={
-                            isFromCurrentUser 
-                              ? profile?.avatar_url 
-                              : partnerProfile?.avatar_url
-                          } />
-                          <AvatarFallback className="text-xs">
-                            {isFromCurrentUser 
-                              ? profile?.display_name?.[0] 
-                              : partnerProfile?.display_name?.[0] || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium">
+                        <div 
+                          className={`${!isFromCurrentUser ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                          onClick={() => !isFromCurrentUser && navigate(`/user/${message.sender_id}`)}
+                        >
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={
+                              isFromCurrentUser 
+                                ? profile?.avatar_url 
+                                : partnerProfile?.avatar_url
+                            } />
+                            <AvatarFallback className="text-xs">
+                              {isFromCurrentUser 
+                                ? profile?.display_name?.[0] 
+                                : partnerProfile?.display_name?.[0] || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                        <span 
+                          className={`text-sm font-medium ${!isFromCurrentUser ? 'hover:underline cursor-pointer' : ''}`}
+                          onClick={() => !isFromCurrentUser && navigate(`/user/${message.sender_id}`)}
+                        >
                           {isFromCurrentUser 
                             ? 'You' 
                             : partnerProfile?.display_name || 'User'}
@@ -240,23 +248,13 @@ export function MessageDialog({ open, onOpenChange, conversationPartnerId, initi
           {/* Reply Form */}
           <form onSubmit={handleSendReply} className="space-y-3">
             <div>
-              <Label htmlFor="reply-subject">Subject</Label>
-              <Input
-                id="reply-subject"
-                value={replySubject}
-                onChange={(e) => setReplySubject(e.target.value)}
-                placeholder="Message subject"
-                required
-              />
-            </div>
-            <div>
               <Label htmlFor="reply-content">Your Reply</Label>
               <Textarea
                 id="reply-content"
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
                 placeholder="Type your reply..."
-                rows={3}
+                rows={4}
                 required
               />
             </div>

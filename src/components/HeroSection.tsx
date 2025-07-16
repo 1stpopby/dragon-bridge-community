@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare, Users, Calendar, Globe } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   const features = [
@@ -40,11 +41,11 @@ const HeroSection = () => {
             across the UK sharing experiences, offering support, and celebrating our culture.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8 py-3">
-              Join Our Community
+            <Button size="lg" className="text-lg px-8 py-3" asChild>
+              <Link to="/auth">Join Our Community</Link>
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-3">
-              Explore Forum
+            <Button variant="outline" size="lg" className="text-lg px-8 py-3" asChild>
+              <Link to="/forum">Explore Forum</Link>
             </Button>
           </div>
         </div>

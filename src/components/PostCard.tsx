@@ -7,14 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import CompanyLink from "@/components/CompanyLink";
-import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Send } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Send, Share2, Bookmark, Eye } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface Comment {
   id: string;
@@ -42,19 +45,23 @@ interface PostCardProps {
   post: Post;
   onUpdate: (post: Post) => void;
   onDelete: (postId: string) => void;
+  onSave?: (post: Post) => void;
+  isSaved?: boolean;
 }
 
-const PostCard = ({ post, onUpdate, onDelete }: PostCardProps) => {
+const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false }: PostCardProps) => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(post.user_liked || false);
-  const [likesCount, setLikesCount] = useState(post.likes_count);
+  const [likesCount, setLikesCount] = useState(post.likes_count || 0);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isCommenting, setIsCommenting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
+  const [likeAnimation, setLikeAnimation] = useState(false);
 
   const fetchComments = async () => {
     try {
@@ -106,6 +113,8 @@ const PostCard = ({ post, onUpdate, onDelete }: PostCardProps) => {
         
         setIsLiked(true);
         setLikesCount(prev => prev + 1);
+        setLikeAnimation(true);
+        setTimeout(() => setLikeAnimation(false), 300);
       }
     } catch (error) {
       console.error('Error updating like:', error);
@@ -212,6 +221,27 @@ const PostCard = ({ post, onUpdate, onDelete }: PostCardProps) => {
     }
   };
 
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Post by ${post.author_name}`,
+          text: post.content,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.log('Share cancelled');
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied",
+        description: "Post link copied to clipboard.",
+      });
+    }
+  };
+
   const initials = post.author_name
     ? post.author_name.split(' ').map(n => n[0]).join('').toUpperCase()
     : '?';
@@ -220,164 +250,253 @@ const PostCard = ({ post, onUpdate, onDelete }: PostCardProps) => {
     ? profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase()
     : user?.email?.[0]?.toUpperCase() || '?';
 
+  const isRecent = new Date(post.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
+
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={post.author_avatar || undefined} alt={post.author_name} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <CompanyLink 
-                authorName={post.author_name} 
-                userId={post.user_id}
-                className="font-medium"
-              />
-              <p className="text-sm text-muted-foreground">
-                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-              </p>
+    <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-card/50 backdrop-blur-sm overflow-hidden group">
+      <CardContent className="p-0">
+        {/* Post Header */}
+        <div className="p-6 pb-4">
+          <div className="flex items-start justify-between">
+            <div className="flex gap-3">
+              <div 
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => navigate(`/user/${post.user_id}`)}
+              >
+                <Avatar className="h-12 w-12 ring-2 ring-primary/10 transition-all group-hover:ring-primary/20">
+                  <AvatarImage src={post.author_avatar || undefined} alt={post.author_name} />
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-sm font-semibold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <CompanyLink 
+                    authorName={post.author_name} 
+                    userId={post.user_id}
+                    className="font-semibold text-foreground hover:text-primary transition-colors"
+                  />
+                  {isRecent && (
+                    <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                      New
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
+                  <span>•</span>
+                  <div className="flex items-center gap-1">
+                    <Eye className="h-3 w-3" />
+                    <span className="text-xs">Public</span>
+                  </div>
+                </div>
+              </div>
             </div>
+            
+            {user?.id === post.user_id && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50">
+                  <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                    <Edit3 className="h-4 w-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
-          
-          {user?.id === post.user_id && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreHorizontal className="h-4 w-4" />
+        </div>
+
+        {/* Post Content */}
+        <div className="px-6">
+          {isEditing ? (
+            <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
+              <Textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="min-h-[80px] resize-none border-0 bg-background/50"
+                placeholder="Share your thoughts..."
+              />
+              <div className="flex gap-2">
+                <Button onClick={handleEdit} size="sm" className="gap-2">
+                  <Send className="h-4 w-4" />
+                  Save
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50">
-                <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                <Button onClick={() => setIsEditing(false)} variant="outline" size="sm">
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
+                {post.content}
+              </p>
+              
+              {post.image_url && (
+                <div className="rounded-xl overflow-hidden bg-muted/20">
+                  <img
+                    src={post.image_url}
+                    alt="Post image"
+                    className="w-full max-h-96 object-cover transition-transform hover:scale-105 duration-500"
+                  />
+                </div>
+              )}
+            </div>
           )}
         </div>
 
-        {isEditing ? (
-          <div className="space-y-4">
-            <Textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              className="min-h-[80px] resize-none"
-            />
-            <div className="flex gap-2">
-              <Button onClick={handleEdit} size="sm">
-                Save
+        {/* Post Actions */}
+        <div className="px-6 py-4 mt-4">
+          <Separator className="mb-4" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLike}
+                className={`gap-2 transition-all duration-200 ${
+                  isLiked 
+                    ? 'text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100' 
+                    : 'hover:text-red-500 hover:bg-red-50'
+                } ${likeAnimation ? 'scale-110' : ''}`}
+              >
+                <Heart className={`h-4 w-4 transition-all ${isLiked ? 'fill-current scale-110' : ''}`} />
+                <span className="font-medium">{likesCount}</span>
               </Button>
-              <Button onClick={() => setIsEditing(false)} variant="outline" size="sm">
-                Cancel
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowComments(!showComments)}
+                className="gap-2 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span className="font-medium">{post.comments_count}</span>
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+                className="gap-2 hover:text-green-500 hover:bg-green-50 transition-colors"
+              >
+                <Share2 className="h-4 w-4" />
+                <span className="font-medium">Share</span>
               </Button>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
-            
-            {post.image_url && (
-              <img
-                src={post.image_url}
-                alt="Post image"
-                className="w-full max-h-96 object-cover rounded-lg"
-              />
-            )}
-          </div>
-        )}
 
-        <div className="flex items-center justify-between pt-4 border-t mt-4">
-          <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleLike}
-              className={`gap-2 ${isLiked ? 'text-red-500 hover:text-red-600' : ''}`}
+              onClick={() => onSave?.(post)}
+              className={`transition-all ${
+                isSaved 
+                  ? 'text-yellow-600 hover:text-yellow-700' 
+                  : 'hover:text-yellow-600'
+              }`}
             >
-              <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-              {likesCount}
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowComments(!showComments)}
-              className="gap-2"
-            >
-              <MessageCircle className="h-4 w-4" />
-              {post.comments_count}
+              <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
             </Button>
           </div>
         </div>
 
+        {/* Comments Section */}
         {showComments && (
-          <div className="mt-4 pt-4 border-t space-y-4">
-            {user && (
-              <form onSubmit={handleComment} className="flex gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={profile?.avatar_url || undefined} alt="Your avatar" />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                    {userInitials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 flex gap-2">
-                  <Textarea
-                    placeholder="Write a comment..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    className="min-h-[40px] resize-none"
-                    disabled={isCommenting}
-                  />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={isCommenting || !newComment.trim()}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </form>
-            )}
-
-            <div className="space-y-3">
-              {comments.map(comment => {
-                const commentInitials = comment.author_name
-                  ? comment.author_name.split(' ').map(n => n[0]).join('').toUpperCase()
-                  : '?';
-
-                return (
-                  <div key={comment.id} className="flex gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={comment.author_avatar || undefined} alt={comment.author_name} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        {commentInitials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="bg-muted rounded-lg p-3">
-                        <CompanyLink 
-                          authorName={comment.author_name} 
-                          userId={comment.user_id}
-                          className="font-medium text-sm"
-                          showBadge={false}
-                        />
-                        <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                      </p>
-                    </div>
+          <div className="border-t bg-muted/10">
+            <div className="p-6 space-y-4">
+              {/* Add Comment */}
+              {user && (
+                <form onSubmit={handleComment} className="flex gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profile?.avatar_url || undefined} alt="Your avatar" />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {userInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 flex gap-2">
+                    <Textarea
+                      placeholder="Write a thoughtful comment..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      className="min-h-[40px] resize-none bg-background/80 border-0 focus-visible:ring-1"
+                      disabled={isCommenting}
+                    />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={isCommenting || !newComment.trim()}
+                      className="self-end"
+                    >
+                      {isCommenting ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-foreground" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
-                );
-              })}
+                </form>
+              )}
+
+              {/* Comments List */}
+              {comments.length > 0 && (
+                <div className="space-y-4">
+                  {comments.map(comment => {
+                    const commentInitials = comment.author_name
+                      ? comment.author_name.split(' ').map(n => n[0]).join('').toUpperCase()
+                      : '?';
+
+                    return (
+                      <div key={comment.id} className="flex gap-3 group/comment">
+                        <div 
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => navigate(`/user/${comment.user_id}`)}
+                        >
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={comment.author_avatar || undefined} alt={comment.author_name} />
+                            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                              {commentInitials}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <div className="bg-muted/50 rounded-lg p-3 transition-colors group-hover/comment:bg-muted/70">
+                            <CompanyLink 
+                              authorName={comment.author_name} 
+                              userId={comment.user_id}
+                              className="font-medium text-sm"
+                              showBadge={false}
+                            />
+                            <p className="text-sm whitespace-pre-wrap mt-1 text-foreground/90">
+                              {comment.content}
+                            </p>
+                          </div>
+                          <p className="text-xs text-muted-foreground pl-3">
+                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {comments.length === 0 && (
+                <div className="text-center py-6">
+                  <MessageCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No comments yet</p>
+                  <p className="text-xs text-muted-foreground">Be the first to share your thoughts!</p>
+                </div>
+              )}
             </div>
           </div>
         )}

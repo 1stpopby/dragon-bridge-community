@@ -12,6 +12,7 @@ import GroupForum from "./pages/GroupForum";
 import Marketplace from "./pages/Marketplace";
 import Resources from "./pages/Resources";
 import Services from "./pages/Services";
+import ServiceManagement from "./pages/ServiceManagement";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/resources" element={<Resources />} />
               <Route path="/services" element={<Services />} />
+              <Route path="/service-management" element={<ServiceManagement />} />
               <Route path="/admin" element={<AdminProtectedRoute><Admin /></AdminProtectedRoute>} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/auth" element={<Auth />} />

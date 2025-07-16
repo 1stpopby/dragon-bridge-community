@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MapPin, Phone, Globe, Star, Search, Filter, CheckCircle } from "lucide-react";
+import { MapPin, Phone, Globe, Star, Search, Filter, CheckCircle, Users, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,7 +21,7 @@ const Services = () => {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("legal");
+  const [selectedTab, setSelectedTab] = useState("all");
   const { toast } = useToast();
   const { user, profile } = useAuth();
 
@@ -52,92 +52,97 @@ const Services = () => {
     }
   };
 
+  const filterServices = () => {
+    if (!searchTerm) return services;
+    return services.filter(service => 
+      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.specialty.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
   useEffect(() => {
     fetchServices();
   }, []);
 
-  const filterServices = (category: string) => {
-    return services.filter(service => {
-      const matchesCategory = service.category === category;
-      const matchesSearch = !searchTerm || 
-        service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      return matchesCategory && matchesSearch;
-    });
-  };
-
-  const ServiceCard = ({ service }: { service: any }) => (
-    <Card className="border-border hover:shadow-lg transition-shadow">
-      <CardHeader>
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">{service.specialty}</Badge>
-            {service.verified && (
-              <Badge variant="default" className="text-xs">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Verified
-              </Badge>
-            )}
-            {service.featured && (
-              <Badge variant="destructive" className="text-xs">
-                Featured
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center text-sm">
-            <Star className="h-4 w-4 text-yellow-500 mr-1" />
-            {service.rating} ({service.reviews_count})
-          </div>
-        </div>
-        <CardTitle className="text-lg">{service.name}</CardTitle>
-        <div className="flex items-center text-sm text-muted-foreground">
-          <MapPin className="h-4 w-4 mr-1" />
-          {service.location}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground mb-4 text-sm line-clamp-2">{service.description}</p>
-        
-        <div className="space-y-2 mb-4">
-          {service.phone && (
-            <div className="flex items-center text-sm">
-              <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-              {service.phone}
+  const ServiceListItem = ({ service }: { service: any }) => (
+    <div className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={service.avatar_url || ""} />
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {service.name.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold">{service.name}</h3>
+                {service.verified && (
+                  <Badge variant="secondary" className="text-xs">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Verified
+                  </Badge>
+                )}
+                {service.featured && (
+                  <Badge variant="destructive" className="text-xs">
+                    Featured
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {service.location}
+                </div>
+                <div className="flex items-center">
+                  <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                  {service.rating} ({service.reviews_count})
+                </div>
+              </div>
             </div>
-          )}
-          <div className="flex items-center text-sm">
-            <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
-            {service.languages?.join(", ") || "Contact for languages"}
+          </div>
+          
+          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+            {service.description}
+          </p>
+          
+          <div className="flex items-center gap-4 text-sm">
+            {service.phone && (
+              <div className="flex items-center">
+                <Phone className="h-4 w-4 mr-1 text-muted-foreground" />
+                {service.phone}
+              </div>
+            )}
+            <div className="flex items-center">
+              <Globe className="h-4 w-4 mr-1 text-muted-foreground" />
+              {service.languages?.join(", ") || "Contact for languages"}
+            </div>
           </div>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 ml-4">
           <ServiceContactDialog
             service={service}
             triggerButton={
-              <Button size="sm" className="flex-1">Contact</Button>
+              <Button size="sm" variant="outline">Contact</Button>
             }
           />
           <ServiceDetailsDialog
             service={service}
             triggerButton={
-              <Button size="sm" variant="outline">Details</Button>
+              <Button size="sm">
+                Details
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
             }
           />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
-
-  const categoryCounts = {
-    legal: filterServices('legal').length,
-    medical: filterServices('medical').length,
-    financial: filterServices('financial').length,
-    education: filterServices('education').length,
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -171,19 +176,20 @@ const Services = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-          <TabsList className={`grid w-full ${canViewServiceRequests ? 'grid-cols-5' : 'grid-cols-4'} mb-8`}>
-            <TabsTrigger value="legal">
-              Legal Services ({categoryCounts.legal})
-            </TabsTrigger>
-            <TabsTrigger value="medical">
-              Healthcare ({categoryCounts.medical})
-            </TabsTrigger>
-            <TabsTrigger value="financial">
-              Financial ({categoryCounts.financial})
-            </TabsTrigger>
-            <TabsTrigger value="education">
-              Education ({categoryCounts.education})
+        {/* Action Buttons at Top */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+          <ServiceRequestDialog
+            triggerButton={<Button>Request a Service</Button>}
+          />
+          <ListBusinessDialog
+            triggerButton={<Button variant="outline">List Your Business</Button>}
+          />
+        </div>
+
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+          <TabsList className={`grid w-full ${canViewServiceRequests ? 'grid-cols-2' : 'grid-cols-1'} mb-8`}>
+            <TabsTrigger value="all">
+              All Services ({services.length})
             </TabsTrigger>
             {canViewServiceRequests && (
               <TabsTrigger value="requests">
@@ -192,27 +198,25 @@ const Services = () => {
             )}
           </TabsList>
           
-          {['legal', 'medical', 'financial', 'education'].map((category) => (
-            <TabsContent key={category} value={category}>
-              {loading ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">Loading services...</p>
-                </div>
-              ) : filterServices(category).length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    {searchTerm ? 'No services match your search criteria.' : `No ${category} services found.`}
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filterServices(category).map((service) => (
-                    <ServiceCard key={service.id} service={service} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          ))}
+          <TabsContent value="all">
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Loading services...</p>
+              </div>
+            ) : filterServices().length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  {searchTerm ? 'No services match your search criteria.' : 'No services found.'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filterServices().map((service) => (
+                  <ServiceListItem key={service.id} service={service} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
           
           {canViewServiceRequests && (
             <TabsContent value="requests">
@@ -220,23 +224,6 @@ const Services = () => {
             </TabsContent>
           )}
         </Tabs>
-
-        {/* Call to Action */}
-        <div className="mt-16 text-center bg-muted/30 rounded-lg p-8">
-          <h3 className="text-2xl font-bold mb-4">Can't find what you're looking for?</h3>
-          <p className="text-muted-foreground mb-6">
-            We're constantly adding new service providers to our directory. 
-            Let us know what services you need in your area.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <ServiceRequestDialog
-              triggerButton={<Button>Request a Service</Button>}
-            />
-            <ListBusinessDialog
-              triggerButton={<Button variant="outline">List Your Business</Button>}
-            />
-          </div>
-        </div>
       </div>
 
       <Footer />

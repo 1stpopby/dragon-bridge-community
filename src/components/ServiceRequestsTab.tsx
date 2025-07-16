@@ -68,6 +68,39 @@ export function ServiceRequestsTab({ searchTerm }: ServiceRequestsTabProps) {
 
   useEffect(() => {
     fetchServiceRequests();
+
+    // Set up real-time subscription for service request updates
+    const channel = supabase
+      .channel('service-requests-tab-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'service_request_responses',
+        },
+        () => {
+          console.log('New service response sent, refreshing requests...');
+          fetchServiceRequests();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'service_request_responses',
+        },
+        () => {
+          console.log('Service response updated, refreshing requests...');
+          fetchServiceRequests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const filterRequests = () => {
@@ -123,36 +156,51 @@ export function ServiceRequestsTab({ searchTerm }: ServiceRequestsTabProps) {
       return;
     }
 
+    if (!profile) {
+      toast({
+        title: "Profile required",
+        description: "Please complete your profile before responding.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Here you could create a responses table or send an email
-      // For now, we'll create a new inquiry as a response
+      // Find the original request to get the requester's user_id
+      const originalRequest = requests.find(req => req.id === requestId);
+      if (!originalRequest) {
+        toast({
+          title: "Error",
+          description: "Could not find the original request.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create a response in the proper service_request_responses table
       const { error } = await supabase
-        .from('service_inquiries')
+        .from('service_request_responses')
         .insert({
-          service_id: null,
-          inquirer_name: profile?.display_name || 'Service Provider',
-          inquirer_email: responseData.contact_email || profile?.contact_email || user?.email,
-          inquirer_phone: responseData.contact_phone,
-          message: `Response to service request:
-
-${responseData.message}
-
-Contact Information:
-Email: ${responseData.contact_email || profile?.contact_email || user?.email}
-Phone: ${responseData.contact_phone || 'Not provided'}`,
-          inquiry_type: 'contact',
-          user_id: user?.id
+          request_id: requestId,
+          company_id: profile.id,
+          response_message: responseData.message,
+          contact_email: responseData.contact_email || profile.contact_email || user?.email,
+          contact_phone: responseData.contact_phone || profile.company_phone,
+          response_status: 'pending'
         });
 
       if (error) throw error;
 
       toast({
         title: "Response sent!",
-        description: "Your response has been sent to the requester.",
+        description: "Your response has been sent to the requester. They will see it in their Messages page.",
       });
 
       setRespondingTo(null);
       setResponseData({ message: '', contact_email: '', contact_phone: '' });
+      
+      // Refresh the requests to update the response count
+      fetchServiceRequests();
     } catch (error) {
       console.error('Error sending response:', error);
       toast({

@@ -54,14 +54,12 @@ export function ServiceRequestDialog({ triggerButton, open: controlledOpen, onOp
     setLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('service_inquiries')
-        .insert({
-          service_id: null, // No specific service, this is a general request
-          inquirer_name: formData.name,
-          inquirer_email: formData.email,
-          inquirer_phone: formData.phone,
-          message: `Service Request:
+      const requestData = {
+        service_id: null, // No specific service, this is a general request
+        inquirer_name: formData.name,
+        inquirer_email: formData.email,
+        inquirer_phone: formData.phone,
+        message: `Service Request:
 Location: ${formData.location}
 Category: ${formData.category}
 Service Type: ${formData.service_type}
@@ -70,10 +68,15 @@ Urgency: ${formData.urgency}
 
 Description:
 ${formData.description}`,
-          inquiry_type: 'request_service',
-          user_id: user?.id
-        });
-
+        inquiry_type: 'request_service',
+        user_id: user?.id
+      };
+      
+      const { data, error } = await supabase
+        .from('service_inquiries')
+        .insert(requestData)
+        .select();
+      
       if (error) throw error;
 
       toast({
@@ -93,6 +96,7 @@ ${formData.description}`,
         budget: '',
         urgency: 'medium'
       });
+      
     } catch (error) {
       console.error('Error submitting request:', error);
       toast({

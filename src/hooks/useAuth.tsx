@@ -8,6 +8,7 @@ interface Profile {
   account_type: string;
   display_name: string;
   company_name?: string | null;
+  company_phone?: string | null;
   contact_email?: string | null;
   phone?: string | null;
   location?: string | null;

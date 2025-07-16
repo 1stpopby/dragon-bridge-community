@@ -31,10 +31,7 @@ export function SendMessageDialog({
   subject = "",
   prefilledMessage = ""
 }: SendMessageDialogProps) {
-  const [messageForm, setMessageForm] = useState({
-    subject: subject,
-    content: prefilledMessage
-  });
+  const [messageContent, setMessageContent] = useState(prefilledMessage);
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -42,10 +39,10 @@ export function SendMessageDialog({
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!messageForm.subject || !messageForm.content) {
+    if (!messageContent.trim()) {
       toast({
         title: "Missing information",
-        description: "Please fill in all fields",
+        description: "Please enter a message",
         variant: "destructive",
       });
       return;
@@ -69,8 +66,8 @@ export function SendMessageDialog({
         .insert([{
           sender_id: user.id,
           recipient_id: recipientId,
-          subject: messageForm.subject,
-          content: messageForm.content
+          subject: `Message from ${user.email?.split('@')[0] || 'User'}`,
+          content: messageContent
         }]);
 
       if (messageError) throw messageError;
@@ -82,7 +79,7 @@ export function SendMessageDialog({
           user_id: recipientId,
           type: 'message',
           title: `New message from ${user.email}`,
-          content: `Subject: ${messageForm.subject}`,
+          content: `New message received`,
           related_type: 'message'
         }]);
 
@@ -93,7 +90,7 @@ export function SendMessageDialog({
         description: `Your message has been sent to ${recipientName}.`,
       });
 
-      setMessageForm({ subject: "", content: "" });
+      setMessageContent("");
       onOpenChange(false);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -116,24 +113,13 @@ export function SendMessageDialog({
         
         <form onSubmit={handleSendMessage} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="message-subject">Subject</Label>
-            <Input
-              id="message-subject"
-              value={messageForm.subject}
-              onChange={(e) => setMessageForm(prev => ({ ...prev, subject: e.target.value }))}
-              placeholder="Message subject"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
             <Label htmlFor="message-content">Message</Label>
             <Textarea
               id="message-content"
-              value={messageForm.content}
-              onChange={(e) => setMessageForm(prev => ({ ...prev, content: e.target.value }))}
+              value={messageContent}
+              onChange={(e) => setMessageContent(e.target.value)}
               placeholder={`Write your message to ${recipientName}...`}
-              rows={6}
+              rows={8}
               required
             />
           </div>

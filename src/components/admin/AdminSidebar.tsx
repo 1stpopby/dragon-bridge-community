@@ -34,7 +34,9 @@ import {
   BarChart3,
   Package,
   Globe,
-  Megaphone
+  Megaphone,
+  FileText as FileTextIcon,
+  Zap
 } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -116,6 +118,12 @@ const menuGroups = [
         value: "resources",
         icon: FileText,
         description: "Knowledge base"
+      },
+      {
+        title: "Services",
+        value: "services",
+        icon: Package,
+        description: "Business services"
       }
     ]
   },
@@ -127,6 +135,12 @@ const menuGroups = [
         value: "announcements",
         icon: Megaphone,
         description: "Schedule announcements"
+      },
+      {
+        title: "Advertisements",
+        icon: Megaphone,
+        value: "advertisements",
+        description: "Manage site advertisements",
       },
       {
         title: "Forum Posts",
@@ -156,6 +170,12 @@ const menuGroups = [
         value: "settings",
         icon: Settings,
         description: "App configuration"
+      },
+      {
+        title: "Footer Pages",
+        value: "footer-pages",
+        icon: FileTextIcon,
+        description: "Manage static pages"
       }
     ]
   }
@@ -240,12 +260,14 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
                   <SidebarMenu>
                     {group.items.map((item) => {
                       const Icon = item.icon;
+                      const isDisabled = (item as any).disabled;
                       return (
                         <SidebarMenuItem key={item.value}>
                           <SidebarMenuButton
-                            className={getMenuCls(item.value)}
-                            onClick={() => onTabChange(item.value)}
+                            className={`${getMenuCls(item.value)} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => !isDisabled && onTabChange(item.value)}
                             tooltip={collapsed ? item.title : undefined}
+                            disabled={isDisabled}
                           >
                             <Icon className="h-4 w-4 flex-shrink-0" />
                             {!collapsed && (

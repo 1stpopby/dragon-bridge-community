@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,13 +15,48 @@ interface ForumPostDialogProps {
   onPostCreated: () => void;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+}
+
 export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user, profile } = useAuth();
+
+  // Fetch forum categories
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name, description, color')
+        .eq('type', 'forum')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      setCategories(data || []);
+      
+      // Set default category if available
+      if (data && data.length > 0 && !category) {
+        setCategory(data[0].name);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   // If user is not logged in, show login prompt
   if (!user || !profile) {
@@ -37,10 +73,10 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title.trim() || !content.trim()) {
+    if (!title.trim() || !content.trim() || !category) {
       toast({
         title: "Missing information",
-        description: "Please fill in all fields",
+        description: "Please fill in all fields including category",
         variant: "destructive",
       });
       return;
@@ -54,6 +90,7 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
         .insert({
           title: title.trim(),
           content: content.trim(),
+          category: category,
           author_name: profile.display_name,
           user_id: user.id,
         });
@@ -67,6 +104,7 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
 
       setTitle("");
       setContent("");
+      setCategory(categories.length > 0 ? categories[0].name : "");
       setOpen(false);
       onPostCreated();
     } catch (error) {
@@ -102,6 +140,27 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
                 <p className="text-xs text-muted-foreground">{profile.company_name}</p>
               )}
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select value={category} onValueChange={setCategory} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.name}>
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: cat.color }}
+                      ></div>
+                      <span>{cat.name}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>

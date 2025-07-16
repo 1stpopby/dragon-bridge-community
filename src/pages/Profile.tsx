@@ -139,13 +139,13 @@ const Profile = () => {
       if (error) throw error;
 
       toast({
-        title: "Profile updated successfully",
-        description: "Your profile information has been saved.",
+        title: "Profile updated",
+        description: "Your profile has been updated.",
       });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: "Error updating profile",
+        title: "Profile update failed",
         description: "Please try again later.",
         variant: "destructive",
       });
@@ -158,132 +158,126 @@ const Profile = () => {
     return <Navigate to="/auth" replace />;
   }
 
+  const initials = formData.display_name 
+    ? formData.display_name.split(' ').map(name => name.charAt(0)).join('').toUpperCase()
+    : user?.email?.charAt(0)?.toUpperCase() || '?';
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        <div className="flex items-center gap-6 mb-8">
-          <div className="relative">
-            <Avatar className="w-20 h-20 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <AvatarImage src={formData.avatar_url} alt="Profile picture" />
-              <AvatarFallback className="text-lg">
-                {formData.display_name ? formData.display_name.charAt(0).toUpperCase() : <User className="h-8 w-8" />}
-              </AvatarFallback>
-            </Avatar>
-            <Button
-              size="sm"
-              variant="secondary"
-              className="absolute -bottom-2 -right-2 rounded-full h-8 w-8 p-0"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingAvatar}
-            >
-              {uploadingAvatar ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-foreground" />
-              ) : (
-                <Camera className="h-4 w-4" />
-              )}
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleAvatarChange}
-              accept="image/*"
-              className="hidden"
-            />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Profile Settings</h1>
-            <p className="text-muted-foreground">Manage your account and preferences</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingAvatar}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              {uploadingAvatar ? "Uploading..." : "Change Photo"}
-            </Button>
-          </div>
-        </div>
-
-        <Card>
+      <div className="max-w-4xl mx-auto p-6">
+        <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-            <CardDescription>
-              Update your personal information and account settings
-            </CardDescription>
+            <CardTitle className="text-2xl font-bold">My Profile</CardTitle>
+            <CardDescription>Profile Settings</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSaveProfile} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Avatar Section */}
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={formData.avatar_url} alt="Profile" />
+                  <AvatarFallback className="text-2xl">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="space-y-2">
-                  <Label htmlFor="display_name">Display Name</Label>
-                  <Input
-                    id="display_name"
-                    value={formData.display_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
-                    placeholder="Your display name"
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    className="flex items-center gap-2"
+                  >
+                    <Camera className="h-4 w-4" />
+                    {uploadingAvatar ? "Uploading Avatar" : "Change Avatar"}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="hidden"
                   />
                 </div>
+              </div>
+
+              {/* Personal Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Personal Information</h3>
                 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="display_name">Display Name</Label>
+                    <Input
+                      id="display_name"
+                      value={formData.display_name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
+                      placeholder="Display Name"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="Location"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="Phone"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_email">Contact Email</Label>
+                    <Input
+                      id="contact_email"
+                      type="email"
+                      value={formData.contact_email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, contact_email: e.target.value }))}
+                      placeholder="Contact Email"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="contact_email">Contact Email</Label>
-                  <Input
-                    id="contact_email"
-                    type="email"
-                    value={formData.contact_email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, contact_email: e.target.value }))}
-                    placeholder="your@email.com"
-                  />
+                  <Label htmlFor="account_type">Account Type</Label>
+                  <Select value={formData.account_type} onValueChange={(value) => setFormData(prev => ({ ...prev, account_type: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">User Account</SelectItem>
+                      <SelectItem value="company">Company Account</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="Your phone number"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                    placeholder="City, Country"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="account_type">Account Type</Label>
-                <Select value={formData.account_type} onValueChange={(value) => setFormData(prev => ({ ...prev, account_type: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">Individual User</SelectItem>
-                    <SelectItem value="company">Company/Organization</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
+              {/* Company Information */}
               {formData.account_type === 'company' && (
-                <>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Company Information</h3>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="company_name">Company Name</Label>
                     <Input
                       id="company_name"
                       value={formData.company_name}
                       onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
-                      placeholder="Your company name"
+                      placeholder="Company Name"
                     />
                   </div>
 
@@ -293,14 +287,14 @@ const Profile = () => {
                       id="company_description"
                       value={formData.company_description}
                       onChange={(e) => setFormData(prev => ({ ...prev, company_description: e.target.value }))}
-                      placeholder="Describe your company..."
+                      placeholder="Company Description"
                       rows={3}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="company_website">Website</Label>
+                      <Label htmlFor="company_website">Company Website</Label>
                       <Input
                         id="company_website"
                         value={formData.company_website}
@@ -315,7 +309,7 @@ const Profile = () => {
                         id="company_phone"
                         value={formData.company_phone}
                         onChange={(e) => setFormData(prev => ({ ...prev, company_phone: e.target.value }))}
-                        placeholder="Company phone number"
+                        placeholder="Company Phone"
                       />
                     </div>
                   </div>
@@ -326,7 +320,7 @@ const Profile = () => {
                       id="company_address"
                       value={formData.company_address}
                       onChange={(e) => setFormData(prev => ({ ...prev, company_address: e.target.value }))}
-                      placeholder="Full company address"
+                      placeholder="Full Company Address"
                     />
                   </div>
 
@@ -335,20 +329,20 @@ const Profile = () => {
                       <Label htmlFor="company_size">Company Size</Label>
                       <Select value={formData.company_size} onValueChange={(value) => setFormData(prev => ({ ...prev, company_size: value }))}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select company size" />
+                          <SelectValue placeholder="Select Company Size" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1-10">1-10 employees</SelectItem>
-                          <SelectItem value="11-50">11-50 employees</SelectItem>
-                          <SelectItem value="51-200">51-200 employees</SelectItem>
-                          <SelectItem value="201-500">201-500 employees</SelectItem>
-                          <SelectItem value="500+">500+ employees</SelectItem>
+                          <SelectItem value="1-10">1-10 Employees</SelectItem>
+                          <SelectItem value="11-50">11-50 Employees</SelectItem>
+                          <SelectItem value="51-200">51-200 Employees</SelectItem>
+                          <SelectItem value="201-500">201-500 Employees</SelectItem>
+                          <SelectItem value="500+">500+ Employees</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="company_founded">Founded Year</Label>
+                      <Label htmlFor="company_founded">Company Founded</Label>
                       <Input
                         id="company_founded"
                         type="date"
@@ -357,7 +351,7 @@ const Profile = () => {
                       />
                     </div>
                   </div>
-                </>
+                </div>
               )}
 
               <div className="space-y-2">
@@ -366,9 +360,36 @@ const Profile = () => {
                   id="bio"
                   value={formData.bio}
                   onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                  placeholder="Tell us about yourself..."
+                  placeholder="Tell us about yourself"
                   rows={4}
                 />
+              </div>
+
+              {/* Language Settings */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <span>🇺🇸</span>
+                  <span>English</span>
+                </Label>
+                <Select value="en" onValueChange={() => {}}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">
+                      <div className="flex items-center gap-2">
+                        <span>🇺🇸</span>
+                        <span>English</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="zh">
+                      <div className="flex items-center gap-2">
+                        <span>🇨🇳</span>
+                        <span>Chinese</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <Button type="submit" disabled={loading} className="w-full">

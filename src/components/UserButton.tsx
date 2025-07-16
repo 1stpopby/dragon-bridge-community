@@ -10,14 +10,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, Building2, Settings, MessageSquare, Bell, Store, Home, HelpCircle } from "lucide-react";
+import { User, LogOut, Building2, Settings, MessageSquare, Bell, Store, Home, ClipboardList } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ServiceRequestDialog } from "@/components/ServiceRequestDialog";
 
 export const UserButton = () => {
   const { user, profile, signOut } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [showServiceDialog, setShowServiceDialog] = useState(false);
 
   if (!user || !profile) {
     return (
@@ -99,6 +97,13 @@ export const UserButton = () => {
         </DropdownMenuItem>
         
         <DropdownMenuItem asChild>
+          <Link to="/service-management" className="cursor-pointer">
+            <ClipboardList className="mr-2 h-4 w-4" />
+            Service Management
+          </Link>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem asChild>
           <Link to="/notifications" className="cursor-pointer">
             <Bell className="mr-2 h-4 w-4" />
             Notifications
@@ -112,25 +117,7 @@ export const UserButton = () => {
           </Link>
          </DropdownMenuItem>
          
-         {/* Service Request for non-company accounts */}
-         {profile.account_type !== 'company' && (
-           <>
-             <DropdownMenuItem 
-               className="cursor-pointer"
-               onClick={(e) => {
-                 e.preventDefault();
-                 setShowServiceDialog(true);
-               }}
-             >
-               <HelpCircle className="mr-2 h-4 w-4" />
-               Request Service
-             </DropdownMenuItem>
-             <ServiceRequestDialog 
-               open={showServiceDialog}
-               onOpenChange={setShowServiceDialog}
-             />
-           </>
-         )}
+
          
          <DropdownMenuSeparator />
         

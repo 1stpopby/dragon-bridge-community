@@ -262,7 +262,6 @@ export function ResourceViewDialog({ resource, children }: ResourceViewDialogPro
           onOpenChange={setShowMessageDialog}
           recipientName={resource.author_name}
           recipientId={resource.user_id}
-          subject={`Question about: ${resource.title}`}
           prefilledMessage={`Hi ${resource.author_name},\n\nI have a question about your resource "${resource.title}".\n\n`}
         />
       </DialogContent>

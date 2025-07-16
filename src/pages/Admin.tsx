@@ -15,6 +15,9 @@ import { AdminUserBansTable } from "@/components/admin/AdminUserBansTable";
 import { AdminCategoriesTable } from "@/components/admin/AdminCategoriesTable";
 import { AdminSettingsTable } from "@/components/admin/AdminSettingsTable";
 import { AdminAnnouncementsTable } from "@/components/admin/AdminAnnouncementsTable";
+import { AdminAdvertisementsTable } from "@/components/admin/AdminAdvertisementsTable";
+import { AdminFooterPagesTable } from "@/components/admin/AdminFooterPagesTable";
+import { AdminServicesTable } from "@/components/admin/AdminServicesTable";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,7 +34,8 @@ const Admin = () => {
     totalEvents: 0,
     totalMarketplaceItems: 0,
     totalGroups: 0,
-    totalResources: 0
+    totalResources: 0,
+    totalServices: 0
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -48,7 +52,8 @@ const Admin = () => {
         { count: eventsCount },
         { count: marketplaceCount },
         { count: groupsCount },
-        { count: resourcesCount }
+        { count: resourcesCount },
+        { count: servicesCount }
       ] = await Promise.all([
         supabase.from('forum_posts').select('*', { count: 'exact', head: true }),
         supabase.from('forum_replies').select('*', { count: 'exact', head: true }),
@@ -56,7 +61,8 @@ const Admin = () => {
         supabase.from('events').select('*', { count: 'exact', head: true }),
         supabase.from('marketplace_items').select('*', { count: 'exact', head: true }),
         supabase.from('community_groups').select('*', { count: 'exact', head: true }),
-        supabase.from('resources').select('*', { count: 'exact', head: true })
+        supabase.from('resources').select('*', { count: 'exact', head: true }),
+        supabase.from('services').select('*', { count: 'exact', head: true })
       ]);
 
       // Fetch posts created today
@@ -75,7 +81,8 @@ const Admin = () => {
         totalEvents: eventsCount || 0,
         totalMarketplaceItems: marketplaceCount || 0,
         totalGroups: groupsCount || 0,
-        totalResources: resourcesCount || 0
+        totalResources: resourcesCount || 0,
+        totalServices: servicesCount || 0
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -130,12 +137,16 @@ const Admin = () => {
         return <AdminMarketplaceTable onDataChange={handleDataChange} />;
       case "resources":
         return <AdminResourcesTable onDataChange={handleDataChange} />;
+      case "services":
+        return <AdminServicesTable onDataChange={handleDataChange} />;
       case "posts":
         return <AdminPostsTable onDataChange={handleDataChange} />;
       case "replies":
         return <AdminRepliesTable onDataChange={handleDataChange} />;
       case "announcements":
         return <AdminAnnouncementsTable onDataChange={handleDataChange} />;
+      case "advertisements":
+        return <AdminAdvertisementsTable onDataChange={handleDataChange} />;
       case "notifications":
         return <AdminNotificationsTable onDataChange={handleDataChange} />;
       case "roles":
@@ -144,6 +155,8 @@ const Admin = () => {
         return <AdminUserBansTable onDataChange={handleDataChange} />;
       case "settings":
         return <AdminSettingsTable onDataChange={handleDataChange} />;
+      case "footer-pages":
+        return <AdminFooterPagesTable onDataChange={handleDataChange} />;
       default:
         return <AdminStats stats={stats} loading={loading} onRefresh={fetchStats} />;
     }

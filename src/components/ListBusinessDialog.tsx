@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,6 +32,7 @@ interface ListBusinessDialogProps {
 export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     specialty: '',
@@ -48,6 +49,35 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
   const { user, profile } = useAuth();
 
   const availableLanguages = ['English', 'Mandarin', 'Cantonese', 'Wu', 'Min', 'Hakka'];
+
+  // Fetch categories from database
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('type', 'services')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Fallback to hardcoded categories
+      setCategories([
+        { name: "Legal", value: "legal" },
+        { name: "Medical", value: "medical" },
+        { name: "Financial", value: "financial" },
+        { name: "Education", value: "education" }
+      ]);
+    }
+  };
+
+  // Fetch categories when component mounts
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,10 +218,11 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="legal">Legal Services</SelectItem>
-                  <SelectItem value="medical">Healthcare</SelectItem>
-                  <SelectItem value="financial">Financial</SelectItem>
-                  <SelectItem value="education">Education</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id || category.value} value={category.name.toLowerCase()}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
