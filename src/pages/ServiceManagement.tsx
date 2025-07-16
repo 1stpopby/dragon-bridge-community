@@ -72,6 +72,7 @@ interface ServiceFeedback {
   response_id: string;
   company_name?: string;
   company_display_name?: string;
+  service_request?: ServiceRequest;
 }
 
 const ServiceManagement = () => {
@@ -306,24 +307,33 @@ const ServiceManagement = () => {
 
       if (feedbackError) throw feedbackError;
 
-      // Get company names for each feedback
-      const feedbackWithCompanyNames = await Promise.all(
+      // Get company names and service details for each feedback
+      const feedbackWithDetails = await Promise.all(
         (feedbackData || []).map(async (feedback) => {
+          // Get company info
           const { data: profileData } = await supabase
             .from('profiles')
             .select('display_name, company_name')
             .eq('id', feedback.company_id)
             .single();
 
+          // Get service request details
+          const { data: serviceData } = await supabase
+            .from('service_inquiries')
+            .select('*')
+            .eq('id', feedback.request_id)
+            .single();
+
           return {
             ...feedback,
             company_name: profileData?.company_name,
-            company_display_name: profileData?.display_name
+            company_display_name: profileData?.display_name,
+            service_request: serviceData
           };
         })
       );
 
-      setMyFeedback(feedbackWithCompanyNames);
+      setMyFeedback(feedbackWithDetails);
     } catch (error) {
       console.error('Error fetching feedback:', error);
     }
@@ -670,7 +680,7 @@ const ServiceManagement = () => {
                       ) : (
                         <>
                           <Eye className="h-4 w-4" />
-                          View Completed Services ({completedServices.length})
+                          Show Completed Services ({completedServices.length})
                         </>
                       )}
                     </Button>
@@ -686,59 +696,6 @@ const ServiceManagement = () => {
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[600px]">
-                    {/* Completed Services Section */}
-                    {showCompletedServices && (
-                      <div className="mb-6">
-                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                          Completed Services
-                        </h3>
-                        
-                        {completedServices.length === 0 ? (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <CheckCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">No completed services yet</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-4 mb-6">
-                            {completedServices.map((service) => (
-                              <div
-                                key={service.id}
-                                className="p-4 border rounded-lg bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
-                              >
-                                <div className="flex items-start justify-between mb-3">
-                                  <div className="flex-1">
-                                    <h4 className="font-medium text-green-900">{service.category}</h4>
-                                    <p className="text-sm text-green-700 mt-1">{service.message}</p>
-                                  </div>
-                                  <Badge className="bg-green-100 text-green-800 border-green-300">
-                                    Completed
-                                  </Badge>
-                                </div>
-                                
-                                <div className="flex items-center justify-between text-sm text-green-600">
-                                  <div className="flex items-center gap-4">
-                                    <span>Budget: {service.budget_range}</span>
-                                    <span>Location: {service.location}</span>
-                                  </div>
-                                  <span>
-                                    {formatDistanceToNow(new Date(service.created_at), { addSuffix: true })}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        
-                        <div className="border-t pt-4 mb-4">
-                          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                            <MessageSquare className="h-5 w-5" />
-                            Your Feedback
-                          </h3>
-                        </div>
-                      </div>
-                    )}
-
                     {/* Feedback Section */}
                     {myFeedback.length === 0 ? (
                       <div className="text-center py-12 text-muted-foreground">
@@ -747,84 +704,153 @@ const ServiceManagement = () => {
                         <p className="text-sm">When you complete services and leave feedback, it will appear here</p>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         {myFeedback.map((feedback) => (
-                          <div
-                            key={feedback.id}
-                            className="p-4 border rounded-lg bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800"
-                          >
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-blue-600" />
-                                <span className="font-medium">
-                                  {feedback.company_name || feedback.company_display_name}
-                                </span>
-                                <div className="flex items-center gap-1">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <span 
-                                      key={star}
-                                      className={`text-sm ${
-                                        star <= feedback.rating 
-                                          ? 'text-yellow-500' 
-                                          : 'text-gray-300'
-                                      }`}
-                                    >
-                                      ★
+                          <div key={feedback.id} className="border rounded-lg overflow-hidden">
+                            {/* Service Details Header */}
+                            {feedback.service_request && (
+                              <div className="bg-slate-50 dark:bg-slate-800 p-4 border-b">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle className="h-5 w-5 text-green-600" />
+                                    <h3 className="font-semibold text-lg">Completed Service</h3>
+                                  </div>
+                                  <Badge className="bg-green-100 text-green-800 border-green-300">
+                                    Completed
+                                  </Badge>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <p className="text-sm font-medium">Service Request:</p>
+                                  <p className="text-sm text-muted-foreground line-clamp-2">
+                                    {feedback.service_request.message}
+                                  </p>
+                                  
+                                  <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
+                                    {feedback.service_request.inquiry_type && (
+                                      <span>Type: {feedback.service_request.inquiry_type}</span>
+                                    )}
+                                    <span>
+                                      Requested: {formatDistanceToNow(new Date(feedback.service_request.created_at), { addSuffix: true })}
                                     </span>
-                                  ))}
-                                  <span className="ml-1 text-sm text-blue-700">
-                                    {feedback.rating}/5
-                                  </span>
+                                  </div>
                                 </div>
                               </div>
-                              <span className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true })}
-                              </span>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <h4 className="font-medium text-blue-900">{feedback.title}</h4>
-                              <p className="text-sm text-blue-700">{feedback.comment}</p>
-                              
-                              {(feedback.service_quality_rating || feedback.communication_rating || 
-                                feedback.timeliness_rating || feedback.value_rating) && (
-                                <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-blue-300">
-                                  {feedback.service_quality_rating && (
-                                    <div className="text-xs">
-                                      <span className="text-muted-foreground">Service Quality:</span>
-                                      <span className="ml-1 text-blue-700">{feedback.service_quality_rating}/5</span>
-                                    </div>
-                                  )}
-                                  {feedback.communication_rating && (
-                                    <div className="text-xs">
-                                      <span className="text-muted-foreground">Communication:</span>
-                                      <span className="ml-1 text-blue-700">{feedback.communication_rating}/5</span>
-                                    </div>
-                                  )}
-                                  {feedback.timeliness_rating && (
-                                    <div className="text-xs">
-                                      <span className="text-muted-foreground">Timeliness:</span>
-                                      <span className="ml-1 text-blue-700">{feedback.timeliness_rating}/5</span>
-                                    </div>
-                                  )}
-                                  {feedback.value_rating && (
-                                    <div className="text-xs">
-                                      <span className="text-muted-foreground">Value:</span>
-                                      <span className="ml-1 text-blue-700">{feedback.value_rating}/5</span>
-                                    </div>
-                                  )}
+                            )}
+
+                            {/* Feedback Details */}
+                            <div className="p-4 bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <Building2 className="h-4 w-4 text-blue-600" />
+                                  <span className="font-medium">
+                                    {feedback.company_name || feedback.company_display_name}
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <span 
+                                        key={star}
+                                        className={`text-sm ${
+                                          star <= feedback.rating 
+                                            ? 'text-yellow-500' 
+                                            : 'text-gray-300'
+                                        }`}
+                                      >
+                                        ★
+                                      </span>
+                                    ))}
+                                    <span className="ml-1 text-sm text-blue-700">
+                                      {feedback.rating}/5
+                                    </span>
+                                  </div>
                                 </div>
-                              )}
+                                <span className="text-xs text-muted-foreground">
+                                  {formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true })}
+                                </span>
+                              </div>
                               
-                              {feedback.would_recommend && (
-                                <div className="flex items-center gap-1 text-xs text-green-700 mt-2">
-                                  <span>👍</span>
-                                  <span>Would recommend</span>
-                                </div>
-                              )}
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-blue-900">{feedback.title}</h4>
+                                <p className="text-sm text-blue-700">{feedback.comment}</p>
+                                
+                                {(feedback.service_quality_rating || feedback.communication_rating || 
+                                  feedback.timeliness_rating || feedback.value_rating) && (
+                                  <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-blue-300">
+                                    {feedback.service_quality_rating && (
+                                      <div className="text-xs">
+                                        <span className="text-muted-foreground">Service Quality:</span>
+                                        <span className="ml-1 text-blue-700">{feedback.service_quality_rating}/5</span>
+                                      </div>
+                                    )}
+                                    {feedback.communication_rating && (
+                                      <div className="text-xs">
+                                        <span className="text-muted-foreground">Communication:</span>
+                                        <span className="ml-1 text-blue-700">{feedback.communication_rating}/5</span>
+                                      </div>
+                                    )}
+                                    {feedback.timeliness_rating && (
+                                      <div className="text-xs">
+                                        <span className="text-muted-foreground">Timeliness:</span>
+                                        <span className="ml-1 text-blue-700">{feedback.timeliness_rating}/5</span>
+                                      </div>
+                                    )}
+                                    {feedback.value_rating && (
+                                      <div className="text-xs">
+                                        <span className="text-muted-foreground">Value:</span>
+                                        <span className="ml-1 text-blue-700">{feedback.value_rating}/5</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                
+                                {feedback.would_recommend && (
+                                  <div className="flex items-center gap-1 text-xs text-green-700 mt-2">
+                                    <span>👍</span>
+                                    <span>Would recommend</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+                    
+                    {/* Show additional completed services if button is toggled */}
+                    {showCompletedServices && completedServices.length > 0 && (
+                      <div className="mt-6 pt-6 border-t">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          Other Completed Services (No Feedback Yet)
+                        </h3>
+                        <div className="space-y-4">
+                          {completedServices.filter(service => !myFeedback.some(feedback => feedback.request_id === service.id)).map((service) => (
+                            <div
+                              key={service.id}
+                              className="p-4 border rounded-lg bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
+                            >
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <h4 className="font-medium text-green-900">Service Request</h4>
+                                  <p className="text-sm text-green-700 mt-1">{service.message}</p>
+                                </div>
+                                <Badge className="bg-green-100 text-green-800 border-green-300">
+                                  Completed
+                                </Badge>
+                              </div>
+                              
+                              <div className="flex items-center justify-between text-sm text-green-600">
+                                <div className="flex items-center gap-4">
+                                  <span>Type: {service.inquiry_type}</span>
+                                  <span>Status: {service.status}</span>
+                                </div>
+                                <span>
+                                  {formatDistanceToNow(new Date(service.created_at), { addSuffix: true })}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </ScrollArea>
