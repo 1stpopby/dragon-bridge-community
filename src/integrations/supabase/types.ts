@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      advertisements: {
+        Row: {
+          click_count: number | null
+          company_id: string | null
+          created_at: string
+          created_by: string
+          description: string
+          end_date: string | null
+          external_link: string | null
+          id: string
+          image_url: string | null
+          link_type: string
+          placement_locations: string[]
+          priority: number | null
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          view_count: number | null
+        }
+        Insert: {
+          click_count?: number | null
+          company_id?: string | null
+          created_at?: string
+          created_by: string
+          description: string
+          end_date?: string | null
+          external_link?: string | null
+          id?: string
+          image_url?: string | null
+          link_type?: string
+          placement_locations?: string[]
+          priority?: number | null
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Update: {
+          click_count?: number | null
+          company_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          end_date?: string | null
+          external_link?: string | null
+          id?: string
+          image_url?: string | null
+          link_type?: string
+          placement_locations?: string[]
+          priority?: number | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertisements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcements: {
         Row: {
           content: string
@@ -61,74 +129,6 @@ export type Database = {
           view_count?: number | null
         }
         Relationships: []
-      }
-      advertisements: {
-        Row: {
-          click_count: number
-          company_id: string | null
-          created_at: string
-          created_by: string
-          description: string
-          end_date: string | null
-          external_link: string | null
-          id: string
-          image_url: string | null
-          link_type: string
-          placement_locations: string[]
-          priority: number
-          start_date: string | null
-          status: string
-          title: string
-          updated_at: string
-          view_count: number
-        }
-        Insert: {
-          click_count?: number
-          company_id?: string | null
-          created_at?: string
-          created_by: string
-          description: string
-          end_date?: string | null
-          external_link?: string | null
-          id?: string
-          image_url?: string | null
-          link_type?: string
-          placement_locations?: string[]
-          priority?: number
-          start_date?: string | null
-          status?: string
-          title: string
-          updated_at?: string
-          view_count?: number
-        }
-        Update: {
-          click_count?: number
-          company_id?: string | null
-          created_at?: string
-          created_by?: string
-          description?: string
-          end_date?: string | null
-          external_link?: string | null
-          id?: string
-          image_url?: string | null
-          link_type?: string
-          placement_locations?: string[]
-          priority?: number
-          start_date?: string | null
-          status?: string
-          title?: string
-          updated_at?: string
-          view_count?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "advertisements_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       app_settings: {
         Row: {
@@ -439,7 +439,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
-          is_published: boolean
+          is_published: boolean | null
           meta_description: string | null
           slug: string
           title: string
@@ -451,7 +451,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
-          is_published?: boolean
+          is_published?: boolean | null
           meta_description?: string | null
           slug: string
           title: string
@@ -463,7 +463,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
-          is_published?: boolean
+          is_published?: boolean | null
           meta_description?: string | null
           slug?: string
           title?: string
@@ -1153,124 +1153,38 @@ export type Database = {
         }
         Relationships: []
       }
-      service_inquiries: {
+      saved_posts: {
         Row: {
-          assigned_to: string | null
-          budget_range: string | null
-          category: string | null
-          created_at: string
+          created_at: string | null
           id: string
-          inquirer_email: string
-          inquirer_name: string
-          inquirer_phone: string | null
-          inquiry_type: string
-          location: string | null
-          message: string
-          priority: string | null
-          responses_count: number | null
-          service_id: string | null
-          status: string
-          user_id: string | null
+          post_id: string
+          user_id: string
         }
         Insert: {
-          assigned_to?: string | null
-          budget_range?: string | null
-          category?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
-          inquirer_email: string
-          inquirer_name: string
-          inquirer_phone?: string | null
-          inquiry_type?: string
-          location?: string | null
-          message: string
-          priority?: string | null
-          responses_count?: number | null
-          service_id?: string | null
-          status?: string
-          user_id?: string | null
+          post_id: string
+          user_id: string
         }
         Update: {
-          assigned_to?: string | null
-          budget_range?: string | null
-          category?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
-          inquirer_email?: string
-          inquirer_name?: string
-          inquirer_phone?: string | null
-          inquiry_type?: string
-          location?: string | null
-          message?: string
-          priority?: string | null
-          responses_count?: number | null
-          service_id?: string | null
-          status?: string
-          user_id?: string | null
+          post_id?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "service_inquiries_service_id_fkey"
-            columns: ["service_id"]
+            foreignKeyName: "saved_posts_post_id_fkey"
+            columns: ["post_id"]
             isOneToOne: false
-            referencedRelation: "services"
+            referencedRelation: "posts"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      service_request_responses: {
-        Row: {
-          availability: string | null
-          company_id: string
-          contact_email: string | null
-          contact_phone: string | null
-          created_at: string
-          estimated_cost: string | null
-          id: string
-          request_id: string
-          response_message: string
-          response_status: string
-          updated_at: string
-        }
-        Insert: {
-          availability?: string | null
-          company_id: string
-          contact_email?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          estimated_cost?: string | null
-          id?: string
-          request_id: string
-          response_message: string
-          response_status?: string
-          updated_at?: string
-        }
-        Update: {
-          availability?: string | null
-          company_id?: string
-          contact_email?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          estimated_cost?: string | null
-          id?: string
-          request_id?: string
-          response_message?: string
-          response_status?: string
-          updated_at?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "service_request_responses_company_id_fkey"
-            columns: ["company_id"]
+            foreignKeyName: "saved_posts_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "service_request_responses_request_id_fkey"
-            columns: ["request_id"]
-            isOneToOne: false
-            referencedRelation: "service_inquiries"
             referencedColumns: ["id"]
           },
         ]
@@ -1349,11 +1263,114 @@ export type Database = {
             referencedRelation: "service_request_responses"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      service_inquiries: {
+        Row: {
+          created_at: string
+          id: string
+          inquirer_email: string
+          inquirer_name: string
+          inquirer_phone: string | null
+          inquiry_type: string
+          message: string
+          responses_count: number | null
+          service_id: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inquirer_email: string
+          inquirer_name: string
+          inquirer_phone?: string | null
+          inquiry_type?: string
+          message: string
+          responses_count?: number | null
+          service_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inquirer_email?: string
+          inquirer_name?: string
+          inquirer_phone?: string | null
+          inquiry_type?: string
+          message?: string
+          responses_count?: number | null
+          service_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "service_feedback_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "service_inquiries_service_id_fkey"
+            columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_request_responses: {
+        Row: {
+          availability: string | null
+          company_id: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          estimated_cost: string | null
+          id: string
+          request_id: string
+          response_message: string
+          response_status: string
+          updated_at: string
+        }
+        Insert: {
+          availability?: string | null
+          company_id: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          estimated_cost?: string | null
+          id?: string
+          request_id: string
+          response_message: string
+          response_status?: string
+          updated_at?: string
+        }
+        Update: {
+          availability?: string | null
+          company_id?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          estimated_cost?: string | null
+          id?: string
+          request_id?: string
+          response_message?: string
+          response_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_request_responses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_request_responses_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_inquiries"
             referencedColumns: ["id"]
           },
         ]
@@ -1469,60 +1486,24 @@ export type Database = {
         }
         Relationships: []
       }
-      saved_posts: {
-        Row: {
-          id: string
-          user_id: string
-          post_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          post_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          post_id?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "saved_posts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "saved_posts_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_follows: {
         Row: {
-          id: string
+          created_at: string
           follower_id: string
           following_id: string
-          created_at: string
+          id: string
         }
         Insert: {
-          id?: string
+          created_at?: string
           follower_id: string
           following_id: string
-          created_at?: string
+          id?: string
         }
         Update: {
-          id?: string
+          created_at?: string
           follower_id?: string
           following_id?: string
-          created_at?: string
+          id?: string
         }
         Relationships: [
           {

@@ -50,12 +50,12 @@ interface ServiceRequest {
   inquirer_email: string;
   inquirer_phone: string | null;
   message: string;
-  category: string | null;
-  location: string | null;
-  budget_range: string | null;
-  priority: string;
+  inquiry_type: string;
+  service_id: string | null;
+  status: string;
   responses_count: number;
   created_at: string;
+  updated_at: string;
   user_id: string | null;
   match_score?: number;
 }
@@ -144,38 +144,6 @@ export function EnhancedServiceRequestsTab({ searchTerm }: EnhancedServiceReques
     try {
       setLoading(true);
       
-      // Fetch matched requests for this company
-      const { data: matchedData, error: matchedError } = await supabase
-        .from('service_request_matches')
-        .select(`
-          match_score,
-          service_inquiries!inner (
-            id,
-            inquirer_name,
-            inquirer_email,
-            inquirer_phone,
-            message,
-            category,
-            location,
-            budget_range,
-            priority,
-            responses_count,
-            created_at,
-            user_id
-          )
-        `)
-        .eq('company_id', profile.id)
-        .order('match_score', { ascending: false });
-
-      if (matchedError) throw matchedError;
-
-      const matchedRequests = matchedData?.map(item => ({
-        ...item.service_inquiries,
-        match_score: item.match_score
-      })) || [];
-
-      setMatchedRequests(matchedRequests);
-
       // Fetch all service requests for browsing
       const { data: allData, error: allError } = await supabase
         .from('service_inquiries')
@@ -185,6 +153,10 @@ export function EnhancedServiceRequestsTab({ searchTerm }: EnhancedServiceReques
 
       if (allError) throw allError;
       setAllRequests(allData || []);
+
+      // For now, we'll use the same data for matched requests
+      // In a real app, you might implement a matching algorithm
+      setMatchedRequests(allData || []);
 
     } catch (error) {
       console.error('Error fetching service requests:', error);
@@ -238,8 +210,8 @@ export function EnhancedServiceRequestsTab({ searchTerm }: EnhancedServiceReques
       return (
         request.inquirer_name.toLowerCase().includes(searchLower) ||
         request.message.toLowerCase().includes(searchLower) ||
-        request.category?.toLowerCase().includes(searchLower) ||
-        request.location?.toLowerCase().includes(searchLower)
+        request.inquiry_type.toLowerCase().includes(searchLower) ||
+        request.status.toLowerCase().includes(searchLower)
       );
     });
   };
@@ -301,12 +273,12 @@ export function EnhancedServiceRequestsTab({ searchTerm }: EnhancedServiceReques
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string): "default" | "destructive" | "secondary" | "outline" => {
     switch (priority?.toLowerCase()) {
-      case 'urgent': return 'destructive';
-      case 'high': return 'default';
-      case 'medium': return 'secondary';
-      case 'low': return 'outline';
+      case 'completed': return 'default';
+      case 'accepted': return 'secondary';
+      case 'declined': return 'destructive';
+      case 'pending': return 'outline';
       default: return 'secondary';
     }
   };
@@ -382,6 +354,8 @@ export function EnhancedServiceRequestsTab({ searchTerm }: EnhancedServiceReques
             setResponseData={setResponseData}
             hasResponded={hasResponded}
             showMatchScore={true}
+            parseRequestDetails={parseRequestDetails}
+            getPriorityColor={getPriorityColor}
           />
         </TabsContent>
 
@@ -396,6 +370,8 @@ export function EnhancedServiceRequestsTab({ searchTerm }: EnhancedServiceReques
             setResponseData={setResponseData}
             hasResponded={hasResponded}
             showMatchScore={false}
+            parseRequestDetails={parseRequestDetails}
+            getPriorityColor={getPriorityColor}
           />
         </TabsContent>
 
@@ -417,6 +393,8 @@ interface ServiceRequestListProps {
   setResponseData: (data: any) => void;
   hasResponded: (requestId: string) => boolean;
   showMatchScore: boolean;
+  parseRequestDetails: (message: string) => any;
+  getPriorityColor: (priority: string) => "default" | "destructive" | "secondary" | "outline";
 }
 
 function ServiceRequestList({ 
@@ -428,7 +406,9 @@ function ServiceRequestList({
   responseData, 
   setResponseData, 
   hasResponded,
-  showMatchScore 
+  showMatchScore,
+  parseRequestDetails,
+  getPriorityColor
 }: ServiceRequestListProps) {
   const { profile } = useAuth();
 
@@ -454,14 +434,10 @@ function ServiceRequestList({
             <CardHeader>
               <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center gap-2 flex-wrap">
-                  {request.category && (
-                    <Badge variant="outline">{request.category}</Badge>
-                  )}
-                  {request.priority && (
-                    <Badge variant={getPriorityColor(request.priority)}>
-                      {request.priority}
-                    </Badge>
-                  )}
+                  <Badge variant="outline">{request.inquiry_type}</Badge>
+                  <Badge variant={getPriorityColor(request.status)}>
+                    {request.status}
+                  </Badge>
                   {showMatchScore && request.match_score && (
                     <Badge variant="secondary" className="bg-green-100 text-green-800">
                       <Star className="h-3 w-3 mr-1" />
@@ -493,18 +469,6 @@ function ServiceRequestList({
 
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
-                {request.location && (
-                  <div className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{request.location}</span>
-                  </div>
-                )}
-                {request.budget_range && (
-                  <div className="flex items-center">
-                    <DollarSign className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{request.budget_range}</span>
-                  </div>
-                )}
                 <div className="flex items-center">
                   <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
                   <span>{request.inquirer_email}</span>
