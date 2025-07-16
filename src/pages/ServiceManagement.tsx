@@ -706,31 +706,50 @@ const ServiceManagement = () => {
                     ) : (
                       <div className="space-y-6">
                         {myFeedback.map((feedback) => (
-                          <div key={feedback.id} className="border rounded-lg overflow-hidden">
+                          <div key={feedback.id} className="bg-card rounded-xl border shadow-sm overflow-hidden">
                             {/* Service Details Header */}
                             {feedback.service_request && (
-                              <div className="bg-slate-50 dark:bg-slate-800 p-4 border-b">
-                                <div className="flex items-start justify-between mb-2">
-                                  <div className="flex items-center gap-2">
-                                    <CheckCircle className="h-5 w-5 text-green-600" />
-                                    <h3 className="font-semibold text-lg">Completed Service</h3>
+                              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950 dark:to-teal-950 p-6 border-b border-emerald-200 dark:border-emerald-800">
+                                <div className="flex items-start justify-between mb-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900 rounded-full flex items-center justify-center">
+                                      <CheckCircle className="h-5 w-5 text-emerald-600" />
+                                    </div>
+                                    <div>
+                                      <h3 className="font-semibold text-lg text-emerald-900 dark:text-emerald-100">
+                                        Completed Service
+                                      </h3>
+                                      <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                                        Service completed successfully
+                                      </p>
+                                    </div>
                                   </div>
-                                  <Badge className="bg-green-100 text-green-800 border-green-300">
+                                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900 dark:text-emerald-100">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
                                     Completed
                                   </Badge>
                                 </div>
                                 
-                                <div className="space-y-2">
-                                  <p className="text-sm font-medium">Service Request:</p>
-                                  <p className="text-sm text-muted-foreground line-clamp-2">
+                                <div className="bg-white/60 dark:bg-black/20 rounded-lg p-4">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <ClipboardList className="h-4 w-4 text-emerald-600" />
+                                    <span className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+                                      Original Service Request
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-emerald-800 dark:text-emerald-200 leading-relaxed">
                                     {feedback.service_request.message}
                                   </p>
                                   
-                                  <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
+                                  <div className="flex items-center gap-6 text-xs text-emerald-600 dark:text-emerald-400 mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700">
                                     {feedback.service_request.inquiry_type && (
-                                      <span>Type: {feedback.service_request.inquiry_type}</span>
+                                      <span className="flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
+                                        Type: {feedback.service_request.inquiry_type}
+                                      </span>
                                     )}
-                                    <span>
+                                    <span className="flex items-center gap-1">
+                                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
                                       Requested: {formatDistanceToNow(new Date(feedback.service_request.created_at), { addSuffix: true })}
                                     </span>
                                   </div>
@@ -739,74 +758,111 @@ const ServiceManagement = () => {
                             )}
 
                             {/* Feedback Details */}
-                            <div className="p-4 bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800">
-                              <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center gap-2">
-                                  <Building2 className="h-4 w-4 text-blue-600" />
-                                  <span className="font-medium">
-                                    {feedback.company_name || feedback.company_display_name}
-                                  </span>
-                                  <div className="flex items-center gap-1">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                      <span 
-                                        key={star}
-                                        className={`text-sm ${
-                                          star <= feedback.rating 
-                                            ? 'text-yellow-500' 
-                                            : 'text-gray-300'
-                                        }`}
-                                      >
-                                        ★
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 p-6">
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                    <Building2 className="h-5 w-5 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-blue-900 dark:text-blue-100">
+                                      {feedback.company_name || feedback.company_display_name}
+                                    </h4>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <div className="flex items-center gap-1">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                          <Star
+                                            key={star}
+                                            className={`h-4 w-4 ${
+                                              star <= feedback.rating 
+                                                ? 'text-yellow-500 fill-yellow-500' 
+                                                : 'text-gray-300'
+                                            }`}
+                                          />
+                                        ))}
+                                      </div>
+                                      <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                                        {feedback.rating}/5
                                       </span>
-                                    ))}
-                                    <span className="ml-1 text-sm text-blue-700">
-                                      {feedback.rating}/5
-                                    </span>
+                                    </div>
                                   </div>
                                 </div>
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded-full">
                                   {formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true })}
                                 </span>
                               </div>
                               
-                              <div className="space-y-2">
-                                <h4 className="font-medium text-blue-900">{feedback.title}</h4>
-                                <p className="text-sm text-blue-700">{feedback.comment}</p>
+                              <div className="bg-white/60 dark:bg-black/20 rounded-lg p-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <MessageSquare className="h-4 w-4 text-blue-600" />
+                                  <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                    Your Feedback
+                                  </span>
+                                </div>
+                                
+                                <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                                  {feedback.title}
+                                </h5>
+                                <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
+                                  {feedback.comment}
+                                </p>
                                 
                                 {(feedback.service_quality_rating || feedback.communication_rating || 
                                   feedback.timeliness_rating || feedback.value_rating) && (
-                                  <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-blue-300">
+                                  <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-blue-200 dark:border-blue-700">
                                     {feedback.service_quality_rating && (
-                                      <div className="text-xs">
-                                        <span className="text-muted-foreground">Service Quality:</span>
-                                        <span className="ml-1 text-blue-700">{feedback.service_quality_rating}/5</span>
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="text-blue-700 dark:text-blue-300">Service Quality:</span>
+                                        <div className="flex items-center gap-1">
+                                          <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                                          <span className="font-medium text-blue-800 dark:text-blue-200">
+                                            {feedback.service_quality_rating}/5
+                                          </span>
+                                        </div>
                                       </div>
                                     )}
                                     {feedback.communication_rating && (
-                                      <div className="text-xs">
-                                        <span className="text-muted-foreground">Communication:</span>
-                                        <span className="ml-1 text-blue-700">{feedback.communication_rating}/5</span>
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="text-blue-700 dark:text-blue-300">Communication:</span>
+                                        <div className="flex items-center gap-1">
+                                          <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                                          <span className="font-medium text-blue-800 dark:text-blue-200">
+                                            {feedback.communication_rating}/5
+                                          </span>
+                                        </div>
                                       </div>
                                     )}
                                     {feedback.timeliness_rating && (
-                                      <div className="text-xs">
-                                        <span className="text-muted-foreground">Timeliness:</span>
-                                        <span className="ml-1 text-blue-700">{feedback.timeliness_rating}/5</span>
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="text-blue-700 dark:text-blue-300">Timeliness:</span>
+                                        <div className="flex items-center gap-1">
+                                          <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                                          <span className="font-medium text-blue-800 dark:text-blue-200">
+                                            {feedback.timeliness_rating}/5
+                                          </span>
+                                        </div>
                                       </div>
                                     )}
                                     {feedback.value_rating && (
-                                      <div className="text-xs">
-                                        <span className="text-muted-foreground">Value:</span>
-                                        <span className="ml-1 text-blue-700">{feedback.value_rating}/5</span>
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="text-blue-700 dark:text-blue-300">Value:</span>
+                                        <div className="flex items-center gap-1">
+                                          <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                                          <span className="font-medium text-blue-800 dark:text-blue-200">
+                                            {feedback.value_rating}/5
+                                          </span>
+                                        </div>
                                       </div>
                                     )}
                                   </div>
                                 )}
                                 
                                 {feedback.would_recommend && (
-                                  <div className="flex items-center gap-1 text-xs text-green-700 mt-2">
-                                    <span>👍</span>
-                                    <span>Would recommend</span>
+                                  <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300 mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
+                                    <div className="w-6 h-6 bg-emerald-100 dark:bg-emerald-900 rounded-full flex items-center justify-center">
+                                      <span className="text-emerald-600">👍</span>
+                                    </div>
+                                    <span className="font-medium">Would recommend this service</span>
                                   </div>
                                 )}
                               </div>
@@ -818,35 +874,66 @@ const ServiceManagement = () => {
                     
                     {/* Show additional completed services if button is toggled */}
                     {showCompletedServices && completedServices.length > 0 && (
-                      <div className="mt-6 pt-6 border-t">
-                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                          Other Completed Services (No Feedback Yet)
-                        </h3>
+                      <div className="mt-8 pt-6 border-t">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center">
+                            <CheckCircle className="h-5 w-5 text-amber-600" />
+                          </div>
+                          <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-100">
+                            Other Completed Services (No Feedback Yet)
+                          </h3>
+                        </div>
                         <div className="space-y-4">
                           {completedServices.filter(service => !myFeedback.some(feedback => feedback.request_id === service.id)).map((service) => (
                             <div
                               key={service.id}
-                              className="p-4 border rounded-lg bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
+                              className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950 rounded-xl border border-amber-200 dark:border-amber-800 p-5 shadow-sm"
                             >
-                              <div className="flex items-start justify-between mb-3">
-                                <div className="flex-1">
-                                  <h4 className="font-medium text-green-900">Service Request</h4>
-                                  <p className="text-sm text-green-700 mt-1">{service.message}</p>
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center">
+                                    <CheckCircle className="h-5 w-5 text-amber-600" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-amber-900 dark:text-amber-100">
+                                      Completed Service Request
+                                    </h4>
+                                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                                      Service completed • No feedback provided yet
+                                    </p>
+                                  </div>
                                 </div>
-                                <Badge className="bg-green-100 text-green-800 border-green-300">
+                                <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900 dark:text-amber-100">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
                                   Completed
                                 </Badge>
                               </div>
                               
-                              <div className="flex items-center justify-between text-sm text-green-600">
-                                <div className="flex items-center gap-4">
-                                  <span>Type: {service.inquiry_type}</span>
-                                  <span>Status: {service.status}</span>
+                              <div className="bg-white/60 dark:bg-black/20 rounded-lg p-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <ClipboardList className="h-4 w-4 text-amber-600" />
+                                  <span className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                                    Service Request Details
+                                  </span>
                                 </div>
-                                <span>
-                                  {formatDistanceToNow(new Date(service.created_at), { addSuffix: true })}
-                                </span>
+                                <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed mb-3">
+                                  {service.message}
+                                </p>
+                                
+                                <div className="flex items-center gap-6 text-xs text-amber-600 dark:text-amber-400 pt-3 border-t border-amber-200 dark:border-amber-700">
+                                  <span className="flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>
+                                    Type: {service.inquiry_type}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>
+                                    Status: {service.status}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>
+                                    Requested: {formatDistanceToNow(new Date(service.created_at), { addSuffix: true })}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           ))}
