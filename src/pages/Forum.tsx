@@ -345,8 +345,10 @@ const Forum = () => {
                     <ForumPostCard
                       key={post.id}
                       post={post}
-                      replies={repliesMap[post.id] || []}
-                      onReplyAdded={fetchPosts}
+                      onClick={() => {
+                        // Handle post click - could navigate to post detail
+                        console.log('Post clicked:', post.id);
+                      }}
                     />
                   ))
                 )}
