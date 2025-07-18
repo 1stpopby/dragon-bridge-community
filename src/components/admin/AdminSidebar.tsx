@@ -113,12 +113,7 @@ const menuGroups = [
         icon: ShoppingBag,
         description: "Buy & sell items"
       },
-      {
-        title: "Resources",
-        value: "resources",
-        icon: FileText,
-        description: "Knowledge base"
-      },
+
       {
         title: "Services",
         value: "services",

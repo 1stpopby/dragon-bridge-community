@@ -12,6 +12,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PostCard from "@/components/PostCard";
 import EventCard from "@/components/EventCard";
 import CompanyReviewSection from "@/components/CompanyReviewSection";
+import CompanyServicesTab from "@/components/CompanyServicesTab";
+import CompanyGalleryTab from "@/components/CompanyGalleryTab";
+import CompanyFeedbackTab from "@/components/CompanyFeedbackTab";
 import { 
   Building2, 
   Globe, 
@@ -305,9 +308,12 @@ const CompanyProfile = () => {
 
         {/* Content Tabs */}
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="posts">Posts ({posts.length})</TabsTrigger>
             <TabsTrigger value="events">Events ({events.length})</TabsTrigger>
+            <TabsTrigger value="services">Services</TabsTrigger>
+            <TabsTrigger value="gallery">Gallery</TabsTrigger>
+            <TabsTrigger value="feedback">Feedback</TabsTrigger>
             <TabsTrigger value="reviews">Reviews ({reviewCount})</TabsTrigger>
           </TabsList>
 
@@ -345,6 +351,27 @@ const CompanyProfile = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="services" className="mt-6">
+            <CompanyServicesTab 
+              companyId={company.id} 
+              isOwner={user?.id === company.user_id}
+            />
+          </TabsContent>
+
+          <TabsContent value="gallery" className="mt-6">
+            <CompanyGalleryTab 
+              companyId={company.id} 
+              isOwner={user?.id === company.user_id}
+            />
+          </TabsContent>
+
+          <TabsContent value="feedback" className="mt-6">
+            <CompanyFeedbackTab 
+              companyId={company.id} 
+              isOwner={user?.id === company.user_id}
+            />
           </TabsContent>
 
           <TabsContent value="reviews" className="mt-6">

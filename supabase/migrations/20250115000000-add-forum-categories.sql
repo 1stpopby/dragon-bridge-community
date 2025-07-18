@@ -8,7 +8,7 @@ DROP CONSTRAINT categories_type_check;
 
 ALTER TABLE public.categories 
 ADD CONSTRAINT categories_type_check 
-CHECK (type IN ('marketplace', 'events', 'groups', 'resources', 'forum'));
+CHECK (type IN ('marketplace', 'events', 'groups', 'forum', 'services'));
 
 -- Insert default forum categories
 INSERT INTO public.categories (name, description, type, icon, color, sort_order) VALUES

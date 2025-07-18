@@ -8,7 +8,7 @@ DROP CONSTRAINT categories_type_check;
 -- Add the new constraint that includes 'forum'
 ALTER TABLE public.categories 
 ADD CONSTRAINT categories_type_check 
-CHECK (type IN ('marketplace', 'events', 'groups', 'resources', 'forum'));
+CHECK (type IN ('marketplace', 'events', 'groups', 'forum', 'services'));
 
 -- Add category field to forum_posts table if it doesn't exist
 ALTER TABLE public.forum_posts 

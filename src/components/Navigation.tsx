@@ -17,7 +17,7 @@ const Navigation = () => {
     { name: "Events", href: "/events", icon: Calendar },
     { name: "Community", href: "/community", icon: Users },
     { name: "Marketplace", href: "/marketplace", icon: ShoppingBag },
-    { name: "Resources", href: "/resources", icon: BookOpen },
+
     { name: "Services", href: "/services", icon: MapPin },
   ];
 

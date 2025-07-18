@@ -8,7 +8,7 @@ DROP CONSTRAINT IF EXISTS categories_type_check;
 -- Add the new constraint that includes 'services'
 ALTER TABLE public.categories 
 ADD CONSTRAINT categories_type_check 
-CHECK (type IN ('marketplace', 'events', 'groups', 'resources', 'forum', 'services'));
+CHECK (type IN ('marketplace', 'events', 'groups', 'forum', 'services'));
 
 -- Insert default service categories
 INSERT INTO public.categories (name, description, type, icon, color, sort_order) 

@@ -170,7 +170,7 @@ INSERT INTO public.footer_pages (slug, title, content, meta_description, is_publ
         <ul class="space-y-2 text-muted-foreground">
           <li>• Finding local events</li>
           <li>• Using the marketplace</li>
-          <li>• Accessing resources</li>
+          
           <li>• Connecting with services</li>
         </ul>
       </div>

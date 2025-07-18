@@ -18,7 +18,7 @@ BEGIN
     -- Add new constraint with forum type
     ALTER TABLE public.categories 
     ADD CONSTRAINT categories_type_check 
-    CHECK (type IN ('marketplace', 'events', 'groups', 'resources', 'forum'));
+    CHECK (type IN ('marketplace', 'events', 'groups', 'forum', 'services'));
 END $$;
 
 -- Insert default forum categories (only if they don't exist)

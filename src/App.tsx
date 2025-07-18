@@ -10,7 +10,7 @@ import Events from "./pages/Events";
 import Community from "./pages/Community";
 import GroupForum from "./pages/GroupForum";
 import Marketplace from "./pages/Marketplace";
-import Resources from "./pages/Resources";
+
 import Services from "./pages/Services";
 import ServiceManagement from "./pages/ServiceManagement";
 import Admin from "./pages/Admin";
@@ -47,7 +47,7 @@ const App = () => (
               <Route path="/community" element={<Community />} />
               <Route path="/group/:groupId" element={<GroupForum />} />
               <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/resources" element={<Resources />} />
+
               <Route path="/services" element={<Services />} />
               <Route path="/service-management" element={<ServiceManagement />} />
               <Route path="/admin" element={<AdminProtectedRoute><Admin /></AdminProtectedRoute>} />

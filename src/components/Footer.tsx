@@ -36,11 +36,7 @@ const Footer = () => {
                   Local Events
                 </Link>
               </li>
-              <li>
-                <Link to="/resources" className="text-muted-foreground hover:text-primary transition-colors">
-                  Resources
-                </Link>
-              </li>
+
               <li>
                 <Link to="/services" className="text-muted-foreground hover:text-primary transition-colors">
                   Local Services

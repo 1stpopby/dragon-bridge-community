@@ -62,7 +62,7 @@ interface Category {
   id: string;
   name: string;
   description: string;
-  type: 'marketplace' | 'events' | 'groups' | 'resources' | 'forum' | 'services';
+  type: 'marketplace' | 'events' | 'groups' | 'forum' | 'services';
   icon: string;
   color: string;
   is_active: boolean;
@@ -79,7 +79,7 @@ const categoryTypes = [
   { value: 'marketplace', label: 'Marketplace', icon: Package },
   { value: 'events', label: 'Events', icon: Calendar },
   { value: 'groups', label: 'Groups', icon: Users },
-  { value: 'resources', label: 'Resources', icon: FileText },
+  
   { value: 'forum', label: 'Forum', icon: MessageSquare },
   { value: 'services', label: 'Services', icon: Wrench },
 ];

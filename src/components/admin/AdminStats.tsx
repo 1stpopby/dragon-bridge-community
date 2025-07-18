@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, MessageSquare, Calendar, RefreshCw, Store, FileText, UserCheck } from "lucide-react";
+import { Users, MessageSquare, Calendar, RefreshCw, Store, UserCheck } from "lucide-react";
 
 interface AdminStatsProps {
   stats: {
@@ -11,7 +11,7 @@ interface AdminStatsProps {
     totalEvents: number;
     totalMarketplaceItems: number;
     totalGroups: number;
-    totalResources: number;
+  
   };
   loading: boolean;
   onRefresh: () => void;
@@ -120,18 +120,7 @@ export const AdminStats = ({ stats, loading, onRefresh }: AdminStatsProps) => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Resources</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? '...' : stats.totalResources}</div>
-            <p className="text-xs text-muted-foreground">
-              Learning materials
-            </p>
-          </CardContent>
-        </Card>
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -82,8 +82,7 @@ const Notifications = () => {
         return <MessageSquare className="h-4 w-4" />;
       case 'event':
         return <Calendar className="h-4 w-4" />;
-      case 'resource':
-        return <Package className="h-4 w-4" />;
+
       case 'marketplace':
         return <Store className="h-4 w-4" />;
       case 'service':

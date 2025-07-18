@@ -1,9 +1,9 @@
--- Create categories table for marketplace, events, groups, and resources
+-- Create categories table for marketplace, events, groups, and services
 CREATE TABLE public.categories (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
-  type TEXT NOT NULL CHECK (type IN ('marketplace', 'events', 'groups', 'resources')),
+  type TEXT NOT NULL CHECK (type IN ('marketplace', 'events', 'groups', 'services')),
   icon TEXT,
   color TEXT DEFAULT '#6366f1',
   is_active BOOLEAN NOT NULL DEFAULT true,
@@ -57,9 +57,3 @@ INSERT INTO public.categories (name, description, type, icon, color, sort_order)
 ('Hobby', 'Hobby and interest groups', 'groups', 'palette', '#06b6d4', 4),
 ('Sports', 'Sports and fitness groups', 'groups', 'dumbbell', '#10b981', 5),
 
--- Resources categories
-('Documents', 'Important documents and forms', 'resources', 'file-text', '#6b7280', 1),
-('Guides', 'How-to guides and tutorials', 'resources', 'book-open', '#10b981', 2),
-('Templates', 'Document templates and samples', 'resources', 'copy', '#f59e0b', 3),
-('Legal', 'Legal information and resources', 'resources', 'gavel', '#ef4444', 4),
-('Employment', 'Job search and career resources', 'resources', 'briefcase', '#3b82f6', 5);
