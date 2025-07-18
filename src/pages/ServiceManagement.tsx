@@ -737,9 +737,76 @@ const ServiceManagement = () => {
                                       Original Service Request
                                     </span>
                                   </div>
-                                  <p className="text-sm text-emerald-800 dark:text-emerald-200 leading-relaxed">
-                                    {feedback.service_request.message}
-                                  </p>
+                                  {/* Parse and format the service request details */}
+                                  {(() => {
+                                    const message = feedback.service_request.message;
+                                    if (message.includes('Location:') && message.includes('Category:')) {
+                                      // Extract structured information from the message
+                                      const locationMatch = message.match(/Location:\s*([^,\n]+)/);
+                                      const categoryMatch = message.match(/Category:\s*([^,\n]+)/);
+                                      const serviceTypeMatch = message.match(/Service Type:\s*([^,\n]+)/);
+                                      const budgetMatch = message.match(/Budget:\s*([^,\n]+)/);
+                                      const urgencyMatch = message.match(/Urgency:\s*([^,\n]+)/);
+                                      const descriptionMatch = message.match(/Description:\s*(.+)$/);
+                                      
+                                      const location = locationMatch?.[1]?.trim();
+                                      const category = categoryMatch?.[1]?.trim();
+                                      const serviceType = serviceTypeMatch?.[1]?.trim();
+                                      const budget = budgetMatch?.[1]?.trim();
+                                      const urgency = urgencyMatch?.[1]?.trim();
+                                      const description = descriptionMatch?.[1]?.trim();
+                                      
+                                      return (
+                                        <div className="space-y-3">
+                                          <div className="grid grid-cols-2 gap-4">
+                                            {location && (
+                                              <div className="flex flex-col">
+                                                <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Location</span>
+                                                <span className="text-sm text-emerald-800 dark:text-emerald-200">{location}</span>
+                                              </div>
+                                            )}
+                                            {category && (
+                                              <div className="flex flex-col">
+                                                <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Category</span>
+                                                <span className="text-sm text-emerald-800 dark:text-emerald-200">{category}</span>
+                                              </div>
+                                            )}
+                                            {serviceType && (
+                                              <div className="flex flex-col">
+                                                <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Service Type</span>
+                                                <span className="text-sm text-emerald-800 dark:text-emerald-200">{serviceType}</span>
+                                              </div>
+                                            )}
+                                            {budget && (
+                                              <div className="flex flex-col">
+                                                <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Budget</span>
+                                                <span className="text-sm text-emerald-800 dark:text-emerald-200">£{budget}</span>
+                                              </div>
+                                            )}
+                                            {urgency && (
+                                              <div className="flex flex-col">
+                                                <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Urgency</span>
+                                                <span className="text-sm text-emerald-800 dark:text-emerald-200 capitalize">{urgency}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                          {description && (
+                                            <div className="pt-2 border-t border-emerald-200 dark:border-emerald-700">
+                                              <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1 block">Description</span>
+                                              <p className="text-sm text-emerald-800 dark:text-emerald-200 leading-relaxed">{description}</p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    } else {
+                                      // Fallback to original format if structured data not available
+                                      return (
+                                        <p className="text-sm text-emerald-800 dark:text-emerald-200 leading-relaxed">
+                                          {message}
+                                        </p>
+                                      );
+                                    }
+                                  })()}
                                   
                                   <div className="flex items-center gap-6 text-xs text-emerald-600 dark:text-emerald-400 mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700">
                                     {feedback.service_request.inquiry_type && (
@@ -916,9 +983,76 @@ const ServiceManagement = () => {
                                     Service Request Details
                                   </span>
                                 </div>
-                                <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed mb-3">
-                                  {service.message}
-                                </p>
+                                {/* Parse and format the service request details */}
+                                {(() => {
+                                  const message = service.message;
+                                  if (message.includes('Location:') && message.includes('Category:')) {
+                                    // Extract structured information from the message
+                                    const locationMatch = message.match(/Location:\s*([^,\n]+)/);
+                                    const categoryMatch = message.match(/Category:\s*([^,\n]+)/);
+                                    const serviceTypeMatch = message.match(/Service Type:\s*([^,\n]+)/);
+                                    const budgetMatch = message.match(/Budget:\s*([^,\n]+)/);
+                                    const urgencyMatch = message.match(/Urgency:\s*([^,\n]+)/);
+                                    const descriptionMatch = message.match(/Description:\s*(.+)$/);
+                                    
+                                    const location = locationMatch?.[1]?.trim();
+                                    const category = categoryMatch?.[1]?.trim();
+                                    const serviceType = serviceTypeMatch?.[1]?.trim();
+                                    const budget = budgetMatch?.[1]?.trim();
+                                    const urgency = urgencyMatch?.[1]?.trim();
+                                    const description = descriptionMatch?.[1]?.trim();
+                                    
+                                    return (
+                                      <div className="space-y-3 mb-3">
+                                        <div className="grid grid-cols-2 gap-4">
+                                          {location && (
+                                            <div className="flex flex-col">
+                                              <span className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">Location</span>
+                                              <span className="text-sm text-amber-800 dark:text-amber-200">{location}</span>
+                                            </div>
+                                          )}
+                                          {category && (
+                                            <div className="flex flex-col">
+                                              <span className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">Category</span>
+                                              <span className="text-sm text-amber-800 dark:text-amber-200">{category}</span>
+                                            </div>
+                                          )}
+                                          {serviceType && (
+                                            <div className="flex flex-col">
+                                              <span className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">Service Type</span>
+                                              <span className="text-sm text-amber-800 dark:text-amber-200">{serviceType}</span>
+                                            </div>
+                                          )}
+                                          {budget && (
+                                            <div className="flex flex-col">
+                                              <span className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">Budget</span>
+                                              <span className="text-sm text-amber-800 dark:text-amber-200">£{budget}</span>
+                                            </div>
+                                          )}
+                                          {urgency && (
+                                            <div className="flex flex-col">
+                                              <span className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">Urgency</span>
+                                              <span className="text-sm text-amber-800 dark:text-amber-200 capitalize">{urgency}</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                        {description && (
+                                          <div className="pt-2 border-t border-amber-200 dark:border-amber-700">
+                                            <span className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1 block">Description</span>
+                                            <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed">{description}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  } else {
+                                    // Fallback to original format if structured data not available
+                                    return (
+                                      <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed mb-3">
+                                        {message}
+                                      </p>
+                                    );
+                                  }
+                                })()}
                                 
                                 <div className="flex items-center gap-6 text-xs text-amber-600 dark:text-amber-400 pt-3 border-t border-amber-200 dark:border-amber-700">
                                   <span className="flex items-center gap-1">

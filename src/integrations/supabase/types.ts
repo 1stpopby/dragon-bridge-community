@@ -244,6 +244,146 @@ export type Database = {
         }
         Relationships: []
       }
+      company_feedback: {
+        Row: {
+          company_id: string
+          company_response_rating: number | null
+          company_response_text: string | null
+          completion_date: string | null
+          created_at: string | null
+          feedback_text: string | null
+          id: string
+          is_verified: boolean | null
+          project_type: string | null
+          rating: number
+          reviewer_email: string | null
+          reviewer_name: string
+          service_inquiry_id: string | null
+          updated_at: string | null
+          user_review_id: string | null
+        }
+        Insert: {
+          company_id: string
+          company_response_rating?: number | null
+          company_response_text?: string | null
+          completion_date?: string | null
+          created_at?: string | null
+          feedback_text?: string | null
+          id?: string
+          is_verified?: boolean | null
+          project_type?: string | null
+          rating: number
+          reviewer_email?: string | null
+          reviewer_name: string
+          service_inquiry_id?: string | null
+          updated_at?: string | null
+          user_review_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          company_response_rating?: number | null
+          company_response_text?: string | null
+          completion_date?: string | null
+          created_at?: string | null
+          feedback_text?: string | null
+          id?: string
+          is_verified?: boolean | null
+          project_type?: string | null
+          rating?: number
+          reviewer_email?: string | null
+          reviewer_name?: string
+          service_inquiry_id?: string | null
+          updated_at?: string | null
+          user_review_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_feedback_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_feedback_service_inquiry_id_fkey"
+            columns: ["service_inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "service_inquiries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_feedback_user_review_id_fkey"
+            columns: ["user_review_id"]
+            isOneToOne: false
+            referencedRelation: "service_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_gallery: {
+        Row: {
+          company_id: string
+          completion_date: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string
+          is_featured: boolean | null
+          project_type: string | null
+          service_response_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          completion_date?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url: string
+          is_featured?: boolean | null
+          project_type?: string | null
+          service_response_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          completion_date?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string
+          is_featured?: boolean | null
+          project_type?: string | null
+          service_response_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_gallery_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_gallery_service_response_id_fkey"
+            columns: ["service_response_id"]
+            isOneToOne: false
+            referencedRelation: "completed_services"
+            referencedColumns: ["service_response_id"]
+          },
+          {
+            foreignKeyName: "company_gallery_service_response_id_fkey"
+            columns: ["service_response_id"]
+            isOneToOne: false
+            referencedRelation: "service_request_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_reviews: {
         Row: {
           company_id: string
@@ -287,6 +427,60 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_services: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          price_range: string | null
+          service_category: string | null
+          service_description: string | null
+          service_id: string | null
+          service_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          price_range?: string | null
+          service_category?: string | null
+          service_description?: string | null
+          service_id?: string | null
+          service_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          price_range?: string | null
+          service_category?: string | null
+          service_description?: string | null
+          service_id?: string | null
+          service_name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_services_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
@@ -1260,6 +1454,13 @@ export type Database = {
             foreignKeyName: "service_feedback_response_id_fkey"
             columns: ["response_id"]
             isOneToOne: false
+            referencedRelation: "completed_services"
+            referencedColumns: ["service_response_id"]
+          },
+          {
+            foreignKeyName: "service_feedback_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
             referencedRelation: "service_request_responses"
             referencedColumns: ["id"]
           },
@@ -1548,7 +1749,37 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      completed_services: {
+        Row: {
+          company_display_name: string | null
+          company_id: string | null
+          company_name: string | null
+          completion_date: string | null
+          estimated_cost: string | null
+          request_id: string | null
+          response_message: string | null
+          service_date: string | null
+          service_description: string | null
+          service_response_id: string | null
+          service_type: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_request_responses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_request_responses_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_inquiries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       assign_admin_role_to_email: {
@@ -1558,6 +1789,21 @@ export type Database = {
       can_create_events: {
         Args: { _user_id: string }
         Returns: boolean
+      }
+      get_completed_services_for_company: {
+        Args: { company_uuid: string }
+        Returns: {
+          service_response_id: string
+          request_id: string
+          service_type: string
+          service_description: string
+          service_date: string
+          response_message: string
+          estimated_cost: string
+          completion_date: string
+          inquirer_name: string
+          inquirer_email: string
+        }[]
       }
       has_role: {
         Args: { _user_id: string; _role: string }
