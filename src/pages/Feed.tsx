@@ -114,6 +114,24 @@ const Feed = () => {
     }
   };
 
+  const fetchFollowedUsers = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: follows, error } = await supabase
+        .from('user_follows')
+        .select('following_id')
+        .eq('follower_id', user.id);
+
+      if (error) throw error;
+
+      const followedUserIds = new Set(follows?.map(f => f.following_id) || []);
+      setFollowedUsers(followedUserIds);
+    } catch (error) {
+      console.error('Error fetching followed users:', error);
+    }
+  };
+
   const fetchSuggestedUsers = async () => {
     try {
       const { data: users, error } = await supabase
@@ -145,7 +163,6 @@ const Feed = () => {
     
     setFollowingLoading(true);
     try {
-      // For now, filter posts from followed users locally
       const followedUserIds = Array.from(followedUsers);
       
       if (followedUserIds.length === 0) {
@@ -153,9 +170,32 @@ const Feed = () => {
         return;
       }
 
-      // Filter posts from followed users
-      const filteredPosts = posts.filter(post => followedUserIds.includes(post.user_id));
-      setFollowingPosts(filteredPosts);
+      const { data: postsData, error } = await supabase
+        .from('posts')
+        .select('*')
+        .in('user_id', followedUserIds)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (user && postsData) {
+        const { data: likesData, error: likesError } = await supabase
+          .from('post_likes')
+          .select('post_id')
+          .eq('user_id', user.id);
+
+        if (likesError) throw likesError;
+
+        const likedPostIds = new Set(likesData?.map(like => like.post_id) || []);
+        const postsWithLikeStatus = postsData.map(post => ({
+          ...post,
+          user_liked: likedPostIds.has(post.id)
+        }));
+
+        setFollowingPosts(postsWithLikeStatus);
+      } else {
+        setFollowingPosts(postsData || []);
+      }
     } catch (error) {
       console.error('Error fetching following posts:', error);
       toast({
@@ -172,28 +212,83 @@ const Feed = () => {
     if (!user) return;
     
     try {
-      // For now, use local state for saved posts
-      // In a real app, you'd fetch from a saved_posts table
-      setSavedPosts([]);
+      const { data: savedPostsData, error } = await supabase
+        .from('saved_posts')
+        .select(`
+          post_id,
+          posts (*)
+        `)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      const posts = savedPostsData?.map(sp => sp.posts).filter(Boolean) || [];
+      
+      if (posts.length > 0) {
+        const { data: likesData, error: likesError } = await supabase
+          .from('post_likes')
+          .select('post_id')
+          .eq('user_id', user.id);
+
+        if (likesError) throw likesError;
+
+        const likedPostIds = new Set(likesData?.map(like => like.post_id) || []);
+        const postsWithLikeStatus = posts.map(post => ({
+          ...post,
+          user_liked: likedPostIds.has(post.id)
+        }));
+
+        setSavedPosts(postsWithLikeStatus);
+      } else {
+        setSavedPosts([]);
+      }
     } catch (error) {
       console.error('Error fetching saved posts:', error);
     }
   };
 
-  const handleSavePost = (post: Post) => {
-    const isAlreadySaved = savedPosts.some(p => p.id === post.id);
+  const handleSavePost = async (post: Post) => {
+    if (!user) return;
     
-    if (isAlreadySaved) {
-      setSavedPosts(prev => prev.filter(p => p.id !== post.id));
+    try {
+      const isAlreadySaved = savedPosts.some(p => p.id === post.id);
+      
+      if (isAlreadySaved) {
+        const { error } = await supabase
+          .from('saved_posts')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('post_id', post.id);
+
+        if (error) throw error;
+
+        setSavedPosts(prev => prev.filter(p => p.id !== post.id));
+        toast({
+          title: "Post unsaved",
+          description: "Post removed from saved posts.",
+        });
+      } else {
+        const { error } = await supabase
+          .from('saved_posts')
+          .insert({
+            user_id: user.id,
+            post_id: post.id
+          });
+
+        if (error) throw error;
+
+        setSavedPosts(prev => [...prev, post]);
+        toast({
+          title: "Post saved",
+          description: "Post saved for later!",
+        });
+      }
+    } catch (error) {
+      console.error('Error saving/unsaving post:', error);
       toast({
-        title: "Post unsaved",
-        description: "Post removed from saved posts.",
-      });
-    } else {
-      setSavedPosts(prev => [...prev, post]);
-      toast({
-        title: "Post saved",
-        description: "Post saved for later!",
+        title: "Error",
+        description: "Failed to update saved post. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -205,7 +300,14 @@ const Feed = () => {
       const isCurrentlyFollowing = followedUsers.has(userId);
       
       if (isCurrentlyFollowing) {
-        // Unfollow user (local state only for now)
+        const { error } = await supabase
+          .from('user_follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', userId);
+
+        if (error) throw error;
+
         setFollowedUsers(prev => {
           const newSet = new Set(prev);
           newSet.delete(userId);
@@ -217,7 +319,15 @@ const Feed = () => {
           description: "You have unfollowed this user.",
         });
       } else {
-        // Follow user (local state only for now)
+        const { error } = await supabase
+          .from('user_follows')
+          .insert({
+            follower_id: user.id,
+            following_id: userId
+          });
+
+        if (error) throw error;
+
         setFollowedUsers(prev => new Set([...prev, userId]));
 
         toast({
@@ -266,9 +376,12 @@ const Feed = () => {
   };
 
   useEffect(() => {
-    fetchPosts();
-    fetchTrendingTopics();
-    fetchSuggestedUsers();
+    if (user) {
+      fetchPosts();
+      fetchTrendingTopics();
+      fetchFollowedUsers();
+      fetchSavedPosts();
+    }
   }, [user]);
 
   useEffect(() => {
