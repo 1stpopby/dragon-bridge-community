@@ -159,11 +159,26 @@ const Feed = () => {
   };
 
   const fetchFollowingPosts = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
     
     setFollowingLoading(true);
     try {
-      const followedUserIds = Array.from(followedUsers);
+      const followedProfileIds = Array.from(followedUsers);
+      
+      if (followedProfileIds.length === 0) {
+        setFollowingPosts([]);
+        return;
+      }
+
+      // First get the user_ids from the followed profile ids
+      const { data: followedProfiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .in('id', followedProfileIds);
+
+      if (profilesError) throw profilesError;
+
+      const followedUserIds = followedProfiles?.map(p => p.user_id) || [];
       
       if (followedUserIds.length === 0) {
         setFollowingPosts([]);
@@ -209,7 +224,7 @@ const Feed = () => {
   };
 
   const fetchSavedPosts = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
     
     try {
       const { data: savedPostsData, error } = await supabase
@@ -218,7 +233,7 @@ const Feed = () => {
           post_id,
           posts (*)
         `)
-        .eq('user_id', user.id);
+        .eq('user_id', profile.id);
 
       if (error) throw error;
 
@@ -248,7 +263,7 @@ const Feed = () => {
   };
 
   const handleSavePost = async (post: Post) => {
-    if (!user) return;
+    if (!user || !profile) return;
     
     try {
       const isAlreadySaved = savedPosts.some(p => p.id === post.id);
@@ -257,7 +272,7 @@ const Feed = () => {
         const { error } = await supabase
           .from('saved_posts')
           .delete()
-          .eq('user_id', user.id)
+          .eq('user_id', profile.id)
           .eq('post_id', post.id);
 
         if (error) throw error;
@@ -271,7 +286,7 @@ const Feed = () => {
         const { error } = await supabase
           .from('saved_posts')
           .insert({
-            user_id: user.id,
+            user_id: profile.id,
             post_id: post.id
           });
 
