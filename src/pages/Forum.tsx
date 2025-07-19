@@ -9,6 +9,7 @@ import { MessageSquare, Plus, Search, TrendingUp, Clock, Users } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { ForumPostDialog } from "@/components/ForumPostDialog";
 import { ForumPostCard } from "@/components/ForumPostCard";
+import { AdvertisementBanner } from "@/components/AdvertisementBanner";
 
 const Forum = () => {
   const [posts, setPosts] = useState<any[]>([]);
@@ -228,6 +229,15 @@ const Forum = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Advertisement Section */}
+        <div className="mb-8">
+          <AdvertisementBanner 
+            location="forum" 
+            variant="banner" 
+            maxAds={1}
+          />
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">

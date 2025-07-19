@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, TrendingUp, UserPlus, Users, Flame, Eye, Bookmark, Heart, UserCheck } from "lucide-react";
+import { AdvertisementBanner } from "@/components/AdvertisementBanner";
 
 interface Post {
   id: string;
@@ -233,7 +234,7 @@ const Feed = () => {
           post_id,
           posts (*)
         `)
-        .eq('user_id', profile.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -272,7 +273,7 @@ const Feed = () => {
         const { error } = await supabase
           .from('saved_posts')
           .delete()
-          .eq('user_id', profile.id)
+          .eq('user_id', user.id)
           .eq('post_id', post.id);
 
         if (error) throw error;
@@ -286,7 +287,7 @@ const Feed = () => {
         const { error } = await supabase
           .from('saved_posts')
           .insert({
-            user_id: profile.id,
+            user_id: user.id,
             post_id: post.id
           });
 
@@ -479,6 +480,13 @@ const Feed = () => {
 
           {/* Main Feed */}
           <div className="lg:col-span-6 space-y-6">
+            {/* Advertisement Section */}
+            <AdvertisementBanner 
+              location="feed" 
+              variant="banner" 
+              maxAds={1}
+            />
+            
             <AnnouncementBanner />
             
             {/* Feed Tabs */}

@@ -18,6 +18,7 @@ import { MarketplaceDialog } from "@/components/MarketplaceDialog";
 import { MarketplaceCard } from "@/components/MarketplaceCard";
 import { FullAdDialog } from "@/components/FullAdDialog";
 import { useToast } from "@/hooks/use-toast";
+import { AdvertisementBanner } from "@/components/AdvertisementBanner";
 
 const Marketplace = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -312,6 +313,15 @@ const Marketplace = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Advertisement Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <AdvertisementBanner 
+          location="marketplace" 
+          variant="banner" 
+          maxAds={1}
+        />
       </div>
 
       {/* Results Section */}

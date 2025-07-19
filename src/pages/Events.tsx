@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { EventDialog } from "@/components/EventDialog";
 import { EventCard } from "@/components/EventCard";
 import { useToast } from "@/hooks/use-toast";
+import { AdvertisementBanner } from "@/components/AdvertisementBanner";
 
 const Events = () => {
   const [events, setEvents] = useState<any[]>([]);
@@ -91,6 +92,15 @@ const Events = () => {
             <EventDialog onEventSaved={fetchEvents} />
           </div>
         </div>
+      </div>
+
+      {/* Advertisement Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <AdvertisementBanner 
+          location="events" 
+          variant="banner" 
+          maxAds={1}
+        />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

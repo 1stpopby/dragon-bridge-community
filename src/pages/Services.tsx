@@ -16,6 +16,7 @@ import { ServiceDetailsDialog } from "@/components/ServiceDetailsDialog";
 import { ServiceRequestDialog } from "@/components/ServiceRequestDialog";
 import { ListBusinessDialog } from "@/components/ListBusinessDialog";
 import { ServiceRequestsTab } from "@/components/ServiceRequestsTab";
+import { AdvertisementBanner } from "@/components/AdvertisementBanner";
 
 const Services = () => {
   const [services, setServices] = useState<any[]>([]);
@@ -173,6 +174,15 @@ const Services = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Advertisement Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <AdvertisementBanner 
+          location="services" 
+          variant="banner" 
+          maxAds={1}
+        />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
