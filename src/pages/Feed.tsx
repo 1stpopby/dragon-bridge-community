@@ -44,7 +44,7 @@ interface SuggestedUser {
 }
 
 const Feed = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,13 +115,13 @@ const Feed = () => {
   };
 
   const fetchFollowedUsers = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
     
     try {
       const { data: follows, error } = await supabase
         .from('user_follows')
         .select('following_id')
-        .eq('follower_id', user.id);
+        .eq('follower_id', profile.id);
 
       if (error) throw error;
 
@@ -294,7 +294,7 @@ const Feed = () => {
   };
 
   const handleFollowUser = async (userId: string) => {
-    if (!user) return;
+    if (!user || !profile) return;
     
     try {
       const isCurrentlyFollowing = followedUsers.has(userId);
@@ -303,7 +303,7 @@ const Feed = () => {
         const { error } = await supabase
           .from('user_follows')
           .delete()
-          .eq('follower_id', user.id)
+          .eq('follower_id', profile.id)
           .eq('following_id', userId);
 
         if (error) throw error;
@@ -322,7 +322,7 @@ const Feed = () => {
         const { error } = await supabase
           .from('user_follows')
           .insert({
-            follower_id: user.id,
+            follower_id: profile.id,
             following_id: userId
           });
 
