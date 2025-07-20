@@ -79,6 +79,7 @@ interface ServiceFeedback {
 const ServiceManagement = () => {
   const { user, profile } = useAuth();
   const [serviceResponses, setServiceResponses] = useState<ServiceResponse[] | ServiceInquiry[]>([]);
+  const [receivedMessages, setReceivedMessages] = useState<ServiceInquiry[]>([]);
   const [myServiceRequests, setMyServiceRequests] = useState<ServiceRequest[]>([]);
   const [myFeedback, setMyFeedback] = useState<ServiceFeedback[]>([]);
   const [completedServices, setCompletedServices] = useState<ServiceRequest[]>([]);
@@ -93,6 +94,7 @@ const ServiceManagement = () => {
   useEffect(() => {
     if (user) {
       fetchServiceResponses();
+      fetchReceivedMessages();
       fetchMyServiceRequests();
       fetchMyFeedback();
       fetchCompletedServices();
@@ -110,6 +112,7 @@ const ServiceManagement = () => {
           () => {
             console.log('New service response received, refreshing data...');
             fetchServiceResponses();
+            fetchReceivedMessages();
             fetchMyServiceRequests();
             fetchCompletedServices();
           }
@@ -124,6 +127,7 @@ const ServiceManagement = () => {
           () => {
             console.log('Service response updated, refreshing data...');
             fetchServiceResponses();
+            fetchReceivedMessages();
             fetchMyServiceRequests();
             fetchCompletedServices();
           }
@@ -142,6 +146,7 @@ const ServiceManagement = () => {
           () => {
             console.log('New service inquiry received, refreshing data...');
             fetchServiceResponses();
+            fetchReceivedMessages();
             fetchMyServiceRequests();
             fetchCompletedServices();
           }
@@ -156,6 +161,7 @@ const ServiceManagement = () => {
           () => {
             console.log('Service inquiry updated, refreshing data...');
             fetchServiceResponses();
+            fetchReceivedMessages();
             fetchMyServiceRequests();
             fetchCompletedServices();
           }
@@ -186,7 +192,7 @@ const ServiceManagement = () => {
               created_at
             )
           `)
-          .eq('company_id', user?.id)
+          .eq('company_id', profile?.id)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -214,6 +220,25 @@ const ServiceManagement = () => {
       }
     } catch (error) {
       console.error('Error fetching service responses:', error);
+    }
+  };
+
+  const fetchReceivedMessages = async () => {
+    try {
+      if (profile?.account_type === 'company') {
+        // For companies, fetch messages they received from users
+        const { data, error } = await supabase
+          .from('service_inquiries')
+          .select('*')
+          .eq('user_id', user?.id)
+          .eq('inquiry_type', 'contact')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setReceivedMessages(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching received messages:', error);
     }
   };
 
@@ -417,10 +442,14 @@ const ServiceManagement = () => {
         {profile?.account_type === 'company' ? (
           // Company view
           <Tabs defaultValue="sent-responses" className="w-full">
-            <TabsList className="grid w-full grid-cols-1">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="sent-responses">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Sent Responses ({serviceResponses.length})
+              </TabsTrigger>
+              <TabsTrigger value="received-messages">
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Received Messages ({receivedMessages.length})
               </TabsTrigger>
             </TabsList>
 
@@ -489,6 +518,63 @@ const ServiceManagement = () => {
                               <span>Contact: {response.contact_email}</span>
                               {response.contact_phone && <span>Phone: {response.contact_phone}</span>}
                               {response.estimated_cost && <span>Cost: {response.estimated_cost}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="received-messages">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <HelpCircle className="h-5 w-5" />
+                    Received Messages
+                  </CardTitle>
+                  <CardDescription>
+                    Messages received from users through your services
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[600px]">
+                    {receivedMessages.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <HelpCircle className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg font-medium mb-2">No messages received yet</p>
+                        <p className="text-sm">When users contact you through services, messages will appear here</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {receivedMessages.map((message) => (
+                          <div
+                            key={message.id}
+                            className="p-4 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
+                            onClick={() => handleResponseClick(message)}
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <HelpCircle className="h-4 w-4 text-blue-600" />
+                                <span className="font-medium">Message from {message.inquirer_name}</span>
+                                <Badge variant="outline" className="text-xs">
+                                  Contact
+                                </Badge>
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                              </span>
+                            </div>
+                            
+                            <p className="text-sm text-muted-foreground line-clamp-3 mb-2">
+                              {message.message}
+                            </p>
+                            
+                            <div className="flex justify-between items-center text-xs text-muted-foreground">
+                              <span>Email: {message.inquirer_email}</span>
+                              <span>Phone: {message.inquirer_phone || 'Not provided'}</span>
                             </div>
                           </div>
                         ))}
