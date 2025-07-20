@@ -228,7 +228,7 @@ export function ServiceRequestManagementDialog({
 
   const updateResponseStatus = async (responseId: string, newStatus: string) => {
     try {
-      console.log('Updating response status:', { responseId, newStatus });
+      console.log('🔄 Updating response status:', { responseId, newStatus });
       
       // Update local state immediately for instant UI feedback
       setResponses(prev => {
@@ -237,7 +237,7 @@ export function ServiceRequestManagementDialog({
             ? { ...response, response_status: newStatus }
             : response
         );
-        console.log('Updated local responses:', updated);
+        console.log('✅ Updated local responses:', updated);
         return updated;
       });
 
@@ -248,11 +248,18 @@ export function ServiceRequestManagementDialog({
         .eq('id', responseId)
         .select();
 
-      console.log('Database update result:', { updateData, error });
+      console.log('📊 Database update result:', { updateData, error });
 
       if (error) throw error;
 
-      // If accepting, update main request status
+      // Verify the update worked
+      if (updateData && updateData.length > 0) {
+        console.log('✅ Database update successful:', updateData[0]);
+      } else {
+        console.warn('⚠️ No rows were updated in database');
+      }
+
+      // If accepting, also update main request status
       if (newStatus === 'accepted') {
         const { data: inquiryData, error: inquiryError } = await supabase
           .from('service_inquiries')
@@ -260,21 +267,28 @@ export function ServiceRequestManagementDialog({
           .eq('id', requestId)
           .select();
         
-        console.log('Inquiry update result:', { inquiryData, inquiryError });
+        console.log('📋 Inquiry update result:', { inquiryData, inquiryError });
         
         if (inquiryError) throw inquiryError;
       }
+
+      // Trigger a manual broadcast to notify other components
+      const channel = supabase.channel('status-update-broadcast');
+      channel.send({
+        type: 'broadcast',
+        event: 'response_status_updated',
+        payload: { responseId, newStatus }
+      });
 
       toast({
         title: "Status updated",
         description: `Response status updated to ${newStatus}`,
       });
 
-      // Don't fetch fresh data immediately to avoid overriding optimistic update
-      // The optimistic update should be sufficient since the database update succeeded
+      console.log('🚀 Status update complete!');
       
     } catch (error) {
-      console.error('Error updating response status:', error);
+      console.error('❌ Error updating response status:', error);
       toast({
         title: "Error",
         description: "Failed to update status",

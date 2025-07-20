@@ -119,12 +119,22 @@ const ServiceManagement = () => {
             table: 'service_request_responses',
           },
           (payload) => {
-            console.log('Service response updated, refreshing data...', payload);
+            console.log('🔄 Service response updated in ServiceManagement, refreshing data...', payload);
             // Immediately update local state for company sent responses
             if (profile?.account_type === 'company' && payload.new) {
+              console.log('📊 Updating company response status locally:', {
+                responseId: payload.new.id,
+                oldStatus: payload.old?.response_status,
+                newStatus: payload.new.response_status
+              });
               setServiceResponses(prev => {
-                return prev.map(response => {
+                const updated = prev.map(response => {
                   if ('id' in response && response.id === payload.new.id) {
+                    console.log('✅ Found matching response, updating status:', {
+                      responseId: response.id,
+                      oldStatus: response.response_status,
+                      newStatus: payload.new.response_status
+                    });
                     return {
                       ...response,
                       response_status: payload.new.response_status,
@@ -133,6 +143,8 @@ const ServiceManagement = () => {
                   }
                   return response;
                 });
+                console.log('🚀 Updated serviceResponses state:', updated);
+                return updated;
               });
             }
             fetchServiceResponses();
@@ -223,6 +235,8 @@ const ServiceManagement = () => {
 
   const fetchServiceResponses = async () => {
     try {
+      console.log('🔍 Fetching service responses for account type:', profile?.account_type);
+      
       if (profile?.account_type === 'company') {
         // For companies, fetch their sent responses with request details AND messages
         const { data, error } = await supabase
@@ -243,9 +257,17 @@ const ServiceManagement = () => {
 
         if (error) throw error;
         
+        console.log('📊 Raw service responses data:', data);
+        
         // Format the responses to include request details and fetch related messages
         const formattedResponses = await Promise.all(
           (data || []).map(async (response) => {
+            console.log('🔄 Processing response:', {
+              id: response.id,
+              response_status: response.response_status,
+              request_id: response.request_id
+            });
+            
             // Fetch messages for this service request
             const { data: messagesData } = await supabase
               .from('service_request_messages')
@@ -253,15 +275,24 @@ const ServiceManagement = () => {
               .eq('request_id', response.request_id)
               .order('created_at', { ascending: false });
 
-            return {
+            const formatted = {
               ...response,
               request_details: response.service_inquiries,
               messages: messagesData || [],
               status_display: response.response_status || 'pending'
             };
+            
+            console.log('✅ Formatted response:', {
+              id: formatted.id,
+              response_status: formatted.response_status,
+              status_display: formatted.status_display
+            });
+            
+            return formatted;
           })
         );
         
+        console.log('🚀 Final formatted responses:', formattedResponses);
         setServiceResponses(formattedResponses);
       } else {
         // For users, fetch service inquiries with responses and conversations
