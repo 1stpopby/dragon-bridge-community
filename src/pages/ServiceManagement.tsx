@@ -66,7 +66,7 @@ const ServiceManagement = () => {
   const [receivedMessages, setReceivedMessages] = useState<ServiceInquiry[]>([]);
   const [myServiceRequests, setMyServiceRequests] = useState<ServiceRequest[]>([]);
   const [completedServices, setCompletedServices] = useState<ServiceRequest[]>([]);
-  const [showCompletedServices, setShowCompletedServices] = useState(false);
+  const [showCompletedServices, setShowCompletedServices] = useState(true);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [selectedRequestTitle, setSelectedRequestTitle] = useState<string>("");
   const [responseDialogOpen, setResponseDialogOpen] = useState(false);
