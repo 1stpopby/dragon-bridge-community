@@ -13,11 +13,32 @@ serve(async (req) => {
   }
 
   try {
-    // Get Google Maps API key from Supabase secrets
-    const apiKey = Deno.env.get('GOOGLE_MAPS_API_KEY')
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     
-    if (!apiKey) {
-      console.error('Google Maps API key not found in environment')
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    
+    // Get Google Maps API key from database
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('setting_value')
+      .eq('setting_key', 'google_maps_api_key')
+      .single()
+    
+    if (error) {
+      console.error('Error fetching Google Maps API key:', error)
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch API key from database' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+    
+    if (!data || !data.setting_value) {
+      console.error('Google Maps API key not found in database')
       return new Response(
         JSON.stringify({ error: 'Google Maps API key not configured' }),
         { 
@@ -26,8 +47,11 @@ serve(async (req) => {
         }
       )
     }
+
+    // Parse the JSON value (since it's stored as JSON in the database)
+    const apiKey = JSON.parse(data.setting_value)
     
-    if (apiKey === '') {
+    if (!apiKey || apiKey === '') {
       console.error('Google Maps API key is empty')
       return new Response(
         JSON.stringify({ error: 'Google Maps API key not set' }),
