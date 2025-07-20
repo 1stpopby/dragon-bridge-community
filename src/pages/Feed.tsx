@@ -102,9 +102,13 @@ const Feed = () => {
 
   const fetchPosts = async () => {
     try {
+      // Fetch posts with latest profile info to ensure avatars are up to date
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select('*')
+        .select(`
+          *,
+          profiles!inner(avatar_url, display_name)
+        `)
         .order('created_at', { ascending: false });
 
       if (postsError) throw postsError;
@@ -120,12 +124,21 @@ const Feed = () => {
         const likedPostIds = new Set(likesData?.map(like => like.post_id) || []);
         const postsWithLikeStatus = postsData.map(post => ({
           ...post,
+          // Use the latest avatar from profiles table if available
+          author_avatar: (post.profiles as any)?.avatar_url || post.author_avatar,
+          author_name: (post.profiles as any)?.display_name || post.author_name,
           user_liked: likedPostIds.has(post.id)
         }));
 
         setPosts(postsWithLikeStatus);
       } else {
-        setPosts(postsData || []);
+        const postsWithLatestAvatars = postsData?.map(post => ({
+          ...post,
+          // Use the latest avatar from profiles table if available
+          author_avatar: (post.profiles as any)?.avatar_url || post.author_avatar,
+          author_name: (post.profiles as any)?.display_name || post.author_name,
+        })) || [];
+        setPosts(postsWithLatestAvatars);
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -222,7 +235,10 @@ const Feed = () => {
 
       const { data: postsData, error } = await supabase
         .from('posts')
-        .select('*')
+        .select(`
+          *,
+          profiles!inner(avatar_url, display_name)
+        `)
         .in('user_id', followedUserIds)
         .order('created_at', { ascending: false });
 
@@ -239,12 +255,21 @@ const Feed = () => {
         const likedPostIds = new Set(likesData?.map(like => like.post_id) || []);
         const postsWithLikeStatus = postsData.map(post => ({
           ...post,
+          // Use the latest avatar from profiles table if available
+          author_avatar: (post.profiles as any)?.avatar_url || post.author_avatar,
+          author_name: (post.profiles as any)?.display_name || post.author_name,
           user_liked: likedPostIds.has(post.id)
         }));
 
         setFollowingPosts(postsWithLikeStatus);
       } else {
-        setFollowingPosts(postsData || []);
+        const postsWithLatestAvatars = postsData?.map(post => ({
+          ...post,
+          // Use the latest avatar from profiles table if available
+          author_avatar: (post.profiles as any)?.avatar_url || post.author_avatar,
+          author_name: (post.profiles as any)?.display_name || post.author_name,
+        })) || [];
+        setFollowingPosts(postsWithLatestAvatars);
       }
     } catch (error) {
       console.error('Error fetching following posts:', error);
@@ -269,13 +294,24 @@ const Feed = () => {
           post_id,
           posts (*)
         `)
-        .eq('user_id', user.id);
+        .eq('user_id', profile?.id); // Use profile.id instead of user.id
 
       if (error) throw error;
 
       const posts = savedPostsData?.map(sp => sp.posts).filter(Boolean) || [];
       
       if (posts.length > 0) {
+        // Enhance saved posts with latest profile info
+        const postsWithUserIds = posts.map(p => p.user_id);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, avatar_url, display_name')
+          .in('user_id', postsWithUserIds);
+
+        if (profilesError) throw profilesError;
+
+        const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+
         const { data: likesData, error: likesError } = await supabase
           .from('post_likes')
           .select('post_id')
@@ -284,10 +320,16 @@ const Feed = () => {
         if (likesError) throw likesError;
 
         const likedPostIds = new Set(likesData?.map(like => like.post_id) || []);
-        const postsWithLikeStatus = posts.map(post => ({
-          ...post,
-          user_liked: likedPostIds.has(post.id)
-        }));
+        const postsWithLikeStatus = posts.map(post => {
+          const profile = profilesMap.get(post.user_id);
+          return {
+            ...post,
+            // Use the latest avatar from profiles table if available
+            author_avatar: profile?.avatar_url || post.author_avatar,
+            author_name: profile?.display_name || post.author_name,
+            user_liked: likedPostIds.has(post.id)
+          };
+        });
 
         setSavedPosts(postsWithLikeStatus);
       } else {
@@ -306,7 +348,7 @@ const Feed = () => {
   };
 
   const handleSavePost = async (post: Post) => {
-    if (!user) return;
+    if (!user || !profile) return;
     
     try {
       const isAlreadySaved = savedPosts.some(p => p.id === post.id);
@@ -315,7 +357,7 @@ const Feed = () => {
         const { error } = await supabase
           .from('saved_posts')
           .delete()
-          .eq('user_id', user.id)
+          .eq('user_id', profile.id) // Use profile.id instead of user.id
           .eq('post_id', post.id);
 
         if (error) {
@@ -332,7 +374,7 @@ const Feed = () => {
         const { error } = await supabase
           .from('saved_posts')
           .insert({
-            user_id: user.id,
+            user_id: profile.id, // Use profile.id instead of user.id
             post_id: post.id
           });
 
