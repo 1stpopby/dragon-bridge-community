@@ -28,10 +28,15 @@ import { AdminAuthProvider } from "./hooks/useAdminAuth";
 import { AdminProtectedRoute } from "./components/AdminProtectedRoute";
 import { BanCheckWrapper } from "./components/BanCheckWrapper";
 import AdminLogin from "./pages/AdminLogin";
+import { useDynamicTitle } from "./hooks/useDynamicTitle";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  // Initialize dynamic title functionality
+  useDynamicTitle();
+  
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
@@ -70,6 +75,7 @@ const App = () => (
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
