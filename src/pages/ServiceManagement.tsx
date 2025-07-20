@@ -595,11 +595,12 @@ const ServiceManagement = () => {
                               // Add company responses
                               if (inquiry.service_inquiry_responses) {
                                 inquiry.service_inquiry_responses.forEach((response: any) => {
+                                  const companyName = profile?.company_name || profile?.display_name || 'You';
                                   allMessages.push({
                                     message: response.response_message,
                                     created_at: response.created_at,
                                     sender_type: 'company',
-                                    sender_name: 'You'
+                                    sender_name: companyName
                                   });
                                 });
                               }
@@ -607,11 +608,13 @@ const ServiceManagement = () => {
                               // Add conversation messages
                               if (inquiry.service_inquiry_conversations) {
                                 inquiry.service_inquiry_conversations.forEach((conv: any) => {
+                                  const senderName = conv.sender_type === 'user' ? inquiry.inquirer_name : 
+                                    (profile?.company_name || profile?.display_name || 'You');
                                   allMessages.push({
                                     message: conv.message,
                                     created_at: conv.created_at,
                                     sender_type: conv.sender_type,
-                                    sender_name: conv.sender_type === 'user' ? inquiry.inquirer_name : 'You'
+                                    sender_name: senderName
                                   });
                                 });
                               }
@@ -936,11 +939,12 @@ const ServiceManagement = () => {
                               // Add company responses
                               if (inquiry.service_inquiry_responses) {
                                 inquiry.service_inquiry_responses.forEach((response: any) => {
+                                  const companyName = response.profiles?.company_name || response.profiles?.display_name || 'Company';
                                   allMessages.push({
                                     message: response.response_message,
                                     created_at: response.created_at,
                                     sender_type: 'company',
-                                    sender_name: response.profiles?.company_name || response.profiles?.display_name || 'Company'
+                                    sender_name: companyName
                                   });
                                 });
                               }
@@ -948,11 +952,15 @@ const ServiceManagement = () => {
                               // Add conversation messages
                               if (inquiry.service_inquiry_conversations) {
                                 inquiry.service_inquiry_conversations.forEach((conv: any) => {
+                                  const senderName = conv.sender_type === 'user' ? 'You' : 
+                                    (inquiry.service_inquiry_responses && inquiry.service_inquiry_responses.length > 0 
+                                      ? inquiry.service_inquiry_responses[0].profiles?.company_name || inquiry.service_inquiry_responses[0].profiles?.display_name || 'Company'
+                                      : 'Company');
                                   allMessages.push({
                                     message: conv.message,
                                     created_at: conv.created_at,
                                     sender_type: conv.sender_type,
-                                    sender_name: conv.sender_type === 'user' ? 'You' : 'Company'
+                                    sender_name: senderName
                                   });
                                 });
                               }

@@ -47,6 +47,15 @@ export function ServiceConversationDialog({
     try {
       const conversationMessages: ConversationMessage[] = [];
 
+      // Get company name from inquiry data or profile
+      let companyName = 'Company';
+      if (inquiry.service_inquiry_responses && inquiry.service_inquiry_responses.length > 0) {
+        const response = inquiry.service_inquiry_responses[0];
+        companyName = response.profiles?.company_name || response.profiles?.display_name || 'Company';
+      } else if (profile?.account_type === 'company') {
+        companyName = profile.company_name || profile.display_name || 'Company';
+      }
+
       // Add the original inquiry as the first message
       conversationMessages.push({
         id: `original-${inquiry.id}`,
@@ -59,12 +68,13 @@ export function ServiceConversationDialog({
       // Add company responses if any
       if (inquiry.service_inquiry_responses && inquiry.service_inquiry_responses.length > 0) {
         inquiry.service_inquiry_responses.forEach((response: any) => {
+          const responseCompanyName = response.profiles?.company_name || response.profiles?.display_name || companyName;
           conversationMessages.push({
             id: `response-${response.id}`,
             message: response.response_message,
             sender_type: 'company',
             created_at: response.created_at,
-            sender_name: response.profiles?.company_name || response.profiles?.display_name || 'Company'
+            sender_name: responseCompanyName
           });
         });
       }
@@ -77,7 +87,7 @@ export function ServiceConversationDialog({
             message: conv.message,
             sender_type: conv.sender_type,
             created_at: conv.created_at,
-            sender_name: conv.sender_type === 'user' ? inquiry.inquirer_name : 'Company'
+            sender_name: conv.sender_type === 'user' ? inquiry.inquirer_name : companyName
           });
         });
       }
