@@ -160,6 +160,8 @@ const ServiceManagement = () => {
           () => {
             console.log('New message received, refreshing data...');
             fetchServiceResponses();
+            fetchReceivedMessages();
+            fetchMyServiceRequests();
           }
         )
         .subscribe();
@@ -310,8 +312,8 @@ const ServiceManagement = () => {
 
       if (requestsError) throw requestsError;
 
-      // Get response counts for each request
-      const requestsWithCounts = await Promise.all(
+      // Get response counts and messages for each request
+      const requestsWithData = await Promise.all(
         (requestsData || []).map(async (request) => {
           const { data: responsesData, error: responsesError } = await supabase
             .from('service_request_responses')
@@ -320,14 +322,22 @@ const ServiceManagement = () => {
 
           if (responsesError) throw responsesError;
 
+          // Also fetch messages for this request
+          const { data: messagesData } = await supabase
+            .from('service_request_messages')
+            .select('*')
+            .eq('request_id', request.id)
+            .order('created_at', { ascending: false });
+
           return {
             ...request,
-            response_count: responsesData?.length || 0
+            response_count: responsesData?.length || 0,
+            messages: messagesData || []
           };
         })
       );
 
-      setMyServiceRequests(requestsWithCounts);
+      setMyServiceRequests(requestsWithData);
     } catch (error) {
       console.error('Error fetching service requests:', error);
     }

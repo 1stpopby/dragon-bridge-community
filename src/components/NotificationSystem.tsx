@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -29,6 +30,7 @@ export function NotificationSystem() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const fetchNotifications = async () => {
     if (!user) return;
@@ -108,15 +110,37 @@ export function NotificationSystem() {
     }
   };
 
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read if not already read
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+    }
+
+    // Close the dropdown
+    setOpen(false);
+
+    // Navigate based on notification type and related data
+    if (notification.related_type === 'service_request' && notification.related_id) {
+      navigate('/service-management');
+    } else if (notification.type === 'message') {
+      navigate('/messages');
+    } else if (notification.type === 'event') {
+      navigate('/events');
+    } else if (notification.type === 'marketplace') {
+      navigate('/marketplace');
+    }
+  };
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'message':
+      case 'service_message':
+      case 'service_reply':
         return <MessageSquare className="h-4 w-4" />;
       case 'reply':
         return <MessageSquare className="h-4 w-4" />;
       case 'event':
         return <Calendar className="h-4 w-4" />;
-
       case 'marketplace':
         return <Store className="h-4 w-4" />;
       case 'service':
@@ -169,7 +193,7 @@ export function NotificationSystem() {
                       ? 'border-l-transparent opacity-60' 
                       : 'border-l-primary bg-primary/5'
                   }`}
-                  onClick={() => !notification.is_read && markAsRead(notification.id)}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">
