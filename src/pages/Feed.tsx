@@ -102,6 +102,8 @@ const Feed = () => {
 
   const fetchPosts = async () => {
     try {
+      console.log('fetchPosts called, user:', user?.id);
+      
       // Fetch posts with latest profile info to ensure avatars are up to date
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
@@ -111,7 +113,12 @@ const Feed = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (postsError) throw postsError;
+      console.log('Posts query result:', { postsData, postsError });
+
+      if (postsError) {
+        console.error('Error in posts query:', postsError);
+        throw postsError;
+      }
 
       if (user && postsData) {
         const { data: likesData, error: likesError } = await supabase
@@ -119,7 +126,10 @@ const Feed = () => {
           .select('post_id')
           .eq('user_id', user.id);
 
-        if (likesError) throw likesError;
+        if (likesError) {
+          console.error('Error in likes query:', likesError);
+          throw likesError;
+        }
 
         const likedPostIds = new Set(likesData?.map(like => like.post_id) || []);
         const postsWithLikeStatus = postsData.map(post => ({
@@ -130,6 +140,7 @@ const Feed = () => {
           user_liked: likedPostIds.has(post.id)
         }));
 
+        console.log('Setting posts with like status:', postsWithLikeStatus.length);
         setPosts(postsWithLikeStatus);
       } else {
         const postsWithLatestAvatars = postsData?.map(post => ({
@@ -138,6 +149,7 @@ const Feed = () => {
           author_avatar: (post.profiles as any)?.avatar_url || post.author_avatar,
           author_name: (post.profiles as any)?.display_name || post.author_name,
         })) || [];
+        console.log('Setting posts without user:', postsWithLatestAvatars.length);
         setPosts(postsWithLatestAvatars);
       }
     } catch (error) {
