@@ -710,130 +710,148 @@ const ServiceManagement = () => {
                     {serviceResponses.length === 0 ? (
                       <div className="text-center py-12 text-muted-foreground">
                         <Building2 className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium mb-2">No responses sent yet</p>
-                        <p className="text-sm">When you respond to customer service requests, they'll appear here</p>
+                        <p className="text-lg font-medium mb-2">No service conversations yet</p>
+                        <p className="text-sm">When you respond to customer service requests, conversations will appear here</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {serviceResponses.map((response) => (
-                          <div
-                            key={response.id}
-                            className="p-4 border rounded-lg"
-                          >
-                            {/* Service Response Header */}
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-green-600" />
-                                <span className="font-medium">Service Response</span>
-                                <Badge variant={
-                                  response.response_status === 'completed' ? 'default' :
-                                  response.response_status === 'accepted' ? 'default' :
-                                  response.response_status === 'declined' ? 'destructive' :
-                                  'secondary'
-                                } className={`text-xs ${
-                                  response.response_status === 'completed' ? 'bg-green-100 text-green-800' : ''
-                                }`}>
-                                  Status: {response.response_status || 'Pending'}
-                                </Badge>
-                                {response.messages && response.messages.length > 0 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {response.messages.length} message{response.messages.length > 1 ? 's' : ''}
-                                  </Badge>
+                        {serviceResponses
+                          .sort((a, b) => {
+                            // Sort by activity (messages) first, then by date
+                            const aHasMessages = a.messages && a.messages.length > 0;
+                            const bHasMessages = b.messages && b.messages.length > 0;
+                            
+                            if (aHasMessages && !bHasMessages) return -1;
+                            if (!aHasMessages && bHasMessages) return 1;
+                            
+                            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                          })
+                          .map((response) => {
+                            const hasMessages = response.messages && response.messages.length > 0;
+                            
+                            // Get the last message in the conversation
+                            let lastMessage = null;
+                            if (hasMessages) {
+                              const sortedMessages = [...response.messages].sort((a, b) => 
+                                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                              );
+                              lastMessage = sortedMessages[0];
+                            }
+                            
+                            return (
+                              <div
+                                key={response.id}
+                                className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                                  hasMessages ? 'border-green-500 bg-green-50 dark:bg-green-950/20' : 'hover:bg-accent/50'
+                                }`}
+                                onClick={() => {
+                                  // Convert response to inquiry format for the conversation dialog
+                                  const inquiryForDialog = {
+                                    id: response.request_id,
+                                    inquirer_name: response.request_details?.inquirer_name || 'Customer',
+                                    inquirer_email: response.request_details?.inquirer_email || '',
+                                    inquirer_phone: '',
+                                    message: response.request_details?.message || '',
+                                    inquiry_type: 'contact',
+                                    created_at: response.request_details?.created_at || response.created_at,
+                                    service_id: '',
+                                    user_id: response.request_details?.user_id,
+                                    service_inquiry_responses: [{
+                                      id: response.id,
+                                      response_message: response.response_message,
+                                      contact_email: response.contact_email,
+                                      contact_phone: response.contact_phone,
+                                      created_at: response.created_at,
+                                      profiles: {
+                                        company_name: profile?.company_name,
+                                        display_name: profile?.display_name
+                                      }
+                                    }],
+                                    service_inquiry_conversations: response.messages?.map(msg => ({
+                                      id: msg.id,
+                                      message: msg.message,
+                                      sender_type: msg.message_type === 'user_to_company' ? 'user' : 'company',
+                                      created_at: msg.created_at
+                                    })) || []
+                                  };
+                                  setSelectedInquiryForConversation(inquiryForDialog);
+                                  setConversationDialogOpen(true);
+                                }}
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <Building2 className={`h-4 w-4 ${hasMessages ? 'text-green-600' : 'text-blue-600'}`} />
+                                    <span className="font-medium">Service Response</span>
+                                    <Badge variant={
+                                      response.response_status === 'completed' ? 'default' :
+                                      response.response_status === 'accepted' ? 'default' :
+                                      response.response_status === 'declined' ? 'destructive' :
+                                      'secondary'
+                                    } className={`text-xs ${
+                                      response.response_status === 'completed' ? 'bg-green-100 text-green-800' : ''
+                                    }`}>
+                                      {response.response_status || 'Pending'}
+                                    </Badge>
+                                    {hasMessages && (
+                                      <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
+                                        New Messages
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <span className="text-sm text-muted-foreground">
+                                    {formatDistanceToNow(new Date(response.created_at), { addSuffix: true })}
+                                  </span>
+                                </div>
+
+                                {/* Customer request preview */}
+                                {response.request_details && (
+                                  <div className="mb-3">
+                                    <p className="text-sm font-medium mb-1">Customer request from {response.request_details.inquirer_name}:</p>
+                                    <p className="text-sm text-muted-foreground line-clamp-2">{response.request_details.message}</p>
+                                  </div>
                                 )}
-                              </div>
-                              <span className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(response.created_at), { addSuffix: true })}
-                              </span>
-                            </div>
 
-                            {/* Service Response Content */}
-                            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                              {isServiceResponse(response) ? response.response_message : response.message}
-                            </p>
+                                {/* Your response preview */}
+                                <div className="mb-3">
+                                  <p className="text-sm font-medium mb-1">Your response:</p>
+                                  <p className="text-sm text-muted-foreground line-clamp-2">
+                                    {isServiceResponse(response) ? response.response_message : response.message}
+                                  </p>
+                                </div>
 
-                            {/* Request Details */}
-                            {response.request_details && (
-                              <div className="mb-3 p-3 bg-muted/30 rounded-md">
-                                <div className="text-xs font-medium text-muted-foreground mb-1">Original Request from {response.request_details.inquirer_name}</div>
-                                <p className="text-sm line-clamp-2">{response.request_details.message}</p>
-                              </div>
-                            )}
-
-                            {/* Messages Section */}
-                            {response.messages && response.messages.length > 0 && (
-                              <div className="mt-4 space-y-2 border-t pt-3">
-                                <div className="text-xs font-medium text-muted-foreground mb-2">Messages:</div>
-                                {response.messages.slice(0, 3).map((message) => (
-                                  <div
-                                    key={message.id}
-                                    className="p-2 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-950 dark:border-blue-800"
-                                  >
+                                {/* Last message preview */}
+                                {lastMessage && (
+                                  <div className={`p-3 rounded border ${
+                                    lastMessage.message_type === 'user_to_company' 
+                                      ? 'bg-blue-100 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800' 
+                                      : 'bg-green-100 border-green-200 dark:bg-green-900/20 dark:border-green-800'
+                                  }`}>
                                     <div className="flex items-center justify-between mb-1">
-                                      <span className="text-xs font-medium">
-                                        {message.message_type === 'user_to_company' ? 'From User' : 'From Company'}
-                                      </span>
+                                      <p className="text-xs font-medium">
+                                        Latest from {lastMessage.message_type === 'user_to_company' ? 'Customer' : 'You'}:
+                                      </p>
                                       <span className="text-xs text-muted-foreground">
-                                        {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                                        {formatDistanceToNow(new Date(lastMessage.created_at), { addSuffix: true })}
                                       </span>
                                     </div>
-                                    <p className="text-sm line-clamp-2">{message.message}</p>
+                                    <p className="text-sm line-clamp-2">{lastMessage.message}</p>
                                   </div>
-                                ))}
-                                {response.messages.length > 3 && (
-                                  <div className="text-xs text-muted-foreground">
-                                    + {response.messages.length - 3} more message{response.messages.length - 3 > 1 ? 's' : ''}
+                                )}
+
+                                {!hasMessages && (
+                                  <div className="text-xs text-muted-foreground mt-2">
+                                    Click to view • Awaiting customer response
                                   </div>
                                 )}
                                 
-                                {/* Reply Button */}
-                                <div className="mt-2">
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    onClick={() => handleResponseClick({
-                                      id: response.id,
-                                      inquirer_name: response.request_details?.inquirer_name || 'User',
-                                      inquirer_email: response.request_details?.inquirer_email || '',
-                                      inquirer_phone: '',
-                                      message: response.response_message || '',
-                                      inquiry_type: 'contact',
-                                      created_at: response.created_at,
-                                      service_id: '',
-                                      user_id: response.request_details?.user_id
-                                    })}
-                                  >
-                                    <MessageSquare className="h-4 w-4 mr-2" />
-                                    Reply to Conversation
-                                  </Button>
-                                </div>
+                                {hasMessages && (
+                                  <div className="text-xs text-green-600 font-medium mt-2">
+                                    Click to view full conversation
+                                  </div>
+                                )}
                               </div>
-                            )}
-
-                            {/* Reply Button for responses without messages */}
-                            {(!response.messages || response.messages.length === 0) && (
-                              <div className="mt-3">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => handleResponseClick({
-                                    id: response.id,
-                                    inquirer_name: response.request_details?.inquirer_name || 'User',
-                                    inquirer_email: response.request_details?.inquirer_email || '',
-                                    inquirer_phone: '',
-                                    message: response.response_message || '',
-                                    inquiry_type: 'contact',
-                                    created_at: response.created_at,
-                                    service_id: '',
-                                    user_id: response.request_details?.user_id
-                                  })}
-                                >
-                                  <MessageSquare className="h-4 w-4 mr-2" />
-                                  Start Conversation
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                            );
+                          })}
                       </div>
                     )}
                   </ScrollArea>
