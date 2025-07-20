@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MapPin, Phone, Globe, Star, Search, Filter, CheckCircle, Users, ChevronRight } from "lucide-react";
+import { MapPin, Phone, Globe, Star, Search, Filter, CheckCircle, Users, ChevronRight, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +18,7 @@ import { ServiceRequestDialog } from "@/components/ServiceRequestDialog";
 import { ListBusinessDialog } from "@/components/ListBusinessDialog";
 import { ServiceRequestsTab } from "@/components/ServiceRequestsTab";
 import { AdvertisementBanner } from "@/components/AdvertisementBanner";
+import { Link } from "react-router-dom";
 
 const Services = () => {
   const [services, setServices] = useState<any[]>([]);
@@ -49,7 +50,7 @@ const Services = () => {
         (servicesData || []).map(async (service) => {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('avatar_url, display_name, company_name')
+            .select('id, avatar_url, display_name, company_name, account_type')
             .eq('user_id', service.user_id)
             .single();
 
@@ -157,11 +158,19 @@ const Services = () => {
           <ServiceDetailsDialog
             service={service}
             triggerButton={
-              <Button size="sm" className="flex-1 bg-red-600 hover:bg-red-700">
+              <Button size="sm" variant="outline" className="flex-1">
                 Details
               </Button>
             }
           />
+          {service.profiles?.account_type === 'company' && service.profiles?.id && (
+            <Link to={`/company/${service.profiles.id}`} className="flex-1">
+              <Button size="sm" className="w-full bg-primary hover:bg-primary/90">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Visit Our Page
+              </Button>
+            </Link>
+          )}
         </div>
       </CardContent>
     </Card>
