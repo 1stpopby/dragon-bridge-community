@@ -1519,6 +1519,54 @@ export type Database = {
           },
         ]
       }
+      service_inquiry_responses: {
+        Row: {
+          company_id: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          inquiry_id: string
+          response_message: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          inquiry_id: string
+          response_message: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          inquiry_id?: string
+          response_message?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_inquiry_responses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_inquiry_responses_inquiry_id_fkey"
+            columns: ["inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "service_inquiries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_request_messages: {
         Row: {
           created_at: string

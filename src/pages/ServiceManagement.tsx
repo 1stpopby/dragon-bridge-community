@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Building2, HelpCircle, Eye, ClipboardList, MessageSquare, RefreshCw, Star, CheckCircle, EyeOff, ThumbsUp } from "lucide-react";
+import { Building2, HelpCircle, Eye, ClipboardList, MessageSquare, RefreshCw, Star, CheckCircle, EyeOff, ThumbsUp, Reply } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate } from "react-router-dom";
@@ -13,6 +13,7 @@ import MobileNavigation from "@/components/MobileNavigation";
 import { ServiceRequestResponsesDialog } from "@/components/ServiceRequestResponsesDialog";
 import { ServiceRequestManagementDialog } from "@/components/ServiceRequestManagementDialog";
 import { ServiceResponseDialog } from "@/components/ServiceResponseDialog";
+import { ServiceInquiryReplyDialog } from "@/components/ServiceInquiryReplyDialog";
 import { CompanyFeedbackManagement } from "@/components/CompanyFeedbackManagement";
 import { UserFeedbackReceived } from "@/components/UserFeedbackReceived";
 import { formatDistanceToNow } from "date-fns";
@@ -73,6 +74,8 @@ const ServiceManagement = () => {
   const [responseDialogOpen, setResponseDialogOpen] = useState(false);
   const [selectedServiceResponse, setSelectedServiceResponse] = useState<ServiceInquiry | null>(null);
   const [serviceResponseDialogOpen, setServiceResponseDialogOpen] = useState(false);
+  const [selectedInquiryForReply, setSelectedInquiryForReply] = useState<ServiceInquiry | null>(null);
+  const [inquiryReplyDialogOpen, setInquiryReplyDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -220,10 +223,24 @@ const ServiceManagement = () => {
         
         setServiceResponses(formattedResponses);
       } else {
-        // For users, fetch service responses they received
+        // For users, fetch service inquiries with responses
         const { data, error } = await supabase
           .from('service_inquiries')
-          .select('*')
+          .select(`
+            *,
+            service_inquiry_responses (
+              id,
+              response_message,
+              contact_email,
+              contact_phone,
+              created_at,
+              company_id,
+              profiles:company_id (
+                display_name,
+                company_name
+              )
+            )
+          `)
           .eq('user_id', user?.id)
           .eq('inquiry_type', 'contact')
           .order('created_at', { ascending: false });
@@ -508,8 +525,7 @@ const ServiceManagement = () => {
                         {receivedMessages.map((inquiry) => (
                           <div
                             key={inquiry.id}
-                            className="p-4 border rounded-lg hover:bg-accent/50 cursor-pointer"
-                            onClick={() => handleResponseClick(inquiry)}
+                            className="p-4 border rounded-lg hover:bg-accent/50"
                           >
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-2">
@@ -534,6 +550,21 @@ const ServiceManagement = () => {
                               )}
                               <div className="bg-muted/50 p-3 rounded">
                                 <p className="text-sm">{inquiry.message}</p>
+                              </div>
+                              
+                              <div className="flex justify-end pt-2">
+                                <Button
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedInquiryForReply(inquiry);
+                                    setInquiryReplyDialogOpen(true);
+                                  }}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Reply className="h-4 w-4" />
+                                  Reply
+                                </Button>
                               </div>
                             </div>
                           </div>
@@ -760,9 +791,45 @@ const ServiceManagement = () => {
                                 <p className="text-sm">{inquiry.message}</p>
                               </div>
                               
-                              <div className="text-xs text-muted-foreground mt-2">
-                                Status: Awaiting company response
-                              </div>
+                              {/* Company Responses */}
+                              {inquiry.service_inquiry_responses && inquiry.service_inquiry_responses.length > 0 ? (
+                                <div className="space-y-2">
+                                  {inquiry.service_inquiry_responses.map((response: any) => (
+                                    <div
+                                      key={response.id}
+                                      className="bg-green-50 p-3 rounded border border-green-200 dark:bg-green-950 dark:border-green-800"
+                                    >
+                                      <div className="flex items-center justify-between mb-1">
+                                        <p className="text-xs font-medium text-green-800 dark:text-green-300">
+                                          Company Response from {response.profiles?.company_name || response.profiles?.display_name || 'Company'}:
+                                        </p>
+                                        <span className="text-xs text-muted-foreground">
+                                          {formatDistanceToNow(new Date(response.created_at), { addSuffix: true })}
+                                        </span>
+                                      </div>
+                                      <p className="text-sm">{response.response_message}</p>
+                                      {(response.contact_email || response.contact_phone) && (
+                                        <div className="mt-2 pt-2 border-t border-green-200 dark:border-green-800">
+                                          <p className="text-xs font-medium text-green-800 dark:text-green-300 mb-1">Contact Details:</p>
+                                          {response.contact_email && (
+                                            <p className="text-xs text-muted-foreground">Email: {response.contact_email}</p>
+                                          )}
+                                          {response.contact_phone && (
+                                            <p className="text-xs text-muted-foreground">Phone: {response.contact_phone}</p>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                  <div className="text-xs text-green-600 font-medium">
+                                    ✓ Company has responded to your inquiry
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-xs text-muted-foreground mt-2">
+                                  Status: Awaiting company response
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -938,6 +1005,19 @@ const ServiceManagement = () => {
             response={selectedServiceResponse}
             open={serviceResponseDialogOpen}
             onOpenChange={setServiceResponseDialogOpen}
+          />
+        )}
+
+        {/* Service Inquiry Reply Dialog */}
+        {selectedInquiryForReply && (
+          <ServiceInquiryReplyDialog
+            inquiry={selectedInquiryForReply}
+            open={inquiryReplyDialogOpen}
+            onOpenChange={setInquiryReplyDialogOpen}
+            onReplySent={() => {
+              fetchReceivedMessages();
+              fetchServiceResponses();
+            }}
           />
         )}
       </div>
