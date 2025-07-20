@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { MarketplaceDialog } from "./MarketplaceDialog";
 import { FullAdDialog } from "./FullAdDialog";
+import MarketplaceLocationMap from "./MarketplaceLocationMap";
 
 interface MarketplaceCardProps {
   item: any;
@@ -234,6 +235,12 @@ export function MarketplaceCard({ item, onItemChanged, showActions = true }: Mar
                 </div>
                 <div>Category: {item.category}</div>
                 <div>Seller: {item.seller_name}</div>
+                <div onClick={(e) => e.stopPropagation()}>
+                  <MarketplaceLocationMap 
+                    location={item.location} 
+                    title={item.title}
+                  />
+                </div>
               </div>
 
               {/* Actions Section */}

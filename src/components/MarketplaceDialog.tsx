@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
+import LocationPicker from "./LocationPicker";
 
 interface MarketplaceDialogProps {
   item?: any;
@@ -352,12 +353,10 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
             </div>
             <div className="col-span-2">
               <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="Item location"
-                required
+              <LocationPicker
+                onLocationSelect={(location) => handleInputChange('location', location.address)}
+                initialLocation={formData.location}
+                placeholder="Enter item location or click on map"
               />
             </div>
             <div>
