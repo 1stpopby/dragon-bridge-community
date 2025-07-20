@@ -184,6 +184,31 @@ All colors MUST be HSL.
       min-height: 44px;
       min-width: 44px;
     }
+    
+    /* Prevent zoom on input focus */
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+    
+    /* Native app-like touch behavior */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Hide scrollbars for cleaner look */
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    
+    /* Better mobile card layouts */
+    .mobile-card {
+      @apply rounded-lg border border-border bg-card p-4 shadow-sm;
+    }
   }
   
   /* Prevent zoom on double tap */

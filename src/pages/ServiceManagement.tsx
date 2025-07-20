@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import MobileNavigation from "@/components/MobileNavigation";
 import { ServiceRequestResponsesDialog } from "@/components/ServiceRequestResponsesDialog";
 import { ServiceRequestManagementDialog } from "@/components/ServiceRequestManagementDialog";
 import { ServiceResponseDialog } from "@/components/ServiceResponseDialog";
@@ -395,7 +396,7 @@ const ServiceManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <Navigation />
       
       <div className="max-w-4xl mx-auto py-8 px-4">
@@ -791,6 +792,7 @@ const ServiceManagement = () => {
           />
         )}
       </div>
+      <MobileNavigation />
     </div>
   );
 };

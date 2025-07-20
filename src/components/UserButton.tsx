@@ -12,10 +12,14 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, LogOut, Building2, Settings, MessageSquare, Bell, Store, Home, ClipboardList } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export const UserButton = () => {
   const { user, profile, signOut } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   if (!user || !profile) {
     return (
@@ -40,6 +44,129 @@ export const UserButton = () => {
     ? profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase()
     : user.email?.[0]?.toUpperCase() || '?';
 
+  const menuItems = (
+    <>
+      <div className="flex flex-col space-y-1 p-4 border-b">
+        <div className="flex items-center gap-2">
+          {profile.account_type === 'company' ? (
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <User className="h-4 w-4 text-muted-foreground" />
+          )}
+          <p className="text-sm font-medium leading-none">
+            {profile.display_name}
+          </p>
+        </div>
+        {profile.company_name && (
+          <p className="text-xs text-muted-foreground">
+            {profile.company_name}
+          </p>
+        )}
+        <p className="text-xs leading-none text-muted-foreground">
+          {user.email}
+        </p>
+      </div>
+      
+      <div className="p-2 space-y-1">
+        {/* My Page for company accounts */}
+        {profile.account_type === 'company' && (
+          <Link 
+            to={`/company/${profile.id}`} 
+            className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors w-full"
+            onClick={() => setIsOpen(false)}
+          >
+            <Home className="mr-2 h-4 w-4" />
+            My Page
+          </Link>
+        )}
+        
+        {/* Quick Access Links */}
+        <Link 
+          to="/messages" 
+          className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors w-full"
+          onClick={() => setIsOpen(false)}
+        >
+          <MessageSquare className="mr-2 h-4 w-4" />
+          Messages
+        </Link>
+        
+        <Link 
+          to="/service-management" 
+          className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors w-full"
+          onClick={() => setIsOpen(false)}
+        >
+          <ClipboardList className="mr-2 h-4 w-4" />
+          Service Management
+        </Link>
+        
+        <Link 
+          to="/notifications" 
+          className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors w-full"
+          onClick={() => setIsOpen(false)}
+        >
+          <Bell className="mr-2 h-4 w-4" />
+          Notifications
+        </Link>
+        
+        <Link 
+          to="/my-marketplace" 
+          className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors w-full"
+          onClick={() => setIsOpen(false)}
+        >
+          <Store className="mr-2 h-4 w-4" />
+          My Marketplace
+        </Link>
+        
+        <div className="border-t my-2"></div>
+        
+        <Link 
+          to="/profile" 
+          className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors w-full"
+          onClick={() => setIsOpen(false)}
+        >
+          <Settings className="mr-2 h-4 w-4" />
+          Profile Settings
+        </Link>
+        
+        <div className="border-t my-2"></div>
+        
+        <button
+          onClick={() => {
+            handleSignOut();
+            setIsOpen(false);
+          }}
+          disabled={isLoggingOut}
+          className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors w-full text-red-600 hover:text-red-700"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          {isLoggingOut ? "Signing out..." : "Sign out"}
+        </button>
+      </div>
+    </>
+  );
+
+  // Mobile version - use Sheet for better touch experience
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-80 p-0">
+          {menuItems}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop version - use DropdownMenu
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -116,8 +243,6 @@ export const UserButton = () => {
             My Marketplace
           </Link>
          </DropdownMenuItem>
-         
-
          
          <DropdownMenuSeparator />
         

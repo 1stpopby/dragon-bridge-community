@@ -107,58 +107,10 @@ const Navigation = () => {
             <UserButton />
           </div>
 
-          {/* Mobile Navigation */}
+          {/* Mobile Navigation - simplified header */}
           <div className="md:hidden flex items-center space-x-2">
             <NotificationSystem />
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] p-0">
-                <div className="flex flex-col h-full">
-                  <div className="p-6 border-b">
-                    <div className="flex items-center space-x-2">
-                      {appSettings.app_logo_url ? (
-                        <img 
-                          src={appSettings.app_logo_url} 
-                          alt="Logo" 
-                          className="w-8 h-8 object-contain rounded"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                          <span className="text-primary-foreground font-bold text-sm">中</span>
-                        </div>
-                      )}
-                      <span className="font-bold text-lg text-foreground">{appSettings.app_name}</span>
-                    </div>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4">
-                    <div className="space-y-2">
-                  {navItems.map((item) => (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={() => setIsOpen(false)}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-colors touch-manipulation ${
-                          isActive(item.href)
-                            ? "text-primary bg-primary/10"
-                            : "text-foreground hover:text-primary hover:bg-muted"
-                        }`}
-                      >
-                        <item.icon className="h-5 w-5" />
-                        <span>{item.name}</span>
-                      </Link>
-                    ))}
-                    </div>
-                  </div>
-                  <div className="p-4 border-t bg-muted/30">
-                    <UserButton />
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <UserButton />
           </div>
         </div>
       </div>

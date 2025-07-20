@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import Navigation from "@/components/Navigation";
+import MobileNavigation from "@/components/MobileNavigation";
 import HeroSection from "@/components/HeroSection";
 import CommunityStats from "@/components/CommunityStats";
 import RecentDiscussions from "@/components/RecentDiscussions";
@@ -89,7 +90,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <Navigation />
       <HeroSection />
       
@@ -193,6 +194,7 @@ const Index = () => {
       </Dialog>
 
       <Footer />
+      <MobileNavigation />
     </div>
   );
 };
