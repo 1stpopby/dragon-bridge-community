@@ -12,7 +12,7 @@ import Events from "./pages/Events";
 import Community from "./pages/Community";
 import GroupForum from "./pages/GroupForum";
 import Marketplace from "./pages/Marketplace";
-
+import FooterPage from "./pages/FooterPage";
 import Services from "./pages/Services";
 import ServiceManagement from "./pages/ServiceManagement";
 import Admin from "./pages/Admin";
@@ -68,6 +68,13 @@ const App = () => {
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/my-marketplace" element={<MyMarketplace />} />
               <Route path="/banned" element={<Banned />} />
+              
+              {/* Footer Pages Routes */}
+              <Route path="/contact" element={<FooterPage />} />
+              <Route path="/help" element={<FooterPage />} />
+              <Route path="/privacy" element={<FooterPage />} />
+              <Route path="/terms" element={<FooterPage />} />
+              
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
