@@ -215,23 +215,27 @@ export function ServiceRequestManagementDialog({
       const response = responses.find(r => r.id === responseId);
       if (!response) return;
 
-      // Store the message in the database so companies can see it
+      // Get the company's user_id from their profile
+      const { data: companyProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', response.company_id)
+        .single();
+
+      if (profileError || !companyProfile) {
+        throw new Error('Could not find company profile');
+      }
+
+      // Store the message in the dedicated messages table
       const { error: messageError } = await supabase
-        .from('service_inquiries')
+        .from('service_request_messages')
         .insert({
-          service_id: null,
-          inquirer_name: profile?.display_name || 'User',
-          inquirer_email: profile?.contact_email || user?.email || '',
-          inquirer_phone: profile?.phone || '',
-          message: `Message regarding service request response:
-
-${message}
-
-Original Request ID: ${requestId}
-Response ID: ${responseId}
-From: ${profile?.display_name || 'User'}`,
-          inquiry_type: 'contact',
-          user_id: user?.id
+          request_id: requestId,
+          response_id: responseId,
+          sender_id: user?.id,
+          recipient_id: companyProfile.user_id,
+          message: message,
+          message_type: 'user_to_company'
         });
 
       if (messageError) throw messageError;

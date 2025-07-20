@@ -205,16 +205,39 @@ const ServiceManagement = () => {
   const fetchReceivedMessages = async () => {
     try {
       if (profile?.account_type === 'company') {
-        // For companies, fetch messages they received from users requesting service info
-        const { data, error } = await supabase
-          .from('service_inquiries')
+        // For companies, fetch messages they received from users
+        const { data: messagesData, error } = await supabase
+          .from('service_request_messages')
           .select('*')
-          .in('service_id', await getCompanyServiceIds())
-          .eq('inquiry_type', 'contact')
+          .eq('recipient_id', user?.id)
+          .eq('message_type', 'user_to_company')
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setReceivedMessages(data || []);
+        
+        // Get sender profiles for each message
+        const messagesWithProfiles = await Promise.all(
+          (messagesData || []).map(async (msg) => {
+            const { data: senderProfile } = await supabase
+              .from('profiles')
+              .select('display_name, contact_email')
+              .eq('user_id', msg.sender_id)
+              .single();
+            
+            return {
+              id: msg.id,
+              inquirer_name: senderProfile?.display_name || 'User',
+              inquirer_email: senderProfile?.contact_email || '',
+              inquirer_phone: '',
+              message: msg.message,
+              inquiry_type: 'contact',
+              created_at: msg.created_at,
+              service_id: null
+            };
+          })
+        );
+        
+        setReceivedMessages(messagesWithProfiles);
       }
     } catch (error) {
       console.error('Error fetching received messages:', error);

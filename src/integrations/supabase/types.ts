@@ -1519,6 +1519,42 @@ export type Database = {
           },
         ]
       }
+      service_request_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          message_type: string
+          recipient_id: string
+          request_id: string
+          response_id: string | null
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          message_type?: string
+          recipient_id: string
+          request_id: string
+          response_id?: string | null
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          message_type?: string
+          recipient_id?: string
+          request_id?: string
+          response_id?: string | null
+          sender_id?: string
+        }
+        Relationships: []
+      }
       service_request_responses: {
         Row: {
           availability: string | null
