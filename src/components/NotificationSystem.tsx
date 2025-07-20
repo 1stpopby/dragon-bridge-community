@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, X, MessageSquare, Calendar, Package, Store, Users } from "lucide-react";
+import { Bell, X, MessageSquare, Calendar, Package, Store, Users, Star, ThumbsUp, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -120,8 +120,18 @@ export function NotificationSystem() {
     setOpen(false);
 
     // Navigate based on notification type and related data
-    if (notification.related_type === 'service_request' && notification.related_id) {
+    if (notification.related_type === 'service_request' || notification.related_type === 'service_feedback') {
       navigate('/service-management');
+    } else if (notification.type === 'feedback_received') {
+      navigate('/service-management');
+    } else if (notification.type === 'forum_reply' || notification.related_type === 'forum_post') {
+      navigate('/forum');
+    } else if (notification.type === 'marketplace_inquiry' || notification.related_type === 'marketplace_item') {
+      navigate('/marketplace');
+    } else if (notification.type === 'new_group_member' || notification.related_type === 'community_group') {
+      navigate('/community');
+    } else if (notification.type === 'post_comment' || notification.related_type === 'post') {
+      navigate('/feed');
     } else if (notification.type === 'message') {
       navigate('/messages');
     } else if (notification.type === 'event') {
@@ -138,13 +148,21 @@ export function NotificationSystem() {
       case 'service_reply':
         return <MessageSquare className="h-4 w-4" />;
       case 'reply':
+      case 'forum_reply':
         return <MessageSquare className="h-4 w-4" />;
+      case 'post_comment':
+        return <MessageSquare className="h-4 w-4" />;
+      case 'feedback_received':
+        return <Star className="h-4 w-4" />;
       case 'event':
         return <Calendar className="h-4 w-4" />;
       case 'marketplace':
+      case 'marketplace_inquiry':
         return <Store className="h-4 w-4" />;
       case 'service':
         return <Users className="h-4 w-4" />;
+      case 'new_group_member':
+        return <UserPlus className="h-4 w-4" />;
       default:
         return <Bell className="h-4 w-4" />;
     }
