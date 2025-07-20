@@ -53,6 +53,7 @@ const CompanyServicesTab = ({ companyId, isOwner }: CompanyServicesTabProps) => 
   const { user } = useAuth();
   const { toast } = useToast();
   const [services, setServices] = useState<CompanyService[]>([]);
+  const [mainServices, setMainServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<CompanyService | null>(null);
@@ -68,6 +69,7 @@ const CompanyServicesTab = ({ companyId, isOwner }: CompanyServicesTabProps) => 
 
   useEffect(() => {
     fetchServices();
+    fetchMainServices();
     fetchAvailableServices();
   }, [companyId]);
 
@@ -134,6 +136,37 @@ const CompanyServicesTab = ({ companyId, isOwner }: CompanyServicesTabProps) => 
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMainServices = async () => {
+    try {
+      // First get the company's user_id from the profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', companyId)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (profile?.user_id) {
+        // Fetch services from the main services table created by this company
+        const { data, error } = await supabase
+          .from('services')
+          .select(`
+            *,
+            profiles!inner(avatar_url, display_name, company_name)
+          `)
+          .eq('user_id', profile.user_id)
+          .order('featured', { ascending: false })
+          .order('rating', { ascending: false });
+
+        if (error) throw error;
+        setMainServices(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching main services:', error);
     }
   };
 
@@ -412,7 +445,7 @@ const CompanyServicesTab = ({ companyId, isOwner }: CompanyServicesTabProps) => 
         </div>
       )}
 
-      {services.length === 0 ? (
+      {(services.length === 0 && mainServices.length === 0) ? (
         <div className="text-center py-12">
           <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">No services listed yet</p>
@@ -423,105 +456,195 @@ const CompanyServicesTab = ({ companyId, isOwner }: CompanyServicesTabProps) => 
           )}
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {services.map((service) => (
-            <Card key={service.id} className={!service.is_active ? 'opacity-60' : ''}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{service.service_name}</CardTitle>
-                  {!service.is_active && (
-                    <Badge variant="secondary">Inactive</Badge>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {service.service_category && (
-                    <Badge variant="outline" className="text-xs">
-                      <Tag className="h-3 w-3 mr-1" />
-                      {service.service_category}
-                    </Badge>
-                  )}
-                  {service.linked_service && (
-                    <Badge variant="secondary" className="text-xs">
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      Linked
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {service.service_description && (
-                  <p className="text-sm text-muted-foreground">
-                    {service.service_description}
-                  </p>
-                )}
-                
-                {service.price_range && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{service.price_range}</span>
-                  </div>
-                )}
+        <div className="space-y-6">
+          {/* Main Services Section */}
+          {mainServices.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-4 flex items-center gap-2">
+                <Star className="h-4 w-4 text-primary" />
+                Listed Services ({mainServices.length})
+              </h4>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {mainServices.map((service) => (
+                  <Card key={`main-${service.id}`} className="border-l-4 border-l-primary">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-lg">{service.name}</CardTitle>
+                        <div className="flex flex-col gap-2">
+                          {service.verified && (
+                            <Badge className="text-xs bg-green-100 text-green-700 border-green-200">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Verified
+                            </Badge>
+                          )}
+                          {service.featured && (
+                            <Badge className="text-xs bg-red-100 text-red-700 border-red-200">
+                              Featured
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          <Tag className="h-3 w-3 mr-1" />
+                          {service.specialty || 'General'}
+                        </Badge>
+                        {service.location && (
+                          <Badge variant="secondary" className="text-xs">
+                            📍 {service.location}
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {service.description}
+                      </p>
+                      
+                      {service.phone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="font-medium">📞 {service.phone}</span>
+                        </div>
+                      )}
 
-                {/* Service Statistics */}
-                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-2 border-t">
-                  <div className="flex items-center gap-1">
-                    <MessageSquare className="h-3 w-3" />
-                    <span>{service.total_responses || 0} responses</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <CheckCircle className="h-3 w-3" />
-                    <span>{service.completed_services || 0} completed</span>
-                  </div>
-                  {service.average_rating && service.average_rating > 0 && (
-                    <div className="flex items-center gap-1 col-span-2">
-                      {renderStars(Math.round(service.average_rating))}
-                      <span>{service.average_rating.toFixed(1)} avg rating</span>
-                    </div>
-                  )}
-                </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-3 w-3 ${
+                                i < service.rating
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                          <span className="ml-1 font-medium">{service.rating || 0}</span>
+                          <span className="text-muted-foreground">({service.reviews_count || 0})</span>
+                        </div>
+                      </div>
 
-                {/* Linked Service Info */}
-                {service.linked_service && (
-                  <div className="p-2 bg-muted rounded text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">Linked Service:</span>
-                      <Button variant="ghost" size="sm" className="h-6 px-2">
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        View
-                      </Button>
-                    </div>
-                    <p className="text-muted-foreground">{service.linked_service.name}</p>
-                    <p className="text-muted-foreground">{service.linked_service.location}</p>
-                  </div>
-                )}
-                
-                {isOwner && (
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEditDialog(service)}
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(service.id)}
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Delete
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                      {service.languages && service.languages.length > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          Languages: {service.languages.join(', ')}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Company Services Section */}
+          {services.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-4 flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-primary" />
+                Company Services ({services.length})
+              </h4>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {services.map((service) => (
+                  <Card key={service.id} className={!service.is_active ? 'opacity-60' : ''}>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-lg">{service.service_name}</CardTitle>
+                        {!service.is_active && (
+                          <Badge variant="secondary">Inactive</Badge>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {service.service_category && (
+                          <Badge variant="outline" className="text-xs">
+                            <Tag className="h-3 w-3 mr-1" />
+                            {service.service_category}
+                          </Badge>
+                        )}
+                        {service.linked_service && (
+                          <Badge variant="secondary" className="text-xs">
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Linked
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {service.service_description && (
+                        <p className="text-sm text-muted-foreground">
+                          {service.service_description}
+                        </p>
+                      )}
+                      
+                      {service.price_range && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <DollarSign className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{service.price_range}</span>
+                        </div>
+                      )}
+
+                      {/* Service Statistics */}
+                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-2 border-t">
+                        <div className="flex items-center gap-1">
+                          <MessageSquare className="h-3 w-3" />
+                          <span>{service.total_responses || 0} responses</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          <span>{service.completed_services || 0} completed</span>
+                        </div>
+                        {service.average_rating && service.average_rating > 0 && (
+                          <div className="flex items-center gap-1 col-span-2">
+                            {renderStars(Math.round(service.average_rating))}
+                            <span>{service.average_rating.toFixed(1)} avg rating</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Linked Service Info */}
+                      {service.linked_service && (
+                        <div className="p-2 bg-muted rounded text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">Linked Service:</span>
+                            <Button variant="ghost" size="sm" className="h-6 px-2">
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              View
+                            </Button>
+                          </div>
+                          <p className="text-muted-foreground">{service.linked_service.name}</p>
+                          <p className="text-muted-foreground">{service.linked_service.location}</p>
+                        </div>
+                      )}
+                      
+                      {isOwner && (
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditDialog(service)}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(service.id)}
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Delete
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 };
 
-export default CompanyServicesTab; 
+export default CompanyServicesTab;
