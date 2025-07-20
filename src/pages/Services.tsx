@@ -34,17 +34,33 @@ const Services = () => {
   const fetchServices = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // First fetch services
+      const { data: servicesData, error: servicesError } = await supabase
         .from('services')
-        .select(`
-          *,
-          profiles!inner(avatar_url, display_name, company_name)
-        `)
+        .select('*')
         .order('featured', { ascending: false })
         .order('rating', { ascending: false });
 
-      if (error) throw error;
-      setServices(data || []);
+      if (servicesError) throw servicesError;
+
+      // Then fetch profile data for each service
+      const servicesWithProfiles = await Promise.all(
+        (servicesData || []).map(async (service) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('avatar_url, display_name, company_name')
+            .eq('user_id', service.user_id)
+            .single();
+
+          return {
+            ...service,
+            profiles: profile
+          };
+        })
+      );
+
+      setServices(servicesWithProfiles);
     } catch (error) {
       console.error('Error fetching services:', error);
       toast({
