@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, TrendingUp, UserPlus, Users, Flame, Eye, Bookmark, Heart, UserCheck } from "lucide-react";
+import { Loader2, TrendingUp, UserPlus, Users, Flame, Eye, Bookmark, Heart, UserCheck, Hash } from "lucide-react";
 import { AdvertisementBanner } from "@/components/AdvertisementBanner";
 
 interface Post {
@@ -56,6 +56,49 @@ const Feed = () => {
   const [followingPosts, setFollowingPosts] = useState<Post[]>([]);
   const [followingLoading, setFollowingLoading] = useState(false);
   const [savedPosts, setSavedPosts] = useState<Post[]>([]);
+  const [savedLoading, setSavedLoading] = useState(false);
+
+  const extractHashtags = (text: string): string[] => {
+    const hashtags = text.match(/#[a-zA-Z0-9_]+/g) || [];
+    return hashtags.map(tag => tag.toLowerCase());
+  };
+
+  const fetchTrendingTopics = async () => {
+    try {
+      // Get all posts to extract hashtags
+      const { data: postsData, error } = await supabase
+        .from('posts')
+        .select('content')
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()); // Last 7 days
+
+      if (error) throw error;
+
+      // Extract and count hashtags
+      const hashtagCount: Record<string, number> = {};
+      postsData?.forEach(post => {
+        const hashtags = extractHashtags(post.content);
+        hashtags.forEach(tag => {
+          hashtagCount[tag] = (hashtagCount[tag] || 0) + 1;
+        });
+      });
+
+      // Convert to trending topics format and sort by count
+      const trending = Object.entries(hashtagCount)
+        .map(([tag, count]) => ({
+          hashtag: tag,
+          count,
+          trend: Math.random() > 0.5 ? 'up' : Math.random() > 0.3 ? 'stable' : 'down' as 'up' | 'down' | 'stable'
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 8);
+
+      setTrendingTopics(trending);
+    } catch (error) {
+      console.error('Error fetching trending topics:', error);
+      // Fallback to empty array
+      setTrendingTopics([]);
+    }
+  };
 
   const fetchPosts = async () => {
     try {
@@ -93,25 +136,6 @@ const Feed = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchTrendingTopics = async () => {
-    try {
-      const mockTrending: TrendingTopic[] = [
-        { hashtag: "#ChineseCommunity", count: 245, trend: 'up' },
-        { hashtag: "#UKLife", count: 189, trend: 'up' },
-        { hashtag: "#Business", count: 167, trend: 'stable' },
-        { hashtag: "#Events", count: 143, trend: 'up' },
-        { hashtag: "#Networking", count: 128, trend: 'down' },
-        { hashtag: "#London", count: 95, trend: 'stable' },
-        { hashtag: "#Edinburgh", count: 78, trend: 'down' },
-        { hashtag: "#Culture", count: 65, trend: 'stable' }
-      ];
-      
-      setTrendingTopics(mockTrending);
-    } catch (error) {
-      console.error('Error fetching trending topics:', error);
     }
   };
 
@@ -225,8 +249,9 @@ const Feed = () => {
   };
 
   const fetchSavedPosts = async () => {
-    if (!user || !profile) return;
+    if (!user) return;
     
+    setSavedLoading(true);
     try {
       const { data: savedPostsData, error } = await supabase
         .from('saved_posts')
@@ -260,11 +285,18 @@ const Feed = () => {
       }
     } catch (error) {
       console.error('Error fetching saved posts:', error);
+      toast({
+        title: "Error loading saved posts",
+        description: "Failed to load your saved posts.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavedLoading(false);
     }
   };
 
   const handleSavePost = async (post: Post) => {
-    if (!user || !profile) return;
+    if (!user) return;
     
     try {
       const isAlreadySaved = savedPosts.some(p => p.id === post.id);
@@ -377,6 +409,8 @@ const Feed = () => {
 
   const handlePostCreated = (newPost: Post) => {
     setPosts(prevPosts => [newPost, ...prevPosts]);
+    // Refresh trending topics when new post is created
+    fetchTrendingTopics();
   };
 
   const handlePostUpdate = (updatedPost: Post) => {
@@ -385,10 +419,22 @@ const Feed = () => {
         post.id === updatedPost.id ? updatedPost : post
       )
     );
+    setFollowingPosts(prevPosts =>
+      prevPosts.map(post =>
+        post.id === updatedPost.id ? updatedPost : post
+      )
+    );
+    setSavedPosts(prevPosts =>
+      prevPosts.map(post =>
+        post.id === updatedPost.id ? updatedPost : post
+      )
+    );
   };
 
   const handlePostDelete = (postId: string) => {
     setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+    setFollowingPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+    setSavedPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
   };
 
   useEffect(() => {
@@ -410,7 +456,7 @@ const Feed = () => {
     } else if (activeTab === 'saved') {
       fetchSavedPosts();
     }
-  }, [activeTab, followedUsers, posts]);
+  }, [activeTab, followedUsers]);
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
@@ -449,31 +495,41 @@ const Feed = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Flame className="h-5 w-5" />
-                  Trending Topics
+                  <Hash className="h-5 w-5" />
+                  Trending Hashtags
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {trendingTopics.map((topic, index) => (
-                  <div key={topic.hashtag} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent/50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-muted-foreground">#{index + 1}</span>
-                      <div>
-                        <p className="font-medium text-sm">{topic.hashtag}</p>
-                        <p className="text-xs text-muted-foreground">{topic.count} posts</p>
+                {trendingTopics.length === 0 ? (
+                  <div className="text-center py-4">
+                    <Hash className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">No hashtags yet</p>
+                    <p className="text-xs text-muted-foreground">Use #hashtags in your posts!</p>
+                  </div>
+                ) : (
+                  trendingTopics.map((topic, index) => (
+                    <div key={topic.hashtag} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-muted-foreground">#{index + 1}</span>
+                        <div>
+                          <p className="font-medium text-sm text-primary">{topic.hashtag}</p>
+                          <p className="text-xs text-muted-foreground">{topic.count} posts</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {getTrendIcon(topic.trend)}
+                        <span className={`text-xs font-medium ${getTrendColor(topic.trend)}`}>
+                          {topic.trend === 'up' ? '+18%' : topic.trend === 'down' ? '-14%' : '8%'}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {getTrendIcon(topic.trend)}
-                      <span className={`text-xs font-medium ${getTrendColor(topic.trend)}`}>
-                        {topic.trend === 'up' ? '+18%' : topic.trend === 'down' ? '-14%' : '8%'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                <Button variant="ghost" size="sm" className="w-full mt-3">
-                  View all trending
-                </Button>
+                  ))
+                )}
+                {trendingTopics.length > 0 && (
+                  <Button variant="ghost" size="sm" className="w-full mt-3">
+                    View all trending
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -512,29 +568,29 @@ const Feed = () => {
                           <p className="text-muted-foreground text-sm">Be the first to share something with the community!</p>
                         </CardContent>
                       </Card>
-                     ) : (
-                       posts.map((post, index) => (
-                         <div key={`post-${post.id}`}>
-                           {/* Insert ad after 1st post, then every 4 posts */}
-                           {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
-                             <div className="mb-6">
-                               <AdvertisementBanner 
-                                 location="feed" 
-                                 variant="card" 
-                                 maxAds={1}
-                               />
-                             </div>
-                           )}
-                           <PostCard
-                             post={post}
-                             onUpdate={handlePostUpdate}
-                             onDelete={handlePostDelete}
-                             onSave={handleSavePost}
-                             isSaved={savedPosts.some(p => p.id === post.id)}
-                           />
-                         </div>
-                       ))
-                     )}
+                    ) : (
+                      posts.map((post, index) => (
+                        <div key={`post-${post.id}`}>
+                          {/* Insert ad after 1st post, then every 4 posts */}
+                          {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
+                            <div className="mb-6">
+                              <AdvertisementBanner 
+                                location="feed" 
+                                variant="card" 
+                                maxAds={1}
+                              />
+                            </div>
+                          )}
+                          <PostCard
+                            post={post}
+                            onUpdate={handlePostUpdate}
+                            onDelete={handlePostDelete}
+                            onSave={handleSavePost}
+                            isSaved={savedPosts.some(p => p.id === post.id)}
+                          />
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
               </TabsContent>
@@ -553,34 +609,38 @@ const Feed = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                   <div className="space-y-6">
-                     {followingPosts.map((post, index) => (
-                       <div key={`following-${post.id}`}>
-                         {/* Insert ad after 1st post, then every 4 posts */}
-                         {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
-                           <div className="mb-6">
-                             <AdvertisementBanner 
-                               location="feed" 
-                               variant="card" 
-                               maxAds={1}
-                             />
-                           </div>
-                         )}
-                         <PostCard
-                           post={post}
-                           onUpdate={handlePostUpdate}
-                           onDelete={handlePostDelete}
-                           onSave={handleSavePost}
-                           isSaved={savedPosts.some(p => p.id === post.id)}
-                         />
-                       </div>
-                     ))}
-                   </div>
+                  <div className="space-y-6">
+                    {followingPosts.map((post, index) => (
+                      <div key={`following-${post.id}`}>
+                        {/* Insert ad after 1st post, then every 4 posts */}
+                        {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
+                          <div className="mb-6">
+                            <AdvertisementBanner 
+                              location="feed" 
+                              variant="card" 
+                              maxAds={1}
+                            />
+                          </div>
+                        )}
+                        <PostCard
+                          post={post}
+                          onUpdate={handlePostUpdate}
+                          onDelete={handlePostDelete}
+                          onSave={handleSavePost}
+                          isSaved={savedPosts.some(p => p.id === post.id)}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 )}
               </TabsContent>
               
               <TabsContent value="saved" className="space-y-6 mt-6">
-                {savedPosts.length === 0 ? (
+                {savedLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : savedPosts.length === 0 ? (
                   <Card>
                     <CardContent className="text-center py-12">
                       <Bookmark className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
@@ -589,29 +649,29 @@ const Feed = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                   <div className="space-y-6">
-                     {savedPosts.map((post, index) => (
-                       <div key={`saved-${post.id}`}>
-                         {/* Insert ad after 1st post, then every 4 posts */}
-                         {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
-                           <div className="mb-6">
-                             <AdvertisementBanner 
-                               location="feed" 
-                               variant="card" 
-                               maxAds={1}
-                             />
-                           </div>
-                         )}
-                         <PostCard
-                           post={post}
-                           onUpdate={handlePostUpdate}
-                           onDelete={handlePostDelete}
-                           onSave={handleSavePost}
-                           isSaved={true}
-                         />
-                       </div>
-                     ))}
-                   </div>
+                  <div className="space-y-6">
+                    {savedPosts.map((post, index) => (
+                      <div key={`saved-${post.id}`}>
+                        {/* Insert ad after 1st post, then every 4 posts */}
+                        {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
+                          <div className="mb-6">
+                            <AdvertisementBanner 
+                              location="feed" 
+                              variant="card" 
+                              maxAds={1}
+                            />
+                          </div>
+                        )}
+                        <PostCard
+                          post={post}
+                          onUpdate={handlePostUpdate}
+                          onDelete={handlePostDelete}
+                          onSave={handleSavePost}
+                          isSaved={true}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 )}
               </TabsContent>
             </Tabs>
@@ -628,15 +688,15 @@ const Feed = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {suggestedUsers.map((suggestedUser) => (
-                  <div key={suggestedUser.id} className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <Avatar className="h-10 w-10 flex-shrink-0">
+                  <div key={suggestedUser.id} className="flex flex-col space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12 flex-shrink-0">
                         <AvatarImage src={suggestedUser.avatar_url || undefined} />
                         <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                           {suggestedUser.display_name?.[0] || suggestedUser.email[0]}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="min-w-0 flex-1">
+                      <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm leading-none truncate">
                           {suggestedUser.display_name || suggestedUser.email.split('@')[0]}
                         </p>
@@ -654,16 +714,16 @@ const Feed = () => {
                       size="sm"
                       variant={suggestedUser.is_following ? "default" : "outline"}
                       onClick={() => handleFollowUser(suggestedUser.id)}
-                      className="flex-shrink-0"
+                      className="w-full"
                     >
                       {suggestedUser.is_following ? (
                         <>
-                          <UserCheck className="h-4 w-4 mr-1" />
+                          <UserCheck className="h-4 w-4 mr-2" />
                           Following
                         </>
                       ) : (
                         <>
-                          <UserPlus className="h-4 w-4 mr-1" />
+                          <UserPlus className="h-4 w-4 mr-2" />
                           Follow
                         </>
                       )}
