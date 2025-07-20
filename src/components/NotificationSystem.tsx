@@ -124,6 +124,8 @@ export function NotificationSystem() {
       navigate('/service-management');
     } else if (notification.type === 'feedback_received') {
       navigate('/service-management');
+    } else if (notification.type === 'service_inquiry' || notification.related_type === 'service_inquiry') {
+      navigate('/service-management');
     } else if (notification.type === 'forum_reply' || notification.related_type === 'forum_post') {
       navigate('/forum');
     } else if (notification.type === 'marketplace_inquiry' || notification.related_type === 'marketplace_item') {
@@ -160,6 +162,7 @@ export function NotificationSystem() {
       case 'marketplace_inquiry':
         return <Store className="h-4 w-4" />;
       case 'service':
+      case 'service_inquiry':
         return <Users className="h-4 w-4" />;
       case 'new_group_member':
         return <UserPlus className="h-4 w-4" />;
