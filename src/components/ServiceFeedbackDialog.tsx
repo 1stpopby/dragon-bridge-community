@@ -99,28 +99,59 @@ export function ServiceFeedbackDialog({
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Check if feedback already exists for this response from this user
+      const { data: existingFeedback, error: checkError } = await supabase
         .from('service_feedback')
-        .insert({
-          response_id: response.id,
-          request_id: response.request_id,
-          user_id: user?.id,
-          company_id: response.company_id,
-          rating: formData.rating,
-          title: formData.title,
-          comment: formData.comment,
-          would_recommend: formData.would_recommend,
-          service_quality_rating: formData.service_quality_rating || null,
-          communication_rating: formData.communication_rating || null,
-          timeliness_rating: formData.timeliness_rating || null,
-          value_rating: formData.value_rating || null
-        })
-        .select();
+        .select('id')
+        .eq('response_id', response.id)
+        .eq('user_id', user?.id)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (checkError) throw checkError;
+
+      let result;
+      if (existingFeedback) {
+        // Update existing feedback
+        result = await supabase
+          .from('service_feedback')
+          .update({
+            rating: formData.rating,
+            title: formData.title,
+            comment: formData.comment,
+            would_recommend: formData.would_recommend,
+            service_quality_rating: formData.service_quality_rating || null,
+            communication_rating: formData.communication_rating || null,
+            timeliness_rating: formData.timeliness_rating || null,
+            value_rating: formData.value_rating || null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingFeedback.id)
+          .select();
+      } else {
+        // Insert new feedback
+        result = await supabase
+          .from('service_feedback')
+          .insert({
+            response_id: response.id,
+            request_id: response.request_id,
+            user_id: user?.id,
+            company_id: response.company_id,
+            rating: formData.rating,
+            title: formData.title,
+            comment: formData.comment,
+            would_recommend: formData.would_recommend,
+            service_quality_rating: formData.service_quality_rating || null,
+            communication_rating: formData.communication_rating || null,
+            timeliness_rating: formData.timeliness_rating || null,
+            value_rating: formData.value_rating || null
+          })
+          .select();
+      }
+
+      if (result.error) throw result.error;
 
       toast({
-        title: "Feedback submitted successfully!",
+        title: `Feedback ${existingFeedback ? 'updated' : 'submitted'} successfully!`,
         description: `Thank you for your ${formData.rating}-star review! Your feedback helps other users make informed decisions and helps improve service quality.`,
         duration: 5000,
       });
