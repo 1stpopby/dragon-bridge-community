@@ -29,15 +29,34 @@ export const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children
           return;
         }
 
-        // Get API key from edge function
-        const response = await fetch('https://spbbiaqrybijcnopbiej.supabase.co/functions/v1/get-google-maps-key');
-        if (!response.ok) {
-          throw new Error('Failed to fetch API key');
+        // Get API key from edge function with retry logic
+        let apiKey = null;
+        let retries = 3;
+        
+        while (retries > 0 && !apiKey) {
+          try {
+            const response = await fetch('https://spbbiaqrybijcnopbiej.supabase.co/functions/v1/get-google-maps-key');
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            if (data.error) {
+              throw new Error(data.error);
+            }
+            
+            apiKey = data.apiKey;
+          } catch (error) {
+            console.error(`Attempt ${4 - retries}: Failed to fetch API key:`, error);
+            retries--;
+            if (retries > 0) {
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+            }
+          }
         }
         
-        const { apiKey } = await response.json();
         if (!apiKey) {
-          throw new Error('No API key received');
+          throw new Error('Failed to fetch Google Maps API key after multiple attempts');
         }
 
         // Load Google Maps script

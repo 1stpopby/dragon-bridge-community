@@ -631,6 +631,31 @@ export const AdminSettingsTable = ({ onDataChange }: AdminSettingsTableProps) =>
               <Separator />
 
               <div className="space-y-2">
+                <Label htmlFor="google_maps_api_key">Google Maps API Key</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="google_maps_api_key"
+                    type="password"
+                    value={formData.google_maps_api_key || ""}
+                    onChange={(e) => updateFormData('google_maps_api_key', e.target.value)}
+                    placeholder="Enter your Google Maps API key"
+                  />
+                  <Button
+                    onClick={() => handleSave('google_maps_api_key')}
+                    disabled={saving}
+                    size="sm"
+                  >
+                    Save
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Your Google Maps API key for location services and maps functionality
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
                 <Label>SMTP Email Configuration</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
