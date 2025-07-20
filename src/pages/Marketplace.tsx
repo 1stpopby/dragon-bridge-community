@@ -358,13 +358,12 @@ const Marketplace = () => {
                   <div key={`grid-${item.id}`} className="contents">
                     {/* Insert ad after 1st item, then every 4 items */}
                     {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
-                      <div className="col-span-full mb-6">
-                        <AdvertisementBanner 
-                          location="marketplace" 
-                          variant="card" 
-                          maxAds={1}
-                        />
-                      </div>
+                      <AdvertisementBanner 
+                        location="marketplace" 
+                        variant="card" 
+                        maxAds={1}
+                        className="h-full"
+                      />
                     )}
                     <div
                       className="animate-fade-in"

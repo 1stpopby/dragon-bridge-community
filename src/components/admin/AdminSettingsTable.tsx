@@ -185,6 +185,43 @@ export const AdminSettingsTable = ({ onDataChange }: AdminSettingsTableProps) =>
     }));
   };
 
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setSaving(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      updateFormData('app_logo_url', publicUrl);
+      
+      toast({
+        title: "Logo uploaded",
+        description: "Logo has been uploaded successfully.",
+      });
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Error uploading logo",
+        description: "Failed to upload logo. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -255,16 +292,26 @@ export const AdminSettingsTable = ({ onDataChange }: AdminSettingsTableProps) =>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="app_logo_url">Logo URL</Label>
-                  <Input
-                    id="app_logo_url"
-                    value={formData.app_logo_url || ""}
-                    onChange={(e) => updateFormData('app_logo_url', e.target.value)}
-                    placeholder="https://example.com/logo.png"
+                  <Label htmlFor="app_logo_file">Logo Upload</Label>
+                  <input
+                    id="app_logo_file"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleLogoUpload(e)}
+                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                   />
                   <p className="text-xs text-muted-foreground">
-                    URL to your application logo
+                    Upload your application logo (PNG, JPG, SVG)
                   </p>
+                  {formData.app_logo_url && (
+                    <div className="mt-2">
+                      <img 
+                        src={formData.app_logo_url} 
+                        alt="Current logo" 
+                        className="h-16 w-auto border rounded"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 

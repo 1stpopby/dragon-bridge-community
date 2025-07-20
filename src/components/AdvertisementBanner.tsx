@@ -343,71 +343,170 @@ export function AdvertisementBanner({
     </Card>
   );
 
-  const renderCardAd = (ad: Advertisement) => (
-    <Card key={ad.id} className={`relative group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 bg-gradient-to-br from-background to-accent/5 overflow-hidden ${className}`}>
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      <CardContent className="p-6 relative z-10">
-        {ad.image_url && (
-          <div className="mb-4 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg blur-sm opacity-50" />
-            <img
-              src={ad.image_url}
-              alt={ad.title}
-              className="w-full h-40 rounded-lg object-cover border-2 border-white/20 shadow-lg relative z-10"
-            />
-          </div>
-        )}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Badge variant="secondary" className="text-xs px-3 py-1 bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 border border-amber-200">
-              <span className="flex items-center gap-1">
-                ✨ Sponsored
-              </span>
-            </Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDismiss(ad.id);
-              }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-red-50 hover:text-red-600"
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-          <h3 className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            {ad.title}
-          </h3>
-          <p className="text-muted-foreground text-sm leading-relaxed">{ad.description}</p>
-          <div className="pt-3">
-            {ad.link_type === 'external' ? (
-              <Button
-                size="default"
-                onClick={() => handleAdClick(ad)}
-                className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                <span>Learn More</span>
-              </Button>
-            ) : (
-              <Button
-                size="default"
-                asChild
-                onClick={() => trackClick(ad.id)}
-                className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              >
-                <Link to={`/company/${ad.company_id}`}>
-                  <Building2 className="h-4 w-4 mr-2" />
-                  <span>View Profile</span>
-                </Link>
-              </Button>
-            )}
+  const renderCardAd = (ad: Advertisement) => {
+    // For marketplace location, use the same layout as MarketplaceCard
+    if (location === 'marketplace') {
+      return (
+        <div 
+          key={ad.id}
+          className={`border border-border rounded-lg p-4 hover:shadow-md transition-shadow bg-background cursor-pointer ${className}`}
+          onClick={() => handleAdClick(ad)}
+        >
+          <div className="flex gap-4">
+            {/* Image Section - same as marketplace card */}
+            <div className="w-32 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+              {ad.image_url ? (
+                <img
+                  src={ad.image_url}
+                  alt={ad.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-muted flex items-center justify-center">
+                  <Star className="h-8 w-8 text-amber-500" />
+                </div>
+              )}
+            </div>
+
+            {/* Content Section - same structure as marketplace card */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-foreground truncate mb-1">
+                    {ad.title}
+                  </h3>
+                  <div className="text-lg font-bold text-amber-600 mb-2">
+                    Sponsored Content
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 ml-4">
+                  <Badge variant="secondary" className="text-xs bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800">
+                    ✨ AD
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDismiss(ad.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-red-50 hover:text-red-600 h-6 w-6 p-0"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                {ad.description}
+              </p>
+
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+                  <div>Promoted Content</div>
+                </div>
+
+                <div className="flex gap-2">
+                  {ad.link_type === 'external' ? (
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAdClick(ad);
+                      }}
+                      className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Learn More
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      asChild
+                      onClick={() => trackClick(ad.id)}
+                      className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                    >
+                      <Link to={`/company/${ad.company_id}`}>
+                        <Building2 className="h-4 w-4 mr-1" />
+                        View
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
-  );
+      );
+    }
+
+    // Default card layout for other locations
+    return (
+      <Card key={ad.id} className={`relative group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 bg-gradient-to-br from-background to-accent/5 overflow-hidden ${className}`}>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <CardContent className="p-6 relative z-10">
+          {ad.image_url && (
+            <div className="mb-4 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg blur-sm opacity-50" />
+              <img
+                src={ad.image_url}
+                alt={ad.title}
+                className="w-full h-40 rounded-lg object-cover border-2 border-white/20 shadow-lg relative z-10"
+              />
+            </div>
+          )}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Badge variant="secondary" className="text-xs px-3 py-1 bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 border border-amber-200">
+                <span className="flex items-center gap-1">
+                  ✨ Sponsored
+                </span>
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDismiss(ad.id);
+                }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-red-50 hover:text-red-600"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+            <h3 className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              {ad.title}
+            </h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">{ad.description}</p>
+            <div className="pt-3">
+              {ad.link_type === 'external' ? (
+                <Button
+                  size="default"
+                  onClick={() => handleAdClick(ad)}
+                  className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  <span>Learn More</span>
+                </Button>
+              ) : (
+                <Button
+                  size="default"
+                  asChild
+                  onClick={() => trackClick(ad.id)}
+                  className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                >
+                  <Link to={`/company/${ad.company_id}`}>
+                    <Building2 className="h-4 w-4 mr-2" />
+                    <span>View Profile</span>
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   const renderInlineAd = (ad: Advertisement) => (
     <div key={ad.id} className={`relative group ${className}`}>

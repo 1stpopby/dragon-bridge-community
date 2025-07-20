@@ -27,6 +27,10 @@ export const ForumPostCard = ({ post, onClick }: ForumPostCardProps) => {
   const [replyCount, setReplyCount] = useState(0);
   const [reactionCount, setReactionCount] = useState(0);
   const navigate = useNavigate();
+  
+  const handleCardClick = () => {
+    navigate(`/forum/${post.id}`);
+  };
 
   useEffect(() => {
     fetchCounts();
@@ -72,7 +76,7 @@ export const ForumPostCard = ({ post, onClick }: ForumPostCardProps) => {
   return (
     <div 
       className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-6 transition-all duration-200 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 hover:border-primary/30 shadow-sm hover:shadow-md cursor-pointer"
-      onClick={onClick}
+      onClick={handleCardClick}
     >
       <div className="flex space-x-4">
         <div 
@@ -153,7 +157,7 @@ export const ForumPostCard = ({ post, onClick }: ForumPostCardProps) => {
               className="text-primary hover:text-primary/80 hover:bg-primary/5 rounded-lg"
               onClick={(e) => {
                 e.stopPropagation();
-                onClick();
+                handleCardClick();
               }}
             >
               <Eye className="h-4 w-4 mr-1" />

@@ -167,15 +167,25 @@ const Feed = () => {
 
       if (error) throw error;
 
-      const usersWithFollowers = users?.map(user => ({
-        id: user.id,
-        display_name: user.display_name,
-        email: user.display_name || 'User',
-        avatar_url: user.avatar_url,
-        is_company: user.account_type === 'company',
-        followers_count: Math.floor(Math.random() * 1000) + 50,
-        is_following: followedUsers.has(user.id)
-      })) || [];
+      // Get real follower counts for each user
+      const usersWithFollowersPromises = users?.map(async (user) => {
+        const { count: followersCount } = await supabase
+          .from('user_follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('following_id', user.id);
+
+        return {
+          id: user.id,
+          display_name: user.display_name,
+          email: user.display_name || 'User',
+          avatar_url: user.avatar_url,
+          is_company: user.account_type === 'company',
+          followers_count: followersCount || 0,
+          is_following: followedUsers.has(user.id)
+        };
+      }) || [];
+
+      const usersWithFollowers = await Promise.all(usersWithFollowersPromises);
 
       setSuggestedUsers(usersWithFollowers);
     } catch (error) {
@@ -308,7 +318,10 @@ const Feed = () => {
           .eq('user_id', user.id)
           .eq('post_id', post.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error unsaving post:', error.message || error);
+          throw error;
+        }
 
         setSavedPosts(prev => prev.filter(p => p.id !== post.id));
         toast({
@@ -323,7 +336,10 @@ const Feed = () => {
             post_id: post.id
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error saving post:', error.message || error);
+          throw error;
+        }
 
         setSavedPosts(prev => [...prev, post]);
         toast({
@@ -331,11 +347,11 @@ const Feed = () => {
           description: "Post saved for later!",
         });
       }
-    } catch (error) {
-      console.error('Error saving/unsaving post:', error);
+    } catch (error: any) {
+      console.error('Error saving/unsaving post:', error.message || error);
       toast({
         title: "Error",
-        description: "Failed to update saved post. Please try again.",
+        description: `Failed to update saved post: ${error.message || 'Please try again.'}`,
         variant: "destructive",
       });
     }
