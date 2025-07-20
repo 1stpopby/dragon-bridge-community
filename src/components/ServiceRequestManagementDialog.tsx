@@ -445,14 +445,20 @@ export function ServiceRequestManagementDialog({
                           </>
                         )}
                         {response.response_status === 'accepted' && (
-                          <Button 
-                            size="sm"
-                            onClick={() => markAsCompleted(response.id)}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Mark as Completed
-                          </Button>
+                          <>
+                            <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              ACCEPTED
+                            </Badge>
+                            <Button 
+                              size="sm"
+                              onClick={() => markAsCompleted(response.id)}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Mark as Completed
+                            </Button>
+                          </>
                         )}
                         {response.response_status === 'completed' && response.feedback && (
                           <Badge variant="secondary" className="bg-blue-100 text-blue-800">

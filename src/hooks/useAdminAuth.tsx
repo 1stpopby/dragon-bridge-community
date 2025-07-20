@@ -37,15 +37,14 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .eq('role', 'admin')
-        .single();
+        .eq('role', 'admin');
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error checking admin role:', error);
         return false;
       }
 
-      return !!data;
+      return data && data.length > 0;
     } catch (error) {
       console.error('Error checking admin role:', error);
       return false;
