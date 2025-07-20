@@ -248,6 +248,7 @@ const Feed = () => {
   const fetchFollowingPosts = async () => {
     if (!user || !profile) return;
     
+    console.log('fetchFollowingPosts called, followedUsers:', followedUsers.size);
     setFollowingLoading(true);
     try {
       const followedProfileIds = Array.from(followedUsers);
@@ -272,18 +273,36 @@ const Feed = () => {
         return;
       }
 
+      // Fetch posts from followed users
       const { data: postsData, error } = await supabase
         .from('posts')
-        .select(`
-          *,
-          profiles!inner(avatar_url, display_name)
-        `)
+        .select('*')
         .in('user_id', followedUserIds)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      if (user && postsData) {
+      if (!postsData || postsData.length === 0) {
+        setFollowingPosts([]);
+        return;
+      }
+
+      // Get profiles for these posts
+      const postUserIds = [...new Set(postsData.map(post => post.user_id))];
+      const { data: profilesData, error: profilesError2 } = await supabase
+        .from('profiles')
+        .select('user_id, avatar_url, display_name')
+        .in('user_id', postUserIds);
+
+      if (profilesError2) {
+        console.error('Error fetching profiles:', profilesError2);
+      }
+
+      const profilesMap = new Map(
+        profilesData?.map(profile => [profile.user_id, profile]) || []
+      );
+
+      if (user) {
         const { data: likesData, error: likesError } = await supabase
           .from('post_likes')
           .select('post_id')
@@ -292,22 +311,26 @@ const Feed = () => {
         if (likesError) throw likesError;
 
         const likedPostIds = new Set(likesData?.map(like => like.post_id) || []);
-        const postsWithLikeStatus = postsData.map(post => ({
-          ...post,
-          // Use the latest avatar from profiles table if available
-          author_avatar: (post.profiles as any)?.avatar_url || post.author_avatar,
-          author_name: (post.profiles as any)?.display_name || post.author_name,
-          user_liked: likedPostIds.has(post.id)
-        }));
+        const postsWithLikeStatus = postsData.map(post => {
+          const profile = profilesMap.get(post.user_id);
+          return {
+            ...post,
+            author_avatar: profile?.avatar_url || post.author_avatar,
+            author_name: profile?.display_name || post.author_name,
+            user_liked: likedPostIds.has(post.id)
+          };
+        });
 
         setFollowingPosts(postsWithLikeStatus);
       } else {
-        const postsWithLatestAvatars = postsData?.map(post => ({
-          ...post,
-          // Use the latest avatar from profiles table if available
-          author_avatar: (post.profiles as any)?.avatar_url || post.author_avatar,
-          author_name: (post.profiles as any)?.display_name || post.author_name,
-        })) || [];
+        const postsWithLatestAvatars = postsData.map(post => {
+          const profile = profilesMap.get(post.user_id);
+          return {
+            ...post,
+            author_avatar: profile?.avatar_url || post.author_avatar,
+            author_name: profile?.display_name || post.author_name,
+          };
+        });
         setFollowingPosts(postsWithLatestAvatars);
       }
     } catch (error) {
@@ -325,6 +348,7 @@ const Feed = () => {
   const fetchSavedPosts = async () => {
     if (!user) return;
     
+    console.log('fetchSavedPosts called, profile.id:', profile?.id);
     setSavedLoading(true);
     try {
       const { data: savedPostsData, error } = await supabase
@@ -684,6 +708,7 @@ const Feed = () => {
                             onDelete={handlePostDelete}
                             onSave={handleSavePost}
                             isSaved={savedPosts.some(p => p.id === post.id)}
+                            onFollow={handleFollowUser}
                           />
                         </div>
                       ))
@@ -725,6 +750,7 @@ const Feed = () => {
                           onDelete={handlePostDelete}
                           onSave={handleSavePost}
                           isSaved={savedPosts.some(p => p.id === post.id)}
+                          onFollow={handleFollowUser}
                         />
                       </div>
                     ))}
@@ -765,6 +791,7 @@ const Feed = () => {
                           onDelete={handlePostDelete}
                           onSave={handleSavePost}
                           isSaved={true}
+                          onFollow={handleFollowUser}
                         />
                       </div>
                     ))}
