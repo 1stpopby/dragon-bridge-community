@@ -171,28 +171,59 @@ export function CompanyFeedbackManagement() {
       const feedback = receivedFeedback.find(f => f.id === feedbackId);
       if (!feedback) return;
 
-      // Insert or update company response in company_feedback table
-      const { error } = await supabase
-        .from('company_feedback')
-        .upsert({
-          company_id: profile?.id,
-          service_inquiry_id: feedback.request_id,
-          user_review_id: feedback.id,
-          reviewer_name: feedback.user_profile?.display_name || 'User',
-          reviewer_email: feedback.user_profile?.contact_email || '',
-          rating: feedback.rating,
-          feedback_text: feedback.comment,
-          project_type: feedback.service_request?.inquiry_type || 'service',
-          completion_date: new Date().toISOString().split('T')[0],
-          is_verified: true,
-          company_response_text: responseText,
-          company_response_rating: responseRating || null,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_review_id'
-        });
+      console.log('Responding to feedback:', { feedbackId, responseText, responseRating });
 
-      if (error) throw error;
+      // Check if company feedback entry already exists
+      const { data: existingFeedback, error: checkError } = await supabase
+        .from('company_feedback')
+        .select('id')
+        .eq('user_review_id', feedback.id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing feedback:', checkError);
+        throw checkError;
+      }
+
+      let result;
+      if (existingFeedback) {
+        // Update existing company feedback
+        result = await supabase
+          .from('company_feedback')
+          .update({
+            company_response_text: responseText,
+            company_response_rating: responseRating || null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingFeedback.id)
+          .select();
+      } else {
+        // Insert new company feedback entry
+        result = await supabase
+          .from('company_feedback')
+          .insert({
+            company_id: profile?.id,
+            service_inquiry_id: feedback.request_id,
+            user_review_id: feedback.id,
+            reviewer_name: feedback.user_profile?.display_name || 'User',
+            reviewer_email: feedback.user_profile?.contact_email || '',
+            rating: feedback.rating,
+            feedback_text: feedback.comment,
+            project_type: feedback.service_request?.inquiry_type || 'service',
+            completion_date: new Date().toISOString().split('T')[0],
+            is_verified: true,
+            company_response_text: responseText,
+            company_response_rating: responseRating || null
+          })
+          .select();
+      }
+
+      console.log('Database operation result:', result);
+
+      if (result.error) {
+        console.error('Database error:', result.error);
+        throw result.error;
+      }
 
       toast({
         title: "Response sent successfully!",
@@ -206,9 +237,10 @@ export function CompanyFeedbackManagement() {
 
     } catch (error) {
       console.error('Error responding to feedback:', error);
+      const errorMessage = error?.message || 'Unknown error occurred';
       toast({
         title: "Error sending response",
-        description: "Failed to send response. Please try again.",
+        description: `Failed to send response: ${errorMessage}`,
         variant: "destructive",
       });
     }
