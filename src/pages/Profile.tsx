@@ -131,11 +131,16 @@ const Profile = () => {
     e.preventDefault();
     setLoading(true);
 
+    console.log('Starting profile update with data:', formData);
+    console.log('User ID:', user?.id);
+
     try {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('profiles')
         .update(formData)
         .eq('user_id', user?.id);
+
+      console.log('Update response:', { error, data });
 
       if (error) throw error;
 
@@ -147,7 +152,7 @@ const Profile = () => {
       console.error('Error updating profile:', error);
       toast({
         title: "Profile update failed",
-        description: "Please try again later.",
+        description: error instanceof Error ? error.message : "Please try again later.",
         variant: "destructive",
       });
     } finally {
