@@ -699,8 +699,12 @@ const ServiceManagement = () => {
           </Tabs>
         ) : (
           // User view
-          <Tabs defaultValue="service-requests" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs defaultValue="service-inquiries" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="service-inquiries">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                My Service Inquiries ({serviceResponses.length})
+              </TabsTrigger>
               <TabsTrigger value="service-requests">
                 <HelpCircle className="h-4 w-4 mr-2" />
                 My Service Requests
@@ -710,6 +714,64 @@ const ServiceManagement = () => {
                 My Feedback
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="service-inquiries">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    My Service Inquiries
+                  </CardTitle>
+                  <CardDescription>
+                    Service inquiries you've sent and company responses
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[600px]">
+                    {serviceResponses.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg font-medium mb-2">No service inquiries yet</p>
+                        <p className="text-sm">When you contact companies through their services, your inquiries will appear here</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {serviceResponses.map((inquiry) => (
+                          <div
+                            key={inquiry.id}
+                            className="p-4 border rounded-lg hover:bg-accent/50"
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4 text-blue-600" />
+                                <span className="font-medium">Service Inquiry</span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {inquiry.inquiry_type}
+                                </Badge>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                {formatDistanceToNow(new Date(inquiry.created_at), { addSuffix: true })}
+                              </span>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <div className="bg-blue-50 p-3 rounded border border-blue-200 dark:bg-blue-950 dark:border-blue-800">
+                                <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">Your Message:</p>
+                                <p className="text-sm">{inquiry.message}</p>
+                              </div>
+                              
+                              <div className="text-xs text-muted-foreground mt-2">
+                                Status: Awaiting company response
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="service-requests">
               <div className="w-full space-y-6">
