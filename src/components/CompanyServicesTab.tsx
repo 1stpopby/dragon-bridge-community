@@ -148,21 +148,28 @@ const CompanyServicesTab = ({ companyId, isOwner }: CompanyServicesTabProps) => 
         .eq('id', companyId)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        return;
+      }
 
       if (profile?.user_id) {
+        console.log('Fetching services for user_id:', profile.user_id);
+        
         // Fetch services from the main services table created by this company
         const { data, error } = await supabase
           .from('services')
-          .select(`
-            *,
-            profiles!inner(avatar_url, display_name, company_name)
-          `)
+          .select('*')
           .eq('user_id', profile.user_id)
           .order('featured', { ascending: false })
           .order('rating', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching main services:', error);
+          return;
+        }
+
+        console.log('Fetched main services:', data);
         setMainServices(data || []);
       }
     } catch (error) {
