@@ -14,6 +14,7 @@ import { ServiceRequestResponsesDialog } from "@/components/ServiceRequestRespon
 import { ServiceRequestManagementDialog } from "@/components/ServiceRequestManagementDialog";
 import { ServiceResponseDialog } from "@/components/ServiceResponseDialog";
 import { ServiceInquiryReplyDialog } from "@/components/ServiceInquiryReplyDialog";
+import { UserReplyDialog } from "@/components/UserReplyDialog";
 import { CompanyFeedbackManagement } from "@/components/CompanyFeedbackManagement";
 import { UserFeedbackReceived } from "@/components/UserFeedbackReceived";
 import { formatDistanceToNow } from "date-fns";
@@ -76,6 +77,8 @@ const ServiceManagement = () => {
   const [serviceResponseDialogOpen, setServiceResponseDialogOpen] = useState(false);
   const [selectedInquiryForReply, setSelectedInquiryForReply] = useState<ServiceInquiry | null>(null);
   const [inquiryReplyDialogOpen, setInquiryReplyDialogOpen] = useState(false);
+  const [selectedInquiryForUserReply, setSelectedInquiryForUserReply] = useState<ServiceInquiry | null>(null);
+  const [userReplyDialogOpen, setUserReplyDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -152,7 +155,7 @@ const ServiceManagement = () => {
             fetchCompletedServices();
           }
         )
-        .subscribe();
+         .subscribe();
 
       const messagesChannel = supabase
         .channel('service-messages')
@@ -172,10 +175,28 @@ const ServiceManagement = () => {
         )
         .subscribe();
 
+      const conversationsChannel = supabase
+        .channel('service-conversations')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'service_inquiry_conversations',
+          },
+          () => {
+            console.log('New conversation message received, refreshing data...');
+            fetchServiceResponses();
+            fetchReceivedMessages();
+          }
+        )
+        .subscribe();
+
       return () => {
         supabase.removeChannel(responseChannel);
         supabase.removeChannel(inquiryChannel);
         supabase.removeChannel(messagesChannel);
+        supabase.removeChannel(conversationsChannel);
       };
     }
   }, [user]);
@@ -223,7 +244,7 @@ const ServiceManagement = () => {
         
         setServiceResponses(formattedResponses);
       } else {
-        // For users, fetch service inquiries with responses
+        // For users, fetch service inquiries with responses and conversations
         const { data, error } = await supabase
           .from('service_inquiries')
           .select(`
@@ -239,6 +260,13 @@ const ServiceManagement = () => {
                 display_name,
                 company_name
               )
+            ),
+            service_inquiry_conversations (
+              id,
+              sender_id,
+              sender_type,
+              message,
+              created_at
             )
           `)
           .eq('user_id', user?.id)
@@ -820,11 +848,26 @@ const ServiceManagement = () => {
                                         </div>
                                       )}
                                     </div>
-                                  ))}
-                                  <div className="text-xs text-green-600 font-medium">
-                                    ✓ Company has responded to your inquiry
-                                  </div>
-                                </div>
+                                   ))}
+                                   <div className="flex items-center justify-between pt-2">
+                                     <div className="text-xs text-green-600 font-medium">
+                                       ✓ Company has responded to your inquiry
+                                     </div>
+                                     <Button
+                                       size="sm"
+                                       variant="outline"
+                                       onClick={(e) => {
+                                         e.stopPropagation();
+                                         setSelectedInquiryForUserReply(inquiry);
+                                         setUserReplyDialogOpen(true);
+                                       }}
+                                       className="flex items-center gap-2"
+                                     >
+                                       <Reply className="h-4 w-4" />
+                                       Reply
+                                     </Button>
+                                   </div>
+                                 </div>
                               ) : (
                                 <div className="text-xs text-muted-foreground mt-2">
                                   Status: Awaiting company response
@@ -1017,6 +1060,19 @@ const ServiceManagement = () => {
             onReplySent={() => {
               fetchReceivedMessages();
               fetchServiceResponses();
+            }}
+          />
+        )}
+
+        {/* User Reply Dialog */}
+        {selectedInquiryForUserReply && (
+          <UserReplyDialog
+            inquiry={selectedInquiryForUserReply}
+            open={userReplyDialogOpen}
+            onOpenChange={setUserReplyDialogOpen}
+            onReplySent={() => {
+              fetchServiceResponses();
+              fetchReceivedMessages();
             }}
           />
         )}

@@ -1519,6 +1519,41 @@ export type Database = {
           },
         ]
       }
+      service_inquiry_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          inquiry_id: string
+          message: string
+          sender_id: string
+          sender_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inquiry_id: string
+          message: string
+          sender_id: string
+          sender_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inquiry_id?: string
+          message?: string
+          sender_id?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_inquiry_conversations_inquiry_id_fkey"
+            columns: ["inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "service_inquiries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_inquiry_responses: {
         Row: {
           company_id: string
