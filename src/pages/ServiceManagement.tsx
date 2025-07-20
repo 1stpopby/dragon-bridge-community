@@ -239,17 +239,33 @@ const ServiceManagement = () => {
   const fetchReceivedMessages = async () => {
     try {
       if (profile?.account_type === 'company') {
-        // For companies, fetch messages they received from users
-        const { data: messagesData, error } = await supabase
+        // For companies, fetch service inquiries for their services
+        const { data: serviceInquiriesData, error: inquiriesError } = await supabase
+          .from('service_inquiries')
+          .select(`
+            *,
+            services!inner (
+              name,
+              user_id
+            )
+          `)
+          .eq('services.user_id', user?.id)
+          .eq('inquiry_type', 'contact')
+          .order('created_at', { ascending: false });
+
+        if (inquiriesError) throw inquiriesError;
+
+        // Also fetch messages from service_request_messages table
+        const { data: messagesData, error: messagesError } = await supabase
           .from('service_request_messages')
           .select('*')
           .eq('recipient_id', user?.id)
           .eq('message_type', 'user_to_company')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (messagesError) throw messagesError;
         
-        // Get sender profiles for each message
+        // Get sender profiles for service request messages
         const messagesWithProfiles = await Promise.all(
           (messagesData || []).map(async (msg) => {
             const { data: senderProfile } = await supabase
@@ -270,8 +286,14 @@ const ServiceManagement = () => {
             };
           })
         );
+
+        // Combine service inquiries with service request messages
+        const allMessages = [
+          ...(serviceInquiriesData || []),
+          ...messagesWithProfiles
+        ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         
-        setReceivedMessages(messagesWithProfiles);
+        setReceivedMessages(allMessages);
       }
     } catch (error) {
       console.error('Error fetching received messages:', error);
@@ -446,17 +468,82 @@ const ServiceManagement = () => {
 
         {profile?.account_type === 'company' ? (
           // Company view
-          <Tabs defaultValue="sent-responses" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs defaultValue="received-inquiries" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="received-inquiries">
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Received Inquiries ({receivedMessages.length})
+              </TabsTrigger>
               <TabsTrigger value="sent-responses">
                 <MessageSquare className="h-4 w-4 mr-2" />
-                Service Requests & Messages ({serviceResponses.length})
+                Sent Responses ({serviceResponses.length})
               </TabsTrigger>
               <TabsTrigger value="feedback">
                 <Star className="h-4 w-4 mr-2" />
                 Customer Feedback
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="received-inquiries">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <HelpCircle className="h-5 w-5" />
+                    Received Service Inquiries
+                  </CardTitle>
+                  <CardDescription>
+                    Service inquiries and contact messages from customers
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[600px]">
+                    {receivedMessages.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <HelpCircle className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg font-medium mb-2">No inquiries received yet</p>
+                        <p className="text-sm">When customers contact you through your services, their messages will appear here</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {receivedMessages.map((inquiry) => (
+                          <div
+                            key={inquiry.id}
+                            className="p-4 border rounded-lg hover:bg-accent/50 cursor-pointer"
+                            onClick={() => handleResponseClick(inquiry)}
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <HelpCircle className="h-4 w-4 text-blue-600" />
+                                <span className="font-medium">Customer Inquiry</span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {inquiry.inquiry_type}
+                                </Badge>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                {formatDistanceToNow(new Date(inquiry.created_at), { addSuffix: true })}
+                              </span>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium">From: {inquiry.inquirer_name}</p>
+                              {inquiry.inquirer_email && (
+                                <p className="text-sm text-muted-foreground">Email: {inquiry.inquirer_email}</p>
+                              )}
+                              {inquiry.inquirer_phone && (
+                                <p className="text-sm text-muted-foreground">Phone: {inquiry.inquirer_phone}</p>
+                              )}
+                              <div className="bg-muted/50 p-3 rounded">
+                                <p className="text-sm">{inquiry.message}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="sent-responses">
               <Card>
