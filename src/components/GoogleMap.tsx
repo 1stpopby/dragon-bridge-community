@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Loader } from '@googlemaps/js-api-loader';
+import { useGoogleMaps } from './GoogleMapsProvider';
 
 interface GoogleMapProps {
   center?: { lat: number; lng: number };
@@ -24,72 +24,70 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [markersArray, setMarkersArray] = useState<google.maps.Marker[]>([]);
+  const { isLoaded, loadError } = useGoogleMaps();
 
   useEffect(() => {
-    const initMap = async () => {
-      try {
-        // Get the API key from Supabase edge function
-        const response = await fetch('/api/get-google-maps-key');
-        const { apiKey } = await response.json();
+    if (!isLoaded || !mapRef.current || map) return;
+
+    try {
+      const mapInstance = new google.maps.Map(mapRef.current, {
+        center,
+        zoom,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+      });
+
+      setMap(mapInstance);
+
+      // Add click listener for location selection
+      if (onLocationSelect) {
+        const geocoder = new google.maps.Geocoder();
         
-        const loader = new Loader({
-          apiKey: apiKey,
-          version: 'weekly',
-          libraries: ['places', 'geometry']
-        });
-
-        const { Map } = await loader.importLibrary('maps');
-        
-        if (mapRef.current) {
-          const mapInstance = new Map(mapRef.current, {
-            center,
-            zoom,
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: false,
-          });
-
-          setMap(mapInstance);
-          setIsLoaded(true);
-
-          // Add click listener for location selection
-          if (onLocationSelect) {
-            const geocoder = new google.maps.Geocoder();
+        mapInstance.addListener('click', (event: google.maps.MapMouseEvent) => {
+          if (event.latLng) {
+            const lat = event.latLng.lat();
+            const lng = event.latLng.lng();
             
-            mapInstance.addListener('click', (event: google.maps.MapMouseEvent) => {
-              if (event.latLng) {
-                const lat = event.latLng.lat();
-                const lng = event.latLng.lng();
-                
-                geocoder.geocode(
-                  { location: { lat, lng } },
-                  (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
-                    if (status === 'OK' && results && results[0]) {
-                      onLocationSelect({
-                        lat,
-                        lng,
-                        address: results[0].formatted_address
-                      });
-                    }
-                  }
-                );
+            geocoder.geocode(
+              { location: { lat, lng } },
+              (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
+                if (status === 'OK' && results && results[0]) {
+                  onLocationSelect({
+                    lat,
+                    lng,
+                    address: results[0].formatted_address
+                  });
+                }
               }
-            });
+            );
           }
-        }
-      } catch (error) {
-        console.error('Error loading Google Maps:', error);
+        });
       }
-    };
+    } catch (error) {
+      console.error('Error creating map:', error);
+    }
+  }, [isLoaded, center, zoom, onLocationSelect, map]);
 
-    initMap();
-  }, [center.lat, center.lng, zoom, onLocationSelect]);
-
+  // Update map center when center prop changes
   useEffect(() => {
-    if (map && isLoaded && markers.length > 0) {
-      // Clear existing markers
-      markers.forEach(markerData => {
+    if (map && center) {
+      map.setCenter(center);
+    }
+  }, [map, center]);
+
+  // Handle markers
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    // Clear existing markers
+    markersArray.forEach(marker => marker.setMap(null));
+    setMarkersArray([]);
+
+    // Add new markers
+    if (markers.length > 0) {
+      const newMarkers = markers.map(markerData => {
         const marker = new google.maps.Marker({
           position: markerData.position,
           map: map,
@@ -105,9 +103,38 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
             infoWindow.open(map, marker);
           });
         }
+
+        return marker;
       });
+
+      setMarkersArray(newMarkers);
     }
   }, [map, isLoaded, markers]);
+
+  if (loadError) {
+    return (
+      <div 
+        style={{ height }} 
+        className={`w-full rounded-lg bg-muted flex items-center justify-center ${className}`}
+      >
+        <div className="text-center text-muted-foreground">
+          <p>Failed to load map</p>
+          <p className="text-sm">{loadError}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div 
+        style={{ height }} 
+        className={`w-full rounded-lg bg-muted flex items-center justify-center ${className}`}
+      >
+        <div className="text-muted-foreground">Loading map...</div>
+      </div>
+    );
+  }
 
   return (
     <div 

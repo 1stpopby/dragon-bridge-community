@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { GoogleMapsProvider } from "@/components/GoogleMapsProvider";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Forum from "./pages/Forum";
@@ -38,12 +39,13 @@ const App = () => {
   
   return (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <AdminAuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <GoogleMapsProvider>
+      <TooltipProvider>
+        <AuthProvider>
+          <AdminAuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <BanCheckWrapper>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -74,6 +76,7 @@ const App = () => {
         </AdminAuthProvider>
       </AuthProvider>
     </TooltipProvider>
+    </GoogleMapsProvider>
   </QueryClientProvider>
   );
 };
