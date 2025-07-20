@@ -228,19 +228,13 @@ export function ServiceRequestManagementDialog({
 
   const updateResponseStatus = async (responseId: string, newStatus: string) => {
     try {
+      // Update response status
       const { error } = await supabase
         .from('service_request_responses')
         .update({ response_status: newStatus })
         .eq('id', responseId);
 
       if (error) throw error;
-
-      await fetchResponses();
-      
-      toast({
-        title: "Status updated",
-        description: `Response status updated to ${newStatus}`,
-      });
 
       // If accepting, update main request status
       if (newStatus === 'accepted') {
@@ -249,6 +243,21 @@ export function ServiceRequestManagementDialog({
           .update({ status: 'accepted' })
           .eq('id', requestId);
       }
+
+      // Update local state immediately for instant UI feedback
+      setResponses(prev => prev.map(response => 
+        response.id === responseId 
+          ? { ...response, response_status: newStatus }
+          : response
+      ));
+
+      // Then fetch fresh data
+      await fetchResponses();
+      
+      toast({
+        title: "Status updated",
+        description: `Response status updated to ${newStatus}`,
+      });
     } catch (error) {
       console.error('Error updating response status:', error);
       toast({
