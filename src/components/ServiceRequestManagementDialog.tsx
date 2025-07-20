@@ -212,8 +212,31 @@ export function ServiceRequestManagementDialog({
     if (!message) return;
 
     try {
-      // For now, we'll simulate chat functionality
-      // In a real implementation, you'd create a messages table
+      const response = responses.find(r => r.id === responseId);
+      if (!response) return;
+
+      // Store the message in the database so companies can see it
+      const { error: messageError } = await supabase
+        .from('service_inquiries')
+        .insert({
+          service_id: null,
+          inquirer_name: profile?.display_name || 'User',
+          inquirer_email: profile?.contact_email || user?.email || '',
+          inquirer_phone: profile?.phone || '',
+          message: `Message regarding service request response:
+
+${message}
+
+Original Request ID: ${requestId}
+Response ID: ${responseId}
+From: ${profile?.display_name || 'User'}`,
+          inquiry_type: 'contact',
+          user_id: user?.id
+        });
+
+      if (messageError) throw messageError;
+
+      // Update local chat state for immediate feedback
       const currentMessages = chatMessages[responseId] || [];
       setChatMessages(prev => ({
         ...prev,
