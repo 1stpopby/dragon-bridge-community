@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
+import MobileNavigation from "@/components/MobileNavigation";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -63,7 +64,7 @@ const Events = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <Navigation />
       
       {/* Header */}
@@ -179,6 +180,7 @@ const Events = () => {
       </div>
 
       <Footer />
+      <MobileNavigation />
     </div>
   );
 };

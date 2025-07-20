@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import MobileNavigation from "@/components/MobileNavigation";
 import CreatePost from "@/components/CreatePost";
 import PostCard from "@/components/PostCard";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
@@ -606,7 +607,7 @@ const Feed = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <Navigation />
       
       <div className="max-w-6xl mx-auto py-6 px-4">
@@ -862,6 +863,7 @@ const Feed = () => {
           </div>
         </div>
       </div>
+      <MobileNavigation />
     </div>
   );
 };

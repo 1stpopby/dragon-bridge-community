@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import MobileNavigation from "@/components/MobileNavigation";
 import { MessageDialog } from "@/components/MessageDialog";
 import { formatDistanceToNow } from "date-fns";
 
@@ -78,7 +79,7 @@ const Messages = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <Navigation />
       
       <div className="max-w-4xl mx-auto py-8 px-4">
@@ -153,6 +154,7 @@ const Messages = () => {
           />
         )}
       </div>
+      <MobileNavigation />
     </div>
   );
 };

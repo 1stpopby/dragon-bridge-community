@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
+import MobileNavigation from "@/components/MobileNavigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -196,7 +197,7 @@ const Forum = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 pb-16 md:pb-0">
       <Navigation />
       
       {/* Professional Header */}
@@ -372,6 +373,7 @@ const Forum = () => {
       </div>
 
       <Footer />
+      <MobileNavigation />
     </div>
   );
 };

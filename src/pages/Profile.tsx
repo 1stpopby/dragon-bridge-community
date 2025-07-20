@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import MobileNavigation from "@/components/MobileNavigation";
 
 const Profile = () => {
   const { user, profile } = useAuth();
@@ -163,7 +164,7 @@ const Profile = () => {
     : user?.email?.charAt(0)?.toUpperCase() || '?';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <Navigation />
       
       <div className="max-w-4xl mx-auto p-6">
@@ -400,6 +401,7 @@ const Profile = () => {
           </CardContent>
         </Card>
       </div>
+      <MobileNavigation />
     </div>
   );
 };

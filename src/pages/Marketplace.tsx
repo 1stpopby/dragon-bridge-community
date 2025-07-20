@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
+import MobileNavigation from "@/components/MobileNavigation";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -202,7 +203,7 @@ const Marketplace = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 pb-16 md:pb-0">
       <Navigation />
       
       {/* Hero Section */}
@@ -406,6 +407,7 @@ const Marketplace = () => {
       </div>
 
       <Footer />
+      <MobileNavigation />
     </div>
   );
 };
