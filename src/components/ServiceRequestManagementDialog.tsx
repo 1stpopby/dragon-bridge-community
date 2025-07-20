@@ -228,7 +228,20 @@ export function ServiceRequestManagementDialog({
 
   const updateResponseStatus = async (responseId: string, newStatus: string) => {
     try {
-      // Update response status
+      console.log('Updating response status:', { responseId, newStatus });
+      
+      // Update local state immediately for instant UI feedback
+      setResponses(prev => {
+        const updated = prev.map(response => 
+          response.id === responseId 
+            ? { ...response, response_status: newStatus }
+            : response
+        );
+        console.log('Updated local responses:', updated);
+        return updated;
+      });
+
+      // Update response status in database
       const { error } = await supabase
         .from('service_request_responses')
         .update({ response_status: newStatus })
@@ -244,20 +257,16 @@ export function ServiceRequestManagementDialog({
           .eq('id', requestId);
       }
 
-      // Update local state immediately for instant UI feedback
-      setResponses(prev => prev.map(response => 
-        response.id === responseId 
-          ? { ...response, response_status: newStatus }
-          : response
-      ));
-
-      // Then fetch fresh data
-      await fetchResponses();
-      
       toast({
         title: "Status updated",
         description: `Response status updated to ${newStatus}`,
       });
+
+      // Refresh data from database to ensure consistency
+      setTimeout(() => {
+        fetchResponses();
+      }, 100);
+      
     } catch (error) {
       console.error('Error updating response status:', error);
       toast({
@@ -265,6 +274,8 @@ export function ServiceRequestManagementDialog({
         description: "Failed to update status",
         variant: "destructive",
       });
+      // Revert local state on error
+      fetchResponses();
     }
   };
 
