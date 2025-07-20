@@ -6,19 +6,21 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Save, Camera, Upload } from "lucide-react";
+import { User, Save, Camera, Upload, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import MobileNavigation from "@/components/MobileNavigation";
+import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 
 const Profile = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     display_name: profile?.display_name || '',
@@ -405,7 +407,44 @@ const Profile = () => {
             </form>
           </CardContent>
         </Card>
+
+        {/* Delete Account Section */}
+        <Card className="shadow-lg border-destructive/20 mt-6">
+          <CardHeader>
+            <CardTitle className="text-destructive flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Danger Zone
+            </CardTitle>
+            <CardDescription>
+              Permanently delete your account and all associated data
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="p-4 border border-destructive/20 rounded-lg bg-destructive/5">
+                <h4 className="font-medium text-destructive mb-2">Delete Account</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Once you delete your account, there is no going back. All your data will be permanently removed from our servers.
+                </p>
+                <Button
+                  variant="destructive"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete My Account
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+      
+      <DeleteAccountDialog 
+        open={deleteDialogOpen} 
+        onOpenChange={setDeleteDialogOpen}
+      />
+      
       <MobileNavigation />
     </div>
   );
