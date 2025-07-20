@@ -242,19 +242,27 @@ export function ServiceRequestManagementDialog({
       });
 
       // Update response status in database
-      const { error } = await supabase
+      const { data: updateData, error } = await supabase
         .from('service_request_responses')
         .update({ response_status: newStatus })
-        .eq('id', responseId);
+        .eq('id', responseId)
+        .select();
+
+      console.log('Database update result:', { updateData, error });
 
       if (error) throw error;
 
       // If accepting, update main request status
       if (newStatus === 'accepted') {
-        await supabase
+        const { data: inquiryData, error: inquiryError } = await supabase
           .from('service_inquiries')
           .update({ status: 'accepted' })
-          .eq('id', requestId);
+          .eq('id', requestId)
+          .select();
+        
+        console.log('Inquiry update result:', { inquiryData, inquiryError });
+        
+        if (inquiryError) throw inquiryError;
       }
 
       toast({
@@ -263,9 +271,11 @@ export function ServiceRequestManagementDialog({
       });
 
       // Refresh data from database to ensure consistency
-      setTimeout(() => {
-        fetchResponses();
-      }, 100);
+      console.log('Fetching fresh data...');
+      setTimeout(async () => {
+        await fetchResponses();
+        console.log('Fresh data fetched');
+      }, 500);
       
     } catch (error) {
       console.error('Error updating response status:', error);
