@@ -229,14 +229,6 @@ const Forum = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Advertisement Section */}
-        <div className="mb-8">
-          <AdvertisementBanner 
-            location="forum" 
-            variant="banner" 
-            maxAds={1}
-          />
-        </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
@@ -351,15 +343,26 @@ const Forum = () => {
                     <p className="text-slate-600 dark:text-slate-400">Be the first to start a meaningful conversation!</p>
                   </div>
                 ) : (
-                  posts.map((post) => (
-                    <ForumPostCard
-                      key={post.id}
-                      post={post}
-                      onClick={() => {
-                        // Handle post click - could navigate to post detail
-                        console.log('Post clicked:', post.id);
-                      }}
-                    />
+                  posts.map((post, index) => (
+                    <div key={`forum-${post.id}`}>
+                      {/* Insert ad after 1st post, then every 4 posts */}
+                      {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
+                        <div className="mb-6">
+                          <AdvertisementBanner 
+                            location="forum" 
+                            variant="card" 
+                            maxAds={1}
+                          />
+                        </div>
+                      )}
+                      <ForumPostCard
+                        post={post}
+                        onClick={() => {
+                          // Handle post click - could navigate to post detail
+                          console.log('Post clicked:', post.id);
+                        }}
+                      />
+                    </div>
                   ))
                 )}
               </div>

@@ -315,14 +315,6 @@ const Marketplace = () => {
         </div>
       </div>
 
-      {/* Advertisement Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <AdvertisementBanner 
-          location="marketplace" 
-          variant="banner" 
-          maxAds={1}
-        />
-      </div>
 
       {/* Results Section */}
       <div className="max-w-7xl mx-auto px-4 py-16">
@@ -363,27 +355,49 @@ const Marketplace = () => {
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredItems.map((item, index) => (
-                  <div
-                    key={item.id}
-                    className="animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <GridCard item={item} />
+                  <div key={`grid-${item.id}`} className="contents">
+                    {/* Insert ad after 1st item, then every 4 items */}
+                    {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
+                      <div className="col-span-full mb-6">
+                        <AdvertisementBanner 
+                          location="marketplace" 
+                          variant="card" 
+                          maxAds={1}
+                        />
+                      </div>
+                    )}
+                    <div
+                      className="animate-fade-in"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <GridCard item={item} />
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="space-y-4">
                 {filteredItems.map((item, index) => (
-                  <div
-                    key={item.id}
-                    className="animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <MarketplaceCard
-                      item={item}
-                      onItemChanged={fetchItems}
-                    />
+                  <div key={`list-${item.id}`}>
+                    {/* Insert ad after 1st item, then every 4 items */}
+                    {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
+                      <div className="mb-6">
+                        <AdvertisementBanner 
+                          location="marketplace" 
+                          variant="card" 
+                          maxAds={1}
+                        />
+                      </div>
+                    )}
+                    <div
+                      className="animate-fade-in"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <MarketplaceCard
+                        item={item}
+                        onItemChanged={fetchItems}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>

@@ -480,13 +480,6 @@ const Feed = () => {
 
           {/* Main Feed */}
           <div className="lg:col-span-6 space-y-6">
-            {/* Advertisement Section */}
-            <AdvertisementBanner 
-              location="feed" 
-              variant="banner" 
-              maxAds={1}
-            />
-            
             <AnnouncementBanner />
             
             {/* Feed Tabs */}
@@ -519,18 +512,29 @@ const Feed = () => {
                           <p className="text-muted-foreground text-sm">Be the first to share something with the community!</p>
                         </CardContent>
                       </Card>
-                    ) : (
-                      posts.map((post) => (
-                        <PostCard
-                          key={post.id}
-                          post={post}
-                          onUpdate={handlePostUpdate}
-                          onDelete={handlePostDelete}
-                          onSave={handleSavePost}
-                          isSaved={savedPosts.some(p => p.id === post.id)}
-                        />
-                      ))
-                    )}
+                     ) : (
+                       posts.map((post, index) => (
+                         <div key={`post-${post.id}`}>
+                           {/* Insert ad after 1st post, then every 4 posts */}
+                           {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
+                             <div className="mb-6">
+                               <AdvertisementBanner 
+                                 location="feed" 
+                                 variant="card" 
+                                 maxAds={1}
+                               />
+                             </div>
+                           )}
+                           <PostCard
+                             post={post}
+                             onUpdate={handlePostUpdate}
+                             onDelete={handlePostDelete}
+                             onSave={handleSavePost}
+                             isSaved={savedPosts.some(p => p.id === post.id)}
+                           />
+                         </div>
+                       ))
+                     )}
                   </div>
                 )}
               </TabsContent>
@@ -549,18 +553,29 @@ const Feed = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="space-y-6">
-                    {followingPosts.map((post) => (
-                      <PostCard
-                        key={post.id}
-                        post={post}
-                        onUpdate={handlePostUpdate}
-                        onDelete={handlePostDelete}
-                        onSave={handleSavePost}
-                        isSaved={savedPosts.some(p => p.id === post.id)}
-                      />
-                    ))}
-                  </div>
+                   <div className="space-y-6">
+                     {followingPosts.map((post, index) => (
+                       <div key={`following-${post.id}`}>
+                         {/* Insert ad after 1st post, then every 4 posts */}
+                         {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
+                           <div className="mb-6">
+                             <AdvertisementBanner 
+                               location="feed" 
+                               variant="card" 
+                               maxAds={1}
+                             />
+                           </div>
+                         )}
+                         <PostCard
+                           post={post}
+                           onUpdate={handlePostUpdate}
+                           onDelete={handlePostDelete}
+                           onSave={handleSavePost}
+                           isSaved={savedPosts.some(p => p.id === post.id)}
+                         />
+                       </div>
+                     ))}
+                   </div>
                 )}
               </TabsContent>
               
@@ -574,18 +589,29 @@ const Feed = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="space-y-6">
-                    {savedPosts.map((post) => (
-                      <PostCard
-                        key={post.id}
-                        post={post}
-                        onUpdate={handlePostUpdate}
-                        onDelete={handlePostDelete}
-                        onSave={handleSavePost}
-                        isSaved={true}
-                      />
-                    ))}
-                  </div>
+                   <div className="space-y-6">
+                     {savedPosts.map((post, index) => (
+                       <div key={`saved-${post.id}`}>
+                         {/* Insert ad after 1st post, then every 4 posts */}
+                         {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
+                           <div className="mb-6">
+                             <AdvertisementBanner 
+                               location="feed" 
+                               variant="card" 
+                               maxAds={1}
+                             />
+                           </div>
+                         )}
+                         <PostCard
+                           post={post}
+                           onUpdate={handlePostUpdate}
+                           onDelete={handlePostDelete}
+                           onSave={handleSavePost}
+                           isSaved={true}
+                         />
+                       </div>
+                     ))}
+                   </div>
                 )}
               </TabsContent>
             </Tabs>

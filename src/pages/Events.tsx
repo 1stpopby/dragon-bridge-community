@@ -94,14 +94,6 @@ const Events = () => {
         </div>
       </div>
 
-      {/* Advertisement Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <AdvertisementBanner 
-          location="events" 
-          variant="banner" 
-          maxAds={1}
-        />
-      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Tabs defaultValue="upcoming" className="w-full">
@@ -127,12 +119,23 @@ const Events = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {upcomingEvents.map((event) => (
-                  <EventCard
-                    key={event.id}
-                    event={event}
-                    onEventChanged={fetchEvents}
-                  />
+                {upcomingEvents.map((event, index) => (
+                  <div key={`upcoming-${event.id}`} className="contents">
+                    {/* Insert ad after 1st event, then every 4 events */}
+                    {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
+                      <div className="col-span-full mb-6">
+                        <AdvertisementBanner 
+                          location="events" 
+                          variant="card" 
+                          maxAds={1}
+                        />
+                      </div>
+                    )}
+                    <EventCard
+                      event={event}
+                      onEventChanged={fetchEvents}
+                    />
+                  </div>
                 ))}
               </div>
             )}
@@ -151,12 +154,23 @@ const Events = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {pastEvents.map((event) => (
-                  <EventCard
-                    key={event.id}
-                    event={event}
-                    onEventChanged={fetchEvents}
-                  />
+                {pastEvents.map((event, index) => (
+                  <div key={`past-${event.id}`} className="contents">
+                    {/* Insert ad after 1st event, then every 4 events */}
+                    {(index === 1 || (index > 1 && (index - 1) % 4 === 0)) && (
+                      <div className="col-span-full mb-6">
+                        <AdvertisementBanner 
+                          location="events" 
+                          variant="card" 
+                          maxAds={1}
+                        />
+                      </div>
+                    )}
+                    <EventCard
+                      event={event}
+                      onEventChanged={fetchEvents}
+                    />
+                  </div>
                 ))}
               </div>
             )}
