@@ -17,9 +17,12 @@ import {
   MessageSquare, 
   Building2,
   User,
-  Calendar
+  Calendar,
+  Reply
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { ServiceResponseReplyDialog } from "./ServiceResponseReplyDialog";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ServiceInquiry {
   id: string;
@@ -36,9 +39,12 @@ interface ServiceResponseDialogProps {
   response: ServiceInquiry;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onReplySent?: () => void;
 }
 
-export function ServiceResponseDialog({ response, open, onOpenChange }: ServiceResponseDialogProps) {
+export function ServiceResponseDialog({ response, open, onOpenChange, onReplySent }: ServiceResponseDialogProps) {
+  const [replyDialogOpen, setReplyDialogOpen] = useState(false);
+  const { profile } = useAuth();
   const parseResponseMessage = (message: string) => {
     if (message.includes('Response to your service request:')) {
       const parts = message.split('Response to your service request:');
@@ -171,12 +177,37 @@ export function ServiceResponseDialog({ response, open, onOpenChange }: ServiceR
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end pt-4">
-          <Button onClick={() => onOpenChange(false)}>
+        <div className="flex justify-between pt-4">
+          {/* Only show reply button for companies */}
+          {profile?.account_type === 'company' && (
+            <Button 
+              onClick={() => setReplyDialogOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Reply className="h-4 w-4" />
+              Reply to Message
+            </Button>
+          )}
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            className={profile?.account_type === 'company' ? '' : 'ml-auto'}
+          >
             Close
           </Button>
         </div>
       </DialogContent>
+
+      {/* Reply Dialog */}
+      <ServiceResponseReplyDialog
+        open={replyDialogOpen}
+        onOpenChange={setReplyDialogOpen}
+        originalResponse={response}
+        onReplySent={() => {
+          setReplyDialogOpen(false);
+          onReplySent?.();
+        }}
+      />
     </Dialog>
   );
-} 
+}
