@@ -625,6 +625,75 @@ const ServiceManagement = () => {
 
             <TabsContent value="service-requests">
               <div className="w-full space-y-6">
+                {/* Completed Services Section - Moved to Top */}
+                {showCompletedServices && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        Completed Services ({completedServices.length})
+                      </CardTitle>
+                      <CardDescription>
+                        Your completed service requests
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-[400px]">
+                        {completedServices.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <CheckCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                            <p className="text-sm">No completed services yet - services need to be marked as completed by companies</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {completedServices.map((service) => (
+                              <div
+                                key={service.id}
+                                className="p-4 border rounded-lg bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                    <span className="font-medium">Completed Service</span>
+                                    <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
+                                      {service.status}
+                                    </Badge>
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">
+                                    {formatDistanceToNow(new Date(service.created_at), { addSuffix: true })}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                                  {service.message}
+                                </p>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Building2 className="h-4 w-4" />
+                                    <span>
+                                      {service.response_count || 0} responses received
+                                    </span>
+                                  </div>
+                                  <ServiceRequestManagementDialog
+                                    requestId={service.id}
+                                    requestTitle={service.message.substring(0, 50) + '...'}
+                                    requestStatus={service.status}
+                                    triggerButton={
+                                      <Button size="sm" variant="outline">
+                                        <Eye className="h-4 w-4 mr-2" />
+                                        View Details
+                                      </Button>
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* My Service Requests - Simplified View */}
                 <Card>
                   <CardHeader>
@@ -692,75 +761,6 @@ const ServiceManagement = () => {
                     </ScrollArea>
                   </CardContent>
                 </Card>
-
-                {/* Completed Services Section */}
-                {showCompletedServices && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                        Completed Services ({completedServices.length})
-                      </CardTitle>
-                      <CardDescription>
-                        Your completed service requests
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-[400px]">
-                        {completedServices.length === 0 ? (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <CheckCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                            <p className="text-sm">No completed services yet</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-4">
-                            {completedServices.map((service) => (
-                              <div
-                                key={service.id}
-                                className="p-4 border rounded-lg bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
-                              >
-                                <div className="flex items-start justify-between mb-2">
-                                  <div className="flex items-center gap-2">
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
-                                    <span className="font-medium">Completed Service</span>
-                                    <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
-                                      {service.status}
-                                    </Badge>
-                                  </div>
-                                  <span className="text-xs text-muted-foreground">
-                                    {formatDistanceToNow(new Date(service.created_at), { addSuffix: true })}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                                  {service.message}
-                                </p>
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Building2 className="h-4 w-4" />
-                                    <span>
-                                      {service.response_count || 0} responses received
-                                    </span>
-                                  </div>
-                                  <ServiceRequestManagementDialog
-                                    requestId={service.id}
-                                    requestTitle={service.message.substring(0, 50) + '...'}
-                                    requestStatus={service.status}
-                                    triggerButton={
-                                      <Button size="sm" variant="outline">
-                                        <Eye className="h-4 w-4 mr-2" />
-                                        View Details
-                                      </Button>
-                                    }
-                                  />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                )}
               </div>
             </TabsContent>
 
