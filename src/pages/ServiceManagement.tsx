@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Building2, HelpCircle, Eye, ClipboardList, MessageSquare, RefreshCw, Star, CheckCircle, EyeOff } from "lucide-react";
+import { Building2, HelpCircle, Eye, ClipboardList, MessageSquare, RefreshCw, Star, CheckCircle, EyeOff, ThumbsUp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate } from "react-router-dom";
@@ -12,6 +12,8 @@ import Navigation from "@/components/Navigation";
 import { ServiceRequestResponsesDialog } from "@/components/ServiceRequestResponsesDialog";
 import { ServiceRequestManagementDialog } from "@/components/ServiceRequestManagementDialog";
 import { ServiceResponseDialog } from "@/components/ServiceResponseDialog";
+import { CompanyFeedbackManagement } from "@/components/CompanyFeedbackManagement";
+import { UserFeedbackReceived } from "@/components/UserFeedbackReceived";
 import { formatDistanceToNow } from "date-fns";
 
 interface ServiceInquiry {
@@ -444,10 +446,14 @@ const ServiceManagement = () => {
         {profile?.account_type === 'company' ? (
           // Company view
           <Tabs defaultValue="sent-responses" className="w-full">
-            <TabsList className="grid w-full grid-cols-1">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="sent-responses">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Service Requests & Messages ({serviceResponses.length})
+              </TabsTrigger>
+              <TabsTrigger value="feedback">
+                <Star className="h-4 w-4 mr-2" />
+                Customer Feedback
               </TabsTrigger>
             </TabsList>
 
@@ -598,147 +604,171 @@ const ServiceManagement = () => {
               </Card>
             </TabsContent>
 
+            <TabsContent value="feedback">
+              <CompanyFeedbackManagement />
+            </TabsContent>
+
           </Tabs>
         ) : (
-          // User view - simplified to show only service requests
-          <div className="w-full space-y-6">
-            {/* My Service Requests - Simplified View */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <HelpCircle className="h-5 w-5" />
-                  My Service Requests
-                </CardTitle>
-                <CardDescription>
-                  Service requests you've submitted and their responses
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[600px]">
-                  {myServiceRequests.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <HelpCircle className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                      <p className="text-lg font-medium mb-2">No service requests yet</p>
-                      <p className="text-sm">When you submit a service request, it will appear here</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {myServiceRequests.map((request) => (
-                        <div
-                          key={request.id}
-                          className="p-4 border rounded-lg"
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <HelpCircle className="h-4 w-4 text-blue-600" />
-                              <span className="font-medium">Service Request</span>
-                              <Badge variant="outline" className="text-xs">
-                                {request.status || 'Submitted'}
-                              </Badge>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                            {request.message}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Building2 className="h-4 w-4" />
-                              <span>
-                                {request.response_count || 0} responses received
-                              </span>
-                            </div>
-                            <ServiceRequestManagementDialog
-                              requestId={request.id}
-                              requestTitle={request.message.substring(0, 50) + '...'}
-                              requestStatus={request.status}
-                              triggerButton={
-                                <Button size="sm" variant="outline">
-                                  <MessageSquare className="h-4 w-4 mr-2" />
-                                  Manage Request
-                                </Button>
-                              }
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
+          // User view
+          <Tabs defaultValue="service-requests" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="service-requests">
+                <HelpCircle className="h-4 w-4 mr-2" />
+                My Service Requests
+              </TabsTrigger>
+              <TabsTrigger value="my-feedback">
+                <ThumbsUp className="h-4 w-4 mr-2" />
+                My Feedback
+              </TabsTrigger>
+            </TabsList>
 
-            {/* Completed Services Section */}
-            {showCompletedServices && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    Completed Services ({completedServices.length})
-                  </CardTitle>
-                  <CardDescription>
-                    Your completed service requests
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[400px]">
-                    {completedServices.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <CheckCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p className="text-sm">No completed services yet</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {completedServices.map((service) => (
-                          <div
-                            key={service.id}
-                            className="p-4 border rounded-lg bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                                <span className="font-medium">Completed Service</span>
-                                <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
-                                  {service.status}
-                                </Badge>
-                              </div>
-                              <span className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(service.created_at), { addSuffix: true })}
-                              </span>
-                            </div>
-                            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                              {service.message}
-                            </p>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Building2 className="h-4 w-4" />
-                                <span>
-                                  {service.response_count || 0} responses received
+            <TabsContent value="service-requests">
+              <div className="w-full space-y-6">
+                {/* My Service Requests - Simplified View */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <HelpCircle className="h-5 w-5" />
+                      My Service Requests
+                    </CardTitle>
+                    <CardDescription>
+                      Service requests you've submitted and their responses
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[600px]">
+                      {myServiceRequests.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                          <HelpCircle className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                          <p className="text-lg font-medium mb-2">No service requests yet</p>
+                          <p className="text-sm">When you submit a service request, it will appear here</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {myServiceRequests.map((request) => (
+                            <div
+                              key={request.id}
+                              className="p-4 border rounded-lg"
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <HelpCircle className="h-4 w-4 text-blue-600" />
+                                  <span className="font-medium">Service Request</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {request.status || 'Submitted'}
+                                  </Badge>
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}
                                 </span>
                               </div>
-                              <ServiceRequestManagementDialog
-                                requestId={service.id}
-                                requestTitle={service.message.substring(0, 50) + '...'}
-                                requestStatus={service.status}
-                                triggerButton={
-                                  <Button size="sm" variant="outline">
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    View Details
-                                  </Button>
-                                }
-                              />
+                              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                                {request.message}
+                              </p>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Building2 className="h-4 w-4" />
+                                  <span>
+                                    {request.response_count || 0} responses received
+                                  </span>
+                                </div>
+                                <ServiceRequestManagementDialog
+                                  requestId={request.id}
+                                  requestTitle={request.message.substring(0, 50) + '...'}
+                                  requestStatus={request.status}
+                                  triggerButton={
+                                    <Button size="sm" variant="outline">
+                                      <MessageSquare className="h-4 w-4 mr-2" />
+                                      Manage Request
+                                    </Button>
+                                  }
+                                />
+                              </div>
                             </div>
+                          ))}
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+
+                {/* Completed Services Section */}
+                {showCompletedServices && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        Completed Services ({completedServices.length})
+                      </CardTitle>
+                      <CardDescription>
+                        Your completed service requests
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-[400px]">
+                        {completedServices.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <CheckCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                            <p className="text-sm">No completed services yet</p>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {completedServices.map((service) => (
+                              <div
+                                key={service.id}
+                                className="p-4 border rounded-lg bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                    <span className="font-medium">Completed Service</span>
+                                    <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
+                                      {service.status}
+                                    </Badge>
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">
+                                    {formatDistanceToNow(new Date(service.created_at), { addSuffix: true })}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                                  {service.message}
+                                </p>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Building2 className="h-4 w-4" />
+                                    <span>
+                                      {service.response_count || 0} responses received
+                                    </span>
+                                  </div>
+                                  <ServiceRequestManagementDialog
+                                    requestId={service.id}
+                                    requestTitle={service.message.substring(0, 50) + '...'}
+                                    requestStatus={service.status}
+                                    triggerButton={
+                                      <Button size="sm" variant="outline">
+                                        <Eye className="h-4 w-4 mr-2" />
+                                        View Details
+                                      </Button>
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="my-feedback">
+              <UserFeedbackReceived />
+            </TabsContent>
+
+          </Tabs>
         )}
 
         {/* Service Request Response Dialog */}
