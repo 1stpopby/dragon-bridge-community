@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PostCard from "@/components/PostCard";
 import EventCard from "@/components/EventCard";
-import CompanyReviewSection from "@/components/CompanyReviewSection";
 import CompanyServicesTab from "@/components/CompanyServicesTab";
 import CompanyGalleryTab from "@/components/CompanyGalleryTab";
 import CompanyFeedbackTab from "@/components/CompanyFeedbackTab";
@@ -83,8 +82,6 @@ const CompanyProfile = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [averageRating, setAverageRating] = useState<number>(0);
-  const [reviewCount, setReviewCount] = useState<number>(0);
 
   useEffect(() => {
     if (companyId) {
@@ -130,20 +127,6 @@ const CompanyProfile = () => {
 
       if (eventsError) throw eventsError;
       setEvents(eventsData || []);
-
-      // Fetch review statistics
-      const { data: reviewStats, error: reviewStatsError } = await supabase
-        .from('company_reviews')
-        .select('rating')
-        .eq('company_id', companyId);
-
-      if (reviewStatsError) throw reviewStatsError;
-      
-      if (reviewStats && reviewStats.length > 0) {
-        const avg = reviewStats.reduce((sum, review) => sum + review.rating, 0) / reviewStats.length;
-        setAverageRating(avg);
-        setReviewCount(reviewStats.length);
-      }
 
     } catch (error) {
       console.error('Error fetching company data:', error);
@@ -229,16 +212,6 @@ const CompanyProfile = () => {
                 )}
               </div>
               
-              {averageRating > 0 && (
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="ml-1 text-sm font-medium">{averageRating.toFixed(1)}</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground">({reviewCount} reviews)</span>
-                </div>
-              )}
-
               <p className="text-muted-foreground mb-4">{company.company_description}</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -308,13 +281,12 @@ const CompanyProfile = () => {
 
         {/* Content Tabs */}
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="posts">Posts ({posts.length})</TabsTrigger>
             <TabsTrigger value="events">Events ({events.length})</TabsTrigger>
             <TabsTrigger value="services">Services</TabsTrigger>
             <TabsTrigger value="gallery">Gallery</TabsTrigger>
             <TabsTrigger value="feedback">Feedback</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({reviewCount})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="posts" className="space-y-6 mt-6">
@@ -371,13 +343,6 @@ const CompanyProfile = () => {
             <CompanyFeedbackTab 
               companyId={company.id} 
               isOwner={user?.id === company.user_id}
-            />
-          </TabsContent>
-
-          <TabsContent value="reviews" className="mt-6">
-            <CompanyReviewSection 
-              companyId={company.id} 
-              onReviewUpdate={() => fetchCompanyData()}
             />
           </TabsContent>
         </Tabs>
