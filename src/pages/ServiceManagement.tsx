@@ -118,8 +118,23 @@ const ServiceManagement = () => {
             schema: 'public',
             table: 'service_request_responses',
           },
-          () => {
-            console.log('Service response updated, refreshing data...');
+          (payload) => {
+            console.log('Service response updated, refreshing data...', payload);
+            // Immediately update local state for company sent responses
+            if (profile?.account_type === 'company' && payload.new) {
+              setServiceResponses(prev => {
+                return prev.map(response => {
+                  if ('id' in response && response.id === payload.new.id) {
+                    return {
+                      ...response,
+                      response_status: payload.new.response_status,
+                      status_display: payload.new.response_status
+                    };
+                  }
+                  return response;
+                });
+              });
+            }
             fetchServiceResponses();
             fetchReceivedMessages();
             fetchMyServiceRequests();
@@ -801,9 +816,10 @@ const ServiceManagement = () => {
                                       response.response_status === 'declined' ? 'destructive' :
                                       'secondary'
                                     } className={`text-xs ${
-                                      response.response_status === 'completed' ? 'bg-green-100 text-green-800' : ''
+                                      response.response_status === 'completed' ? 'bg-green-100 text-green-800' :
+                                      response.response_status === 'accepted' ? 'bg-blue-100 text-blue-800' : ''
                                     }`}>
-                                      {response.response_status || 'Pending'}
+                                      {response.response_status || 'pending'}
                                     </Badge>
                                     {hasMessages && (
                                       <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
