@@ -29,6 +29,8 @@ interface ServiceInquiry {
   created_at: string;
   service_id: string;
   user_id?: string;
+  service_inquiry_responses?: any[];
+  service_inquiry_conversations?: any[];
 }
 
 interface ServiceResponse {
@@ -284,7 +286,7 @@ const ServiceManagement = () => {
   const fetchReceivedMessages = async () => {
     try {
       if (profile?.account_type === 'company') {
-        // For companies, fetch service inquiries for their services
+        // For companies, fetch service inquiries for their services with conversation history
         const { data: serviceInquiriesData, error: inquiriesError } = await supabase
           .from('service_inquiries')
           .select(`
@@ -292,6 +294,20 @@ const ServiceManagement = () => {
             services!inner (
               name,
               user_id
+            ),
+            service_inquiry_conversations (
+              id,
+              sender_id,
+              sender_type,
+              message,
+              created_at
+            ),
+            service_inquiry_responses (
+              id,
+              response_message,
+              contact_email,
+              contact_phone,
+              created_at
             )
           `)
           .eq('services.user_id', user?.id)
@@ -576,9 +592,80 @@ const ServiceManagement = () => {
                               {inquiry.inquirer_phone && (
                                 <p className="text-sm text-muted-foreground">Phone: {inquiry.inquirer_phone}</p>
                               )}
-                              <div className="bg-muted/50 p-3 rounded">
+                              
+                              {/* Original User Message */}
+                              <div className="bg-blue-50 p-3 rounded border border-blue-200 dark:bg-blue-950 dark:border-blue-800">
+                                <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">Customer Message:</p>
                                 <p className="text-sm">{inquiry.message}</p>
                               </div>
+
+                              {/* Company Response */}
+                              {inquiry.service_inquiry_responses && inquiry.service_inquiry_responses.length > 0 && (
+                                <div className="space-y-2">
+                                  {inquiry.service_inquiry_responses.map((response: any) => (
+                                    <div
+                                      key={response.id}
+                                      className="bg-green-50 p-3 rounded border border-green-200 dark:bg-green-950 dark:border-green-800"
+                                    >
+                                      <div className="flex items-center justify-between mb-1">
+                                        <p className="text-xs font-medium text-green-800 dark:text-green-300">
+                                          Your Response:
+                                        </p>
+                                        <span className="text-xs text-muted-foreground">
+                                          {formatDistanceToNow(new Date(response.created_at), { addSuffix: true })}
+                                        </span>
+                                      </div>
+                                      <p className="text-sm">{response.response_message}</p>
+                                      {(response.contact_email || response.contact_phone) && (
+                                        <div className="mt-2 pt-2 border-t border-green-200 dark:border-green-800">
+                                          <p className="text-xs font-medium text-green-800 dark:text-green-300 mb-1">Contact Details Provided:</p>
+                                          {response.contact_email && (
+                                            <p className="text-xs text-muted-foreground">Email: {response.contact_email}</p>
+                                          )}
+                                          {response.contact_phone && (
+                                            <p className="text-xs text-muted-foreground">Phone: {response.contact_phone}</p>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Conversation History */}
+                              {inquiry.service_inquiry_conversations && inquiry.service_inquiry_conversations.length > 0 && (
+                                <div className="space-y-2 mt-3">
+                                  <div className="text-xs font-medium text-muted-foreground border-t pt-2">
+                                    Conversation History:
+                                  </div>
+                                  {inquiry.service_inquiry_conversations
+                                    .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                                    .map((message: any) => (
+                                    <div
+                                      key={message.id}
+                                      className={`p-3 rounded border ${
+                                        message.sender_type === 'user'
+                                          ? 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800 mr-4'
+                                          : 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800 ml-4'
+                                      }`}
+                                    >
+                                      <div className="flex items-center justify-between mb-1">
+                                        <p className={`text-xs font-medium ${
+                                          message.sender_type === 'user'
+                                            ? 'text-blue-800 dark:text-blue-300'
+                                            : 'text-green-800 dark:text-green-300'
+                                        }`}>
+                                          {message.sender_type === 'user' ? 'Customer' : 'You'}:
+                                        </p>
+                                        <span className="text-xs text-muted-foreground">
+                                          {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                                        </span>
+                                      </div>
+                                      <p className="text-sm">{message.message}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                               
                               <div className="flex justify-end pt-2">
                                 <Button
@@ -819,9 +906,10 @@ const ServiceManagement = () => {
                                 <p className="text-sm">{inquiry.message}</p>
                               </div>
                               
-                              {/* Company Responses */}
+                              {/* Complete Conversation History */}
                               {inquiry.service_inquiry_responses && inquiry.service_inquiry_responses.length > 0 ? (
                                 <div className="space-y-2">
+                                  {/* Company Initial Response */}
                                   {inquiry.service_inquiry_responses.map((response: any) => (
                                     <div
                                       key={response.id}
@@ -848,26 +936,62 @@ const ServiceManagement = () => {
                                         </div>
                                       )}
                                     </div>
-                                   ))}
-                                   <div className="flex items-center justify-between pt-2">
-                                     <div className="text-xs text-green-600 font-medium">
-                                       ✓ Company has responded to your inquiry
-                                     </div>
-                                     <Button
-                                       size="sm"
-                                       variant="outline"
-                                       onClick={(e) => {
-                                         e.stopPropagation();
-                                         setSelectedInquiryForUserReply(inquiry);
-                                         setUserReplyDialogOpen(true);
-                                       }}
-                                       className="flex items-center gap-2"
-                                     >
-                                       <Reply className="h-4 w-4" />
-                                       Reply
-                                     </Button>
-                                   </div>
-                                 </div>
+                                  ))}
+                                  
+                                  {/* Conversation Messages */}
+                                  {inquiry.service_inquiry_conversations && inquiry.service_inquiry_conversations.length > 0 && (
+                                    <div className="space-y-2 mt-3">
+                                      <div className="text-xs font-medium text-muted-foreground border-t pt-2">
+                                        Conversation History:
+                                      </div>
+                                      {inquiry.service_inquiry_conversations
+                                        .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                                        .map((message: any) => (
+                                        <div
+                                          key={message.id}
+                                          className={`p-3 rounded border ${
+                                            message.sender_type === 'user'
+                                              ? 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800 ml-4'
+                                              : 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800 mr-4'
+                                          }`}
+                                        >
+                                          <div className="flex items-center justify-between mb-1">
+                                            <p className={`text-xs font-medium ${
+                                              message.sender_type === 'user'
+                                                ? 'text-blue-800 dark:text-blue-300'
+                                                : 'text-green-800 dark:text-green-300'
+                                            }`}>
+                                              {message.sender_type === 'user' ? 'You' : 'Company'}:
+                                            </p>
+                                            <span className="text-xs text-muted-foreground">
+                                              {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                                            </span>
+                                          </div>
+                                          <p className="text-sm">{message.message}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  
+                                  <div className="flex items-center justify-between pt-2">
+                                    <div className="text-xs text-green-600 font-medium">
+                                      ✓ Company has responded to your inquiry
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedInquiryForUserReply(inquiry);
+                                        setUserReplyDialogOpen(true);
+                                      }}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Reply className="h-4 w-4" />
+                                      Reply
+                                    </Button>
+                                  </div>
+                                </div>
                               ) : (
                                 <div className="text-xs text-muted-foreground mt-2">
                                   Status: Awaiting company response
