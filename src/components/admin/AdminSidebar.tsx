@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminNotifications } from "@/hooks/useAdminNotifications";
 import {
   Collapsible,
   CollapsibleContent,
@@ -188,6 +189,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   const collapsed = state === "collapsed";
   const { signOut, user } = useAdminAuth();
   const { toast } = useToast();
+  const { counts } = useAdminNotifications();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(
     menuGroups.map(group => group.label)
   );
@@ -213,6 +215,19 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
         description: "Failed to sign out. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const getNotificationCount = (value: string) => {
+    switch (value) {
+      case 'services':
+        return counts.newServices;
+      case 'users':
+        return counts.newUsers;
+      case 'events':
+        return counts.newEvents;
+      default:
+        return 0;
     }
   };
 
@@ -273,12 +288,24 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
                           >
                             <Icon className="h-4 w-4 flex-shrink-0" />
                             {!collapsed && (
-                              <div className="min-w-0">
-                                <span className="font-medium truncate">{item.title}</span>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium truncate">{item.title}</span>
+                                  {getNotificationCount(item.value) > 0 && (
+                                    <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 ml-2 animate-pulse">
+                                      {getNotificationCount(item.value)}
+                                    </Badge>
+                                  )}
+                                </div>
                                 <p className="text-xs text-muted-foreground truncate">
                                   {item.description}
                                 </p>
                               </div>
+                            )}
+                            {collapsed && getNotificationCount(item.value) > 0 && (
+                              <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 ml-auto animate-pulse">
+                                {getNotificationCount(item.value)}
+                              </Badge>
                             )}
                           </SidebarMenuButton>
                         </SidebarMenuItem>

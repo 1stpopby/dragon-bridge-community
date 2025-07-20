@@ -36,7 +36,10 @@ const Services = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('services')
-        .select('*')
+        .select(`
+          *,
+          profiles!inner(avatar_url, display_name, company_name)
+        `)
         .order('featured', { ascending: false })
         .order('rating', { ascending: false });
 
@@ -74,9 +77,9 @@ const Services = () => {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12 border-2 border-primary/10">
-              <AvatarImage src={service.avatar_url || ""} />
+              <AvatarImage src={service.profiles?.avatar_url || ""} />
               <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                {service.name.charAt(0)}
+                {(service.profiles?.company_name || service.profiles?.display_name || service.name).charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
