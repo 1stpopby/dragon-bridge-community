@@ -15,6 +15,7 @@ import { ServiceRequestManagementDialog } from "@/components/ServiceRequestManag
 import { ServiceResponseDialog } from "@/components/ServiceResponseDialog";
 import { ServiceInquiryReplyDialog } from "@/components/ServiceInquiryReplyDialog";
 import { UserReplyDialog } from "@/components/UserReplyDialog";
+import { ServiceConversationDialog } from "@/components/ServiceConversationDialog";
 import { CompanyFeedbackManagement } from "@/components/CompanyFeedbackManagement";
 import { UserFeedbackReceived } from "@/components/UserFeedbackReceived";
 import { formatDistanceToNow } from "date-fns";
@@ -81,6 +82,8 @@ const ServiceManagement = () => {
   const [inquiryReplyDialogOpen, setInquiryReplyDialogOpen] = useState(false);
   const [selectedInquiryForUserReply, setSelectedInquiryForUserReply] = useState<ServiceInquiry | null>(null);
   const [userReplyDialogOpen, setUserReplyDialogOpen] = useState(false);
+  const [selectedInquiryForConversation, setSelectedInquiryForConversation] = useState<any>(null);
+  const [conversationDialogOpen, setConversationDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -882,124 +885,123 @@ const ServiceManagement = () => {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {serviceResponses.map((inquiry) => (
-                          <div
-                            key={inquiry.id}
-                            className="p-4 border rounded-lg hover:bg-accent/50"
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <MessageSquare className="h-4 w-4 text-blue-600" />
-                                <span className="font-medium">Service Inquiry</span>
-                                <Badge variant="secondary" className="text-xs">
-                                  {inquiry.inquiry_type}
-                                </Badge>
-                              </div>
-                              <span className="text-sm text-muted-foreground">
-                                {formatDistanceToNow(new Date(inquiry.created_at), { addSuffix: true })}
-                              </span>
-                            </div>
+                        {serviceResponses
+                          .sort((a, b) => {
+                            // Sort by answered status first (answered inquiries to top), then by date
+                            const aHasResponse = a.service_inquiry_responses && a.service_inquiry_responses.length > 0;
+                            const bHasResponse = b.service_inquiry_responses && b.service_inquiry_responses.length > 0;
                             
-                            <div className="space-y-2">
-                              <div className="bg-blue-50 p-3 rounded border border-blue-200 dark:bg-blue-950 dark:border-blue-800">
-                                <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">Your Message:</p>
-                                <p className="text-sm">{inquiry.message}</p>
-                              </div>
+                            if (aHasResponse && !bHasResponse) return -1;
+                            if (!aHasResponse && bHasResponse) return 1;
+                            
+                            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                          })
+                          .map((inquiry) => {
+                            const hasResponse = inquiry.service_inquiry_responses && inquiry.service_inquiry_responses.length > 0;
+                            const hasConversation = inquiry.service_inquiry_conversations && inquiry.service_inquiry_conversations.length > 0;
+                            
+                            // Get the last message in the conversation
+                            let lastMessage = null;
+                            if (hasResponse || hasConversation) {
+                              const allMessages = [];
                               
-                              {/* Complete Conversation History */}
-                              {inquiry.service_inquiry_responses && inquiry.service_inquiry_responses.length > 0 ? (
-                                <div className="space-y-2">
-                                  {/* Company Initial Response */}
-                                  {inquiry.service_inquiry_responses.map((response: any) => (
-                                    <div
-                                      key={response.id}
-                                      className="bg-green-50 p-3 rounded border border-green-200 dark:bg-green-950 dark:border-green-800"
-                                    >
-                                      <div className="flex items-center justify-between mb-1">
-                                        <p className="text-xs font-medium text-green-800 dark:text-green-300">
-                                          Company Response from {response.profiles?.company_name || response.profiles?.display_name || 'Company'}:
-                                        </p>
-                                        <span className="text-xs text-muted-foreground">
-                                          {formatDistanceToNow(new Date(response.created_at), { addSuffix: true })}
-                                        </span>
-                                      </div>
-                                      <p className="text-sm">{response.response_message}</p>
-                                      {(response.contact_email || response.contact_phone) && (
-                                        <div className="mt-2 pt-2 border-t border-green-200 dark:border-green-800">
-                                          <p className="text-xs font-medium text-green-800 dark:text-green-300 mb-1">Contact Details:</p>
-                                          {response.contact_email && (
-                                            <p className="text-xs text-muted-foreground">Email: {response.contact_email}</p>
-                                          )}
-                                          {response.contact_phone && (
-                                            <p className="text-xs text-muted-foreground">Phone: {response.contact_phone}</p>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                  
-                                  {/* Conversation Messages */}
-                                  {inquiry.service_inquiry_conversations && inquiry.service_inquiry_conversations.length > 0 && (
-                                    <div className="space-y-2 mt-3">
-                                      <div className="text-xs font-medium text-muted-foreground border-t pt-2">
-                                        Conversation History:
-                                      </div>
-                                      {inquiry.service_inquiry_conversations
-                                        .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-                                        .map((message: any) => (
-                                        <div
-                                          key={message.id}
-                                          className={`p-3 rounded border ${
-                                            message.sender_type === 'user'
-                                              ? 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800 ml-4'
-                                              : 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800 mr-4'
-                                          }`}
-                                        >
-                                          <div className="flex items-center justify-between mb-1">
-                                            <p className={`text-xs font-medium ${
-                                              message.sender_type === 'user'
-                                                ? 'text-blue-800 dark:text-blue-300'
-                                                : 'text-green-800 dark:text-green-300'
-                                            }`}>
-                                              {message.sender_type === 'user' ? 'You' : 'Company'}:
-                                            </p>
-                                            <span className="text-xs text-muted-foreground">
-                                              {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                                            </span>
-                                          </div>
-                                          <p className="text-sm">{message.message}</p>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                  
-                                  <div className="flex items-center justify-between pt-2">
-                                    <div className="text-xs text-green-600 font-medium">
-                                      ✓ Company has responded to your inquiry
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedInquiryForUserReply(inquiry);
-                                        setUserReplyDialogOpen(true);
-                                      }}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <Reply className="h-4 w-4" />
-                                      Reply
-                                    </Button>
+                              // Add company responses
+                              if (inquiry.service_inquiry_responses) {
+                                inquiry.service_inquiry_responses.forEach((response: any) => {
+                                  allMessages.push({
+                                    message: response.response_message,
+                                    created_at: response.created_at,
+                                    sender_type: 'company',
+                                    sender_name: response.profiles?.company_name || response.profiles?.display_name || 'Company'
+                                  });
+                                });
+                              }
+                              
+                              // Add conversation messages
+                              if (inquiry.service_inquiry_conversations) {
+                                inquiry.service_inquiry_conversations.forEach((conv: any) => {
+                                  allMessages.push({
+                                    message: conv.message,
+                                    created_at: conv.created_at,
+                                    sender_type: conv.sender_type,
+                                    sender_name: conv.sender_type === 'user' ? 'You' : 'Company'
+                                  });
+                                });
+                              }
+                              
+                              // Sort and get the latest message
+                              allMessages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                              lastMessage = allMessages[0];
+                            }
+                            
+                            return (
+                              <div
+                                key={inquiry.id}
+                                className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                                  hasResponse ? 'border-green-500 bg-green-50 dark:bg-green-950/20' : 'hover:bg-accent/50'
+                                }`}
+                                onClick={() => {
+                                  setSelectedInquiryForConversation(inquiry);
+                                  setConversationDialogOpen(true);
+                                }}
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <MessageSquare className={`h-4 w-4 ${hasResponse ? 'text-green-600' : 'text-blue-600'}`} />
+                                    <span className="font-medium">Service Inquiry</span>
+                                    <Badge variant={hasResponse ? "default" : "secondary"} className={`text-xs ${hasResponse ? 'bg-green-100 text-green-800' : ''}`}>
+                                      {hasResponse ? 'Answered' : 'Pending'}
+                                    </Badge>
+                                    {hasResponse && (
+                                      <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
+                                        New Messages
+                                      </Badge>
+                                    )}
                                   </div>
+                                  <span className="text-sm text-muted-foreground">
+                                    {formatDistanceToNow(new Date(inquiry.created_at), { addSuffix: true })}
+                                  </span>
                                 </div>
-                              ) : (
-                                <div className="text-xs text-muted-foreground mt-2">
-                                  Status: Awaiting company response
+                                
+                                {/* Original inquiry message */}
+                                <div className="mb-3">
+                                  <p className="text-sm font-medium mb-1">Your inquiry:</p>
+                                  <p className="text-sm text-muted-foreground line-clamp-2">{inquiry.message}</p>
                                 </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                                
+                                {/* Last message preview */}
+                                {lastMessage && (
+                                  <div className={`p-3 rounded border ${
+                                    lastMessage.sender_type === 'company' 
+                                      ? 'bg-green-100 border-green-200 dark:bg-green-900/20 dark:border-green-800' 
+                                      : 'bg-blue-100 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800'
+                                  }`}>
+                                    <div className="flex items-center justify-between mb-1">
+                                      <p className="text-xs font-medium">
+                                        Latest from {lastMessage.sender_name}:
+                                      </p>
+                                      <span className="text-xs text-muted-foreground">
+                                        {formatDistanceToNow(new Date(lastMessage.created_at), { addSuffix: true })}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm line-clamp-2">{lastMessage.message}</p>
+                                  </div>
+                                )}
+                                
+                                {!hasResponse && (
+                                  <div className="text-xs text-muted-foreground mt-2">
+                                    Click to view • Status: Awaiting company response
+                                  </div>
+                                )}
+                                
+                                {hasResponse && (
+                                  <div className="text-xs text-green-600 font-medium mt-2">
+                                    Click to view full conversation
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                       </div>
                     )}
                   </ScrollArea>
@@ -1195,6 +1197,18 @@ const ServiceManagement = () => {
             open={userReplyDialogOpen}
             onOpenChange={setUserReplyDialogOpen}
             onReplySent={() => {
+              fetchServiceResponses();
+              fetchReceivedMessages();
+            }}
+          />
+        )}
+
+        {selectedInquiryForConversation && (
+          <ServiceConversationDialog
+            inquiry={selectedInquiryForConversation}
+            open={conversationDialogOpen}
+            onOpenChange={setConversationDialogOpen}
+            onMessageSent={() => {
               fetchServiceResponses();
               fetchReceivedMessages();
             }}
