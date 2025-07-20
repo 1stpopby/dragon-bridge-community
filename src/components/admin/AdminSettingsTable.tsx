@@ -189,37 +189,85 @@ export const AdminSettingsTable = ({ onDataChange }: AdminSettingsTableProps) =>
     const file = event.target.files?.[0];
     if (!file) return;
 
-    try {
-      setSaving(true);
-      const fileExt = file.name.split('.').pop();
-      const fileName = `logo-${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      updateFormData('app_logo_url', publicUrl);
-      
+    // Validate file type
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    if (!allowedTypes.includes(file.type)) {
       toast({
-        title: "Logo uploaded",
-        description: "Logo has been uploaded successfully.",
-      });
-    } catch (error) {
-      console.error('Error uploading logo:', error);
-      toast({
-        title: "Error uploading logo",
-        description: "Failed to upload logo. Please try again.",
+        title: "Invalid file type",
+        description: "Please upload a PNG, JPG, or SVG file.",
         variant: "destructive",
       });
-    } finally {
-      setSaving(false);
+      return;
     }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload a file smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate image dimensions
+    const img = new window.Image();
+    img.onload = async () => {
+      try {
+        // Recommended logo size: between 32x32 and 512x512 pixels
+        if (img.width < 32 || img.height < 32 || img.width > 512 || img.height > 512) {
+          toast({
+            title: "Invalid image dimensions",
+            description: "Logo should be between 32x32 and 512x512 pixels. Current: " + img.width + "x" + img.height,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setSaving(true);
+        const fileExt = file.name.split('.').pop();
+        const fileName = `logo-${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+
+        updateFormData('app_logo_url', publicUrl);
+        
+        // Auto-save the logo URL
+        await handleSave('app_logo_url');
+        
+        toast({
+          title: "Logo uploaded",
+          description: "Logo has been uploaded and saved successfully.",
+        });
+      } catch (error) {
+        console.error('Error uploading logo:', error);
+        toast({
+          title: "Error uploading logo",
+          description: "Failed to upload logo. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    img.onerror = () => {
+      toast({
+        title: "Invalid image file",
+        description: "Please upload a valid image file.",
+        variant: "destructive",
+      });
+    };
+
+    img.src = URL.createObjectURL(file);
   };
 
   useEffect(() => {
@@ -280,12 +328,21 @@ export const AdminSettingsTable = ({ onDataChange }: AdminSettingsTableProps) =>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="app_name">Application Name</Label>
-                  <Input
-                    id="app_name"
-                    value={formData.app_name || ""}
-                    onChange={(e) => updateFormData('app_name', e.target.value)}
-                    placeholder="Enter application name"
-                  />
+                  <div className="flex space-x-2">
+                    <Input
+                      id="app_name"
+                      value={formData.app_name || ""}
+                      onChange={(e) => updateFormData('app_name', e.target.value)}
+                      placeholder="Enter application name"
+                    />
+                    <Button
+                      onClick={() => handleSave('app_name')}
+                      disabled={saving}
+                      size="sm"
+                    >
+                      Save
+                    </Button>
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {settings.app_name?.description}
                   </p>
@@ -296,19 +353,24 @@ export const AdminSettingsTable = ({ onDataChange }: AdminSettingsTableProps) =>
                   <input
                     id="app_logo_file"
                     type="file"
-                    accept="image/*"
+                    accept="image/png,image/jpeg,image/jpg,image/svg+xml"
                     onChange={(e) => handleLogoUpload(e)}
-                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                    disabled={saving}
+                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Upload your application logo (PNG, JPG, SVG)
-                  </p>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>Upload your application logo (PNG, JPG, SVG)</p>
+                    <p>• Size: 32x32 to 512x512 pixels</p>
+                    <p>• Max file size: 5MB</p>
+                    <p>• Square ratio recommended for best results</p>
+                  </div>
                   {formData.app_logo_url && (
-                    <div className="mt-2">
+                    <div className="mt-2 p-3 border rounded-lg bg-muted/50">
+                      <p className="text-sm font-medium mb-2">Current Logo:</p>
                       <img 
                         src={formData.app_logo_url} 
                         alt="Current logo" 
-                        className="h-16 w-auto border rounded"
+                        className="h-16 w-16 object-contain border rounded"
                       />
                     </div>
                   )}

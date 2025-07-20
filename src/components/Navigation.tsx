@@ -1,14 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Home, MessageSquare, Calendar, Users, ShoppingBag, BookOpen, MapPin, Settings, Rss } from "lucide-react";
 import { UserButton } from "./UserButton";
 import { NotificationSystem } from "./NotificationSystem";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const [appSettings, setAppSettings] = useState({
+    app_name: "UK Chinese Community",
+    app_logo_url: "",
+  });
+
+  useEffect(() => {
+    const fetchAppSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('app_settings')
+          .select('setting_key, setting_value')
+          .in('setting_key', ['app_name', 'app_logo_url']);
+
+        if (error) throw error;
+
+        const settingsMap: Record<string, any> = {};
+        data?.forEach((setting) => {
+          try {
+            settingsMap[setting.setting_key] = typeof setting.setting_value === 'string' 
+              ? JSON.parse(setting.setting_value)
+              : setting.setting_value;
+          } catch {
+            settingsMap[setting.setting_key] = setting.setting_value;
+          }
+        });
+
+        setAppSettings(prev => ({
+          ...prev,
+          ...settingsMap,
+        }));
+      } catch (error) {
+        console.error('Error fetching app settings:', error);
+      }
+    };
+
+    fetchAppSettings();
+  }, []);
 
   const navItems = [
     { name: "Home", href: "/", icon: Home },
@@ -29,14 +67,22 @@ const Navigation = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">中</span>
-              </div>
+              {appSettings.app_logo_url ? (
+                <img 
+                  src={appSettings.app_logo_url} 
+                  alt="Logo" 
+                  className="w-8 h-8 object-contain rounded"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-sm">中</span>
+                </div>
+              )}
               <span className="font-bold text-lg sm:text-xl text-foreground hidden xs:block">
-                UK Chinese Community
+                {appSettings.app_name}
               </span>
               <span className="font-bold text-base text-foreground xs:hidden">
-                Dragon Bridge
+                {appSettings.app_name}
               </span>
             </Link>
           </div>
@@ -74,10 +120,18 @@ const Navigation = () => {
                 <div className="flex flex-col h-full">
                   <div className="p-6 border-b">
                     <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                        <span className="text-primary-foreground font-bold text-sm">中</span>
-                      </div>
-                      <span className="font-bold text-lg text-foreground">Dragon Bridge</span>
+                      {appSettings.app_logo_url ? (
+                        <img 
+                          src={appSettings.app_logo_url} 
+                          alt="Logo" 
+                          className="w-8 h-8 object-contain rounded"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                          <span className="text-primary-foreground font-bold text-sm">中</span>
+                        </div>
+                      )}
+                      <span className="font-bold text-lg text-foreground">{appSettings.app_name}</span>
                     </div>
                   </div>
                   <div className="flex-1 overflow-y-auto p-4">
