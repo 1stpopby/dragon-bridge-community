@@ -36,7 +36,8 @@ import {
   Globe,
   Megaphone,
   FileText as FileTextIcon,
-  Zap
+  Zap,
+  Database
 } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -171,6 +172,12 @@ const menuGroups = [
         value: "footer-pages",
         icon: FileTextIcon,
         description: "Manage static pages"
+      },
+      {
+        title: "Data Management",
+        value: "data-management",
+        icon: Database,
+        description: "Reset site data"
       }
     ]
   }
