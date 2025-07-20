@@ -98,8 +98,80 @@ export function ServiceRequestManagementDialog({
   useEffect(() => {
     if (open && requestId) {
       fetchResponses();
+      loadExistingMessages();
+
+      // Set up real-time subscription for new messages
+      const messagesChannel = supabase
+        .channel('user-messages')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'service_request_messages',
+            filter: `request_id=eq.${requestId}`
+          },
+          () => {
+            console.log('New message received, refreshing messages...');
+            loadExistingMessages();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(messagesChannel);
+      };
     }
   }, [open, requestId]);
+
+  const loadExistingMessages = async () => {
+    try {
+      // Load all messages for this request
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('service_request_messages')
+        .select('*')
+        .eq('request_id', requestId)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) throw messagesError;
+
+      // Group messages by response_id and fetch sender profiles
+      const messagesByResponse: Record<string, any[]> = {};
+      
+      for (const msg of messagesData || []) {
+        const responseId = msg.response_id || 'general';
+        if (!messagesByResponse[responseId]) {
+          messagesByResponse[responseId] = [];
+        }
+        
+        // Get sender profile
+        let authorName = 'Unknown';
+        if (msg.message_type === 'user_to_company') {
+          authorName = profile?.display_name || 'You';
+        } else {
+          // Fetch company sender profile
+          const { data: senderProfile } = await supabase
+            .from('profiles')
+            .select('display_name, company_name')
+            .eq('user_id', msg.sender_id)
+            .single();
+          authorName = senderProfile?.company_name || senderProfile?.display_name || 'Company';
+        }
+        
+        messagesByResponse[responseId].push({
+          id: msg.id,
+          message: msg.message,
+          sender: msg.message_type === 'user_to_company' ? 'user' : 'company',
+          timestamp: msg.created_at,
+          author: authorName
+        });
+      }
+
+      setChatMessages(messagesByResponse);
+    } catch (error) {
+      console.error('Error loading existing messages:', error);
+    }
+  };
 
   const fetchResponses = async () => {
     try {

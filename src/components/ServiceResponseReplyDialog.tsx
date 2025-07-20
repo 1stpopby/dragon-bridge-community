@@ -38,16 +38,52 @@ export const ServiceResponseReplyDialog: React.FC<ServiceResponseReplyDialogProp
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [sending, setSending] = useState(false);
+  const [latestUserMessage, setLatestUserMessage] = useState<any>(null);
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
-  // Pre-fill contact information when dialog opens
+  // Pre-fill contact information and fetch latest user message when dialog opens
   useEffect(() => {
     if (open && profile) {
       setContactEmail(profile.contact_email || user?.email || '');
       setContactPhone(profile.phone || profile.company_phone || '');
+      
+      // Fetch the latest user message for this conversation
+      const fetchLatestUserMessage = async () => {
+        try {
+          const originalRequestId = extractOriginalRequestId(originalResponse.message);
+          const requestId = originalRequestId || originalResponse.id;
+
+          const { data: latestMessage } = await supabase
+            .from('service_request_messages')
+            .select('*')
+            .eq('request_id', requestId)
+            .eq('message_type', 'user_to_company')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          if (latestMessage) {
+            const { data: senderProfile } = await supabase
+              .from('profiles')
+              .select('display_name, contact_email')
+              .eq('user_id', latestMessage.sender_id)
+              .single();
+
+            setLatestUserMessage({
+              ...latestMessage,
+              inquirer_name: senderProfile?.display_name || 'User',
+              inquirer_email: senderProfile?.contact_email || '',
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching latest user message:', error);
+        }
+      };
+
+      fetchLatestUserMessage();
     }
-  }, [open, profile, user]);
+  }, [open, profile, user, originalResponse]);
 
   const extractOriginalRequestId = (message: string) => {
     const match = message.match(/Original Request ID: ([a-f0-9-]+)/);
@@ -166,15 +202,28 @@ Sender ID: ${user?.id}`;
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Original Response Preview */}
+          {/* Latest User Message Preview */}
           <div className="bg-muted/50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Original Response from {originalResponse.inquirer_name}</span>
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">
+                {latestUserMessage 
+                  ? `Latest message from ${latestUserMessage.inquirer_name}`
+                  : `Original Response from ${originalResponse.inquirer_name}`
+                }
+              </span>
             </div>
             <p className="text-sm text-muted-foreground line-clamp-3">
-              {parseResponseMessage(originalResponse.message)}
+              {latestUserMessage 
+                ? latestUserMessage.message
+                : parseResponseMessage(originalResponse.message)
+              }
             </p>
+            {latestUserMessage && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {new Date(latestUserMessage.created_at).toLocaleString()}
+              </p>
+            )}
           </div>
 
           {/* Reply Form */}

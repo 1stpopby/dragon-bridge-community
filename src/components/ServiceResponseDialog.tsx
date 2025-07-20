@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +23,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { ServiceResponseReplyDialog } from "./ServiceResponseReplyDialog";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ServiceInquiry {
   id: string;
@@ -44,7 +45,56 @@ interface ServiceResponseDialogProps {
 
 export function ServiceResponseDialog({ response, open, onOpenChange, onReplySent }: ServiceResponseDialogProps) {
   const [replyDialogOpen, setReplyDialogOpen] = useState(false);
-  const { profile } = useAuth();
+  const [latestUserMessage, setLatestUserMessage] = useState<any>(null);
+  const { profile, user } = useAuth();
+
+  // Fetch the latest message from the user for this conversation
+  useEffect(() => {
+    const fetchLatestUserMessage = async () => {
+      if (open && profile?.account_type === 'company' && response.id) {
+        try {
+          // Get the original request ID from the response message
+          const originalRequestId = extractOriginalRequestId(response.message);
+          const requestId = originalRequestId || response.id;
+
+          // Fetch the latest user message for this conversation
+          const { data: latestMessage } = await supabase
+            .from('service_request_messages')
+            .select('*')
+            .eq('request_id', requestId)
+            .eq('message_type', 'user_to_company')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          if (latestMessage) {
+            // Get sender profile separately
+            const { data: senderProfile } = await supabase
+              .from('profiles')
+              .select('display_name, contact_email')
+              .eq('user_id', latestMessage.sender_id)
+              .single();
+
+            setLatestUserMessage({
+              ...latestMessage,
+              inquirer_name: senderProfile?.display_name || 'User',
+              inquirer_email: senderProfile?.contact_email || '',
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching latest user message:', error);
+        }
+      }
+    };
+
+    fetchLatestUserMessage();
+  }, [open, response.id, profile?.account_type]);
+
+  const extractOriginalRequestId = (message: string) => {
+    const match = message.match(/Original Request ID: ([a-f0-9-]+)/);
+    return match ? match[1] : null;
+  };
+
   const parseResponseMessage = (message: string) => {
     if (message.includes('Response to your service request:')) {
       const parts = message.split('Response to your service request:');
