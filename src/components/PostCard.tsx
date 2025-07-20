@@ -124,6 +124,11 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
         throw new Error('Could not find user profile');
       }
 
+      // Validate IDs before proceeding
+      if (!profile.id || !authorProfile.id) {
+        throw new Error('Invalid profile data');
+      }
+
       if (isFollowing) {
         // Unfollow
         const { error } = await supabase
@@ -139,20 +144,49 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
           description: `You are no longer following ${post.author_name}.`,
         });
       } else {
-        // Follow
-        const { error } = await supabase
+        // Check if already following to prevent duplicate key error
+        const { data: existingFollow } = await supabase
           .from('user_follows')
-          .insert({
-            follower_id: profile.id,
-            following_id: authorProfile.id
-          });
+          .select('id')
+          .eq('follower_id', profile.id)
+          .eq('following_id', authorProfile.id)
+          .maybeSingle();
 
-        if (error) throw error;
-        setIsFollowing(true);
-        toast({
-          title: "User followed",
-          description: `You are now following ${post.author_name}!`,
-        });
+        if (existingFollow) {
+          // Already following, just update the UI
+          setIsFollowing(true);
+          toast({
+            title: "Already following",
+            description: `You are already following ${post.author_name}.`,
+          });
+        } else {
+          // Follow
+          const { error } = await supabase
+            .from('user_follows')
+            .insert({
+              follower_id: profile.id,
+              following_id: authorProfile.id
+            });
+
+          if (error) {
+            // Handle duplicate key error specifically
+            if (error.code === '23505') {
+              setIsFollowing(true);
+              toast({
+                title: "Already following",
+                description: `You are already following ${post.author_name}.`,
+              });
+            } else {
+              throw error;
+            }
+          } else {
+            setIsFollowing(true);
+            toast({
+              title: "User followed",
+              description: `You are now following ${post.author_name}!`,
+            });
+          }
+        }
       }
 
       // Call the parent onFollow callback if provided
