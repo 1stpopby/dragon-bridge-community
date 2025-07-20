@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Building2, HelpCircle, Eye, ClipboardList, MessageSquare, RefreshCw, Star, CheckCircle, EyeOff, ThumbsUp, Reply } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -68,6 +69,7 @@ interface ServiceRequest {
 
 const ServiceManagement = () => {
   const { user, profile } = useAuth();
+  const { toast } = useToast();
   const [serviceResponses, setServiceResponses] = useState<ServiceResponse[] | ServiceInquiry[]>([]);
   const [receivedMessages, setReceivedMessages] = useState<ServiceInquiry[]>([]);
   const [myServiceRequests, setMyServiceRequests] = useState<ServiceRequest[]>([]);
@@ -856,6 +858,45 @@ const ServiceManagement = () => {
                                       <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
                                         New Messages
                                       </Badge>
+                                    )}
+                                    {/* Add "Mark as Completed" button for accepted services */}
+                                    {response.response_status === 'accepted' && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-green-600 border-green-600 hover:bg-green-50 ml-2"
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          try {
+                                            const { error } = await supabase
+                                              .from('service_request_responses')
+                                              .update({ response_status: 'completed' })
+                                              .eq('id', response.id);
+                                            
+                                            if (error) throw error;
+                                            
+                                            toast({
+                                              title: "Service completed!",
+                                              description: "The service has been marked as completed successfully.",
+                                            });
+                                            
+                                            // Refresh data
+                                            fetchServiceResponses();
+                                            fetchMyServiceRequests();
+                                            fetchCompletedServices();
+                                          } catch (error) {
+                                            console.error('Error marking as completed:', error);
+                                            toast({
+                                              title: "Error",
+                                              description: "Failed to mark service as completed. Please try again.",
+                                              variant: "destructive",
+                                            });
+                                          }
+                                        }}
+                                      >
+                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                        Mark Completed
+                                      </Button>
                                     )}
                                   </div>
                                   <span className="text-sm text-muted-foreground">

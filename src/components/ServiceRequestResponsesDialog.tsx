@@ -221,12 +221,31 @@ export function ServiceRequestResponsesDialog({
       
       console.log(`Response ${responseId} status updated to: ${newStatus}`);
       
-      // If marking as completed, show success message
+      // Show appropriate message based on status
       if (newStatus === 'completed') {
+        toast({
+          title: "Service completed!",
+          description: "The service has been marked as completed successfully.",
+        });
         console.log(`Service request ${requestId} automatically marked as completed via database trigger`);
+      } else if (newStatus === 'accepted') {
+        toast({
+          title: "Service accepted!",
+          description: "You have accepted this service offer.",
+        });
+      } else if (newStatus === 'declined') {
+        toast({
+          title: "Service declined",
+          description: "You have declined this service offer.",
+        });
       }
     } catch (error) {
       console.error('Error updating response status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update status. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
