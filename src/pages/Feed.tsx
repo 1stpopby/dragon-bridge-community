@@ -104,13 +104,10 @@ const Feed = () => {
     try {
       console.log('fetchPosts called, user:', user?.id);
       
-      // Fetch posts with latest profile info to ensure avatars are up to date
+      // Fetch posts first
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select(`
-          *,
-          profiles!inner(avatar_url, display_name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       console.log('Posts query result:', { postsData, postsError });
@@ -120,7 +117,31 @@ const Feed = () => {
         throw postsError;
       }
 
-      if (user && postsData) {
+      if (!postsData || postsData.length === 0) {
+        setPosts([]);
+        return;
+      }
+
+      // Get unique user IDs from posts
+      const userIds = [...new Set(postsData.map(post => post.user_id))];
+      
+      // Fetch profiles for these users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, avatar_url, display_name')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.error('Error in profiles query:', profilesError);
+        // Continue without profile data
+      }
+
+      // Create a map of user_id to profile data
+      const profilesMap = new Map(
+        profilesData?.map(profile => [profile.user_id, profile]) || []
+      );
+
+      if (user) {
         const { data: likesData, error: likesError } = await supabase
           .from('post_likes')
           .select('post_id')
@@ -132,23 +153,29 @@ const Feed = () => {
         }
 
         const likedPostIds = new Set(likesData?.map(like => like.post_id) || []);
-        const postsWithLikeStatus = postsData.map(post => ({
-          ...post,
-          // Use the latest avatar from profiles table if available
-          author_avatar: (post.profiles as any)?.avatar_url || post.author_avatar,
-          author_name: (post.profiles as any)?.display_name || post.author_name,
-          user_liked: likedPostIds.has(post.id)
-        }));
+        const postsWithLikeStatus = postsData.map(post => {
+          const profile = profilesMap.get(post.user_id);
+          return {
+            ...post,
+            // Use the latest avatar from profiles table if available
+            author_avatar: profile?.avatar_url || post.author_avatar,
+            author_name: profile?.display_name || post.author_name,
+            user_liked: likedPostIds.has(post.id)
+          };
+        });
 
         console.log('Setting posts with like status:', postsWithLikeStatus.length);
         setPosts(postsWithLikeStatus);
       } else {
-        const postsWithLatestAvatars = postsData?.map(post => ({
-          ...post,
-          // Use the latest avatar from profiles table if available
-          author_avatar: (post.profiles as any)?.avatar_url || post.author_avatar,
-          author_name: (post.profiles as any)?.display_name || post.author_name,
-        })) || [];
+        const postsWithLatestAvatars = postsData.map(post => {
+          const profile = profilesMap.get(post.user_id);
+          return {
+            ...post,
+            // Use the latest avatar from profiles table if available
+            author_avatar: profile?.avatar_url || post.author_avatar,
+            author_name: profile?.display_name || post.author_name,
+          };
+        });
         console.log('Setting posts without user:', postsWithLatestAvatars.length);
         setPosts(postsWithLatestAvatars);
       }
