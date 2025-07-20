@@ -23,6 +23,7 @@ interface ServiceInquiry {
   inquiry_type: string;
   created_at: string;
   service_id: string;
+  user_id?: string;
 }
 
 interface ServiceResponse {
@@ -147,9 +148,26 @@ const ServiceManagement = () => {
         )
         .subscribe();
 
+      const messagesChannel = supabase
+        .channel('service-messages')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'service_request_messages',
+          },
+          () => {
+            console.log('New message received, refreshing data...');
+            fetchServiceResponses();
+          }
+        )
+        .subscribe();
+
       return () => {
         supabase.removeChannel(responseChannel);
         supabase.removeChannel(inquiryChannel);
+        supabase.removeChannel(messagesChannel);
       };
     }
   }, [user]);
@@ -157,7 +175,7 @@ const ServiceManagement = () => {
   const fetchServiceResponses = async () => {
     try {
       if (profile?.account_type === 'company') {
-        // For companies, fetch their sent responses with request details
+        // For companies, fetch their sent responses with request details AND messages
         const { data, error } = await supabase
           .from('service_request_responses')
           .select(`
@@ -176,13 +194,24 @@ const ServiceManagement = () => {
 
         if (error) throw error;
         
-        // Format the responses to include request details
-        const formattedResponses = (data || []).map(response => ({
-          ...response,
-          request_details: response.service_inquiries,
-          // Add status info for better UI display
-          status_display: response.response_status || 'pending'
-        }));
+        // Format the responses to include request details and fetch related messages
+        const formattedResponses = await Promise.all(
+          (data || []).map(async (response) => {
+            // Fetch messages for this service request
+            const { data: messagesData } = await supabase
+              .from('service_request_messages')
+              .select('*')
+              .eq('request_id', response.request_id)
+              .order('created_at', { ascending: false });
+
+            return {
+              ...response,
+              request_details: response.service_inquiries,
+              messages: messagesData || [],
+              status_display: response.response_status || 'pending'
+            };
+          })
+        );
         
         setServiceResponses(formattedResponses);
       } else {
@@ -405,14 +434,10 @@ const ServiceManagement = () => {
         {profile?.account_type === 'company' ? (
           // Company view
           <Tabs defaultValue="sent-responses" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-1">
               <TabsTrigger value="sent-responses">
                 <MessageSquare className="h-4 w-4 mr-2" />
-                Sent Responses ({serviceResponses.length})
-              </TabsTrigger>
-              <TabsTrigger value="received-messages">
-                <HelpCircle className="h-4 w-4 mr-2" />
-                Received Messages ({receivedMessages.length})
+                Service Requests & Messages ({serviceResponses.length})
               </TabsTrigger>
             </TabsList>
 
@@ -440,13 +465,13 @@ const ServiceManagement = () => {
                         {serviceResponses.map((response) => (
                           <div
                             key={response.id}
-                            className="p-4 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
-                            onClick={() => !isServiceResponse(response) && handleResponseClick(response)}
+                            className="p-4 border rounded-lg"
                           >
+                            {/* Service Response Header */}
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <Building2 className="h-4 w-4 text-green-600" />
-                                <span className="font-medium">Response Sent</span>
+                                <span className="font-medium">Service Response</span>
                                 <Badge variant={
                                   response.response_status === 'completed' ? 'default' :
                                   response.response_status === 'accepted' ? 'default' :
@@ -457,14 +482,103 @@ const ServiceManagement = () => {
                                 }`}>
                                   Status: {response.response_status || 'Pending'}
                                 </Badge>
+                                {response.messages && response.messages.length > 0 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {response.messages.length} message{response.messages.length > 1 ? 's' : ''}
+                                  </Badge>
+                                )}
                               </div>
                               <span className="text-xs text-muted-foreground">
                                 {formatDistanceToNow(new Date(response.created_at), { addSuffix: true })}
                               </span>
                             </div>
+
+                            {/* Service Response Content */}
                             <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
                               {isServiceResponse(response) ? response.response_message : response.message}
                             </p>
+
+                            {/* Request Details */}
+                            {response.request_details && (
+                              <div className="mb-3 p-3 bg-muted/30 rounded-md">
+                                <div className="text-xs font-medium text-muted-foreground mb-1">Original Request from {response.request_details.inquirer_name}</div>
+                                <p className="text-sm line-clamp-2">{response.request_details.message}</p>
+                              </div>
+                            )}
+
+                            {/* Messages Section */}
+                            {response.messages && response.messages.length > 0 && (
+                              <div className="mt-4 space-y-2 border-t pt-3">
+                                <div className="text-xs font-medium text-muted-foreground mb-2">Messages:</div>
+                                {response.messages.slice(0, 3).map((message) => (
+                                  <div
+                                    key={message.id}
+                                    className="p-2 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-950 dark:border-blue-800"
+                                  >
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-xs font-medium">
+                                        {message.message_type === 'user_to_company' ? 'From User' : 'From Company'}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm line-clamp-2">{message.message}</p>
+                                  </div>
+                                ))}
+                                {response.messages.length > 3 && (
+                                  <div className="text-xs text-muted-foreground">
+                                    + {response.messages.length - 3} more message{response.messages.length - 3 > 1 ? 's' : ''}
+                                  </div>
+                                )}
+                                
+                                {/* Reply Button */}
+                                <div className="mt-2">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleResponseClick({
+                                      id: response.id,
+                                      inquirer_name: response.request_details?.inquirer_name || 'User',
+                                      inquirer_email: response.request_details?.inquirer_email || '',
+                                      inquirer_phone: '',
+                                      message: response.response_message || '',
+                                      inquiry_type: 'contact',
+                                      created_at: response.created_at,
+                                      service_id: '',
+                                      user_id: response.request_details?.user_id
+                                    })}
+                                  >
+                                    <MessageSquare className="h-4 w-4 mr-2" />
+                                    Reply to Conversation
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Reply Button for responses without messages */}
+                            {(!response.messages || response.messages.length === 0) && (
+                              <div className="mt-3">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleResponseClick({
+                                    id: response.id,
+                                    inquirer_name: response.request_details?.inquirer_name || 'User',
+                                    inquirer_email: response.request_details?.inquirer_email || '',
+                                    inquirer_phone: '',
+                                    message: response.response_message || '',
+                                    inquiry_type: 'contact',
+                                    created_at: response.created_at,
+                                    service_id: '',
+                                    user_id: response.request_details?.user_id
+                                  })}
+                                >
+                                  <MessageSquare className="h-4 w-4 mr-2" />
+                                  Start Conversation
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -474,60 +588,6 @@ const ServiceManagement = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="received-messages">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <HelpCircle className="h-5 w-5" />
-                    Received Messages
-                  </CardTitle>
-                  <CardDescription>
-                    Messages from users requesting information about your services
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[600px]">
-                    {receivedMessages.length === 0 ? (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <HelpCircle className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium mb-2">No messages received yet</p>
-                        <p className="text-sm">When users request more information about your services, their messages will appear here</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {receivedMessages.map((message) => (
-                          <div
-                            key={message.id}
-                            className="p-4 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
-                            onClick={() => handleResponseClick(message)}
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <HelpCircle className="h-4 w-4 text-blue-600" />
-                                <span className="font-medium">Service Inquiry</span>
-                                <Badge variant="secondary" className="text-xs">From {message.inquirer_name}</Badge>
-                              </div>
-                              <span className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                              </span>
-                            </div>
-                            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                              {message.message}
-                            </p>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span>Contact: {message.inquirer_email}</span>
-                              {message.inquirer_phone && (
-                                <span>• Phone: {message.inquirer_phone}</span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-            </TabsContent>
           </Tabs>
         ) : (
           // User view - simplified to show only service requests
