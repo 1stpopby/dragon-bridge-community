@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import CompanyLink from "@/components/CompanyLink";
-import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Send, Share2, Bookmark, Eye } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Send, Share2, Bookmark, Eye, UserPlus, UserCheck } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,9 +47,10 @@ interface PostCardProps {
   onDelete: (postId: string) => void;
   onSave?: (post: Post) => void;
   isSaved?: boolean;
+  onFollow?: (userId: string) => void;
 }
 
-const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false }: PostCardProps) => {
+const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow }: PostCardProps) => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -62,6 +63,8 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false }: PostCar
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const [likeAnimation, setLikeAnimation] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   const fetchComments = async () => {
     try {
@@ -78,11 +81,105 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false }: PostCar
     }
   };
 
+  const checkFollowStatus = async () => {
+    if (!user || !profile || user.id === post.user_id) return;
+    
+    try {
+      // Get the post author's profile first
+      const { data: authorProfile, error: authorError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', post.user_id)
+        .single();
+
+      if (authorError || !authorProfile) return;
+
+      const { data, error } = await supabase
+        .from('user_follows')
+        .select('id')
+        .eq('follower_id', profile.id)
+        .eq('following_id', authorProfile.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setIsFollowing(!!data);
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+    }
+  };
+
+  const handleFollow = async () => {
+    if (!user || !profile || user.id === post.user_id) return;
+    
+    setFollowLoading(true);
+    try {
+      // Get the post author's profile first
+      const { data: authorProfile, error: authorError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', post.user_id)
+        .single();
+
+      if (authorError || !authorProfile) {
+        throw new Error('Could not find user profile');
+      }
+
+      if (isFollowing) {
+        // Unfollow
+        const { error } = await supabase
+          .from('user_follows')
+          .delete()
+          .eq('follower_id', profile.id)
+          .eq('following_id', authorProfile.id);
+
+        if (error) throw error;
+        setIsFollowing(false);
+        toast({
+          title: "User unfollowed",
+          description: `You are no longer following ${post.author_name}.`,
+        });
+      } else {
+        // Follow
+        const { error } = await supabase
+          .from('user_follows')
+          .insert({
+            follower_id: profile.id,
+            following_id: authorProfile.id
+          });
+
+        if (error) throw error;
+        setIsFollowing(true);
+        toast({
+          title: "User followed",
+          description: `You are now following ${post.author_name}!`,
+        });
+      }
+
+      // Call the parent onFollow callback if provided
+      if (onFollow) {
+        onFollow(authorProfile.id);
+      }
+    } catch (error) {
+      console.error('Error following/unfollowing user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update follow status. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (showComments) {
       fetchComments();
     }
   }, [showComments, post.id]);
+
+  useEffect(() => {
+    checkFollowStatus();
+  }, [user, profile, post.user_id]);
 
   const handleLike = async () => {
     if (!user) return;
@@ -294,25 +391,50 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false }: PostCar
               </div>
             </div>
             
-            {user?.id === post.user_id && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50">
-                  <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Follow button - only show if not the current user and user is logged in */}
+              {user && user.id !== post.user_id && (
+                <Button
+                  variant={isFollowing ? "secondary" : "default"}
+                  size="sm"
+                  onClick={handleFollow}
+                  disabled={followLoading}
+                  className="gap-2 transition-all"
+                >
+                  {followLoading ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-foreground" />
+                  ) : isFollowing ? (
+                    <UserCheck className="h-4 w-4" />
+                  ) : (
+                    <UserPlus className="h-4 w-4" />
+                  )}
+                  <span className="text-sm">
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </span>
+                </Button>
+              )}
+              
+              {/* Edit/Delete dropdown - only show for post owner */}
+              {user?.id === post.user_id && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50">
+                    <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                      <Edit3 className="h-4 w-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </div>
         </div>
 
