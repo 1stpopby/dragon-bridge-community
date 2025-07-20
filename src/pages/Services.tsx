@@ -69,145 +69,126 @@ const Services = () => {
   }, []);
 
   const ServiceListItem = ({ service }: { service: any }) => (
-    <div className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <Avatar className="h-10 w-10">
+    <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-primary/20 hover:border-l-primary">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-12 w-12 border-2 border-primary/10">
               <AvatarImage src={service.avatar_url || ""} />
-              <AvatarFallback className="bg-primary text-primary-foreground">
+              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                 {service.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <div>
+            <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold">{service.name}</h3>
+                <h3 className="font-semibold text-foreground text-lg">{service.name}</h3>
                 {service.verified && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 border-green-200">
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Verified
                   </Badge>
                 )}
                 {service.featured && (
-                  <Badge variant="destructive" className="text-xs">
+                  <Badge className="text-xs bg-red-100 text-red-700 border-red-200">
                     Featured
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <div className="flex items-center">
                   <MapPin className="h-4 w-4 mr-1" />
                   {service.location}
                 </div>
                 <div className="flex items-center">
-                  <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                  {service.rating} ({service.reviews_count})
+                  <Star className="h-4 w-4 text-yellow-500 mr-1 fill-current" />
+                  <span className="font-medium">{service.rating}</span>
+                  <span className="text-muted-foreground">({service.reviews_count})</span>
                 </div>
               </div>
             </div>
           </div>
-          
-          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-            {service.description}
-          </p>
-          
-          <div className="flex items-center gap-4 text-sm">
-            {service.phone && (
-              <div className="flex items-center">
-                <Phone className="h-4 w-4 mr-1 text-muted-foreground" />
-                {service.phone}
-              </div>
-            )}
-            <div className="flex items-center">
-              <Globe className="h-4 w-4 mr-1 text-muted-foreground" />
-              {service.languages?.join(", ") || "Contact for languages"}
+        </div>
+        
+        <p className="text-sm text-muted-foreground mb-4 line-clamp-2 leading-relaxed">
+          {service.description}
+        </p>
+        
+        <div className="space-y-2 mb-4">
+          {service.phone && (
+            <div className="flex items-center text-sm">
+              <Phone className="h-4 w-4 mr-2 text-primary" />
+              <span className="font-medium">{service.phone}</span>
             </div>
+          )}
+          <div className="flex items-center text-sm">
+            <Globe className="h-4 w-4 mr-2 text-primary" />
+            <span>{service.languages?.join(", ") || "English, Mandarin"}</span>
           </div>
         </div>
         
-        <div className="flex items-center gap-2 ml-4">
+        <div className="flex items-center gap-2 pt-3 border-t border-border">
           <ServiceContactDialog
             service={service}
             triggerButton={
-              <Button size="sm" variant="outline">Contact</Button>
+              <Button size="sm" variant="outline" className="flex-1">
+                Contact
+              </Button>
             }
           />
           <ServiceDetailsDialog
             service={service}
             triggerButton={
-              <Button size="sm">
+              <Button size="sm" className="flex-1 bg-red-600 hover:bg-red-700">
                 Details
-                <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             }
           />
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0">
       <Navigation />
       
-      {/* Header */}
-      <div className="bg-muted/30 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Local Services
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Find trusted Chinese-speaking professionals and services across the UK. 
-              From legal advice to healthcare, education, and financial planning.
-            </p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search services or location..." 
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+      {/* Simplified Header */}
+      <div className="bg-background border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">All Services ({services.length})</h1>
+            </div>
+            <div className="flex gap-2">
+              <ServiceRequestDialog
+                triggerButton={<Button size="sm" variant="outline">Request Service</Button>}
+              />
+              <ListBusinessDialog
+                triggerButton={<Button size="sm">List Business</Button>}
               />
             </div>
           </div>
+          
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search services or location..." 
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Advertisement Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <AdvertisementBanner 
-          location="services" 
-          variant="banner" 
-          maxAds={1}
-        />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Action Buttons at Top */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-          <ServiceRequestDialog
-            triggerButton={<Button>Request a Service</Button>}
-          />
-          <ListBusinessDialog
-            triggerButton={<Button variant="outline">List Your Business</Button>}
-          />
-        </div>
-
+      <div className="max-w-7xl mx-auto px-4 py-6">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-          <TabsList className={`grid w-full ${canViewServiceRequests ? 'grid-cols-2' : 'grid-cols-1'} mb-8`}>
-            <TabsTrigger value="all">
-              All Services ({services.length})
-            </TabsTrigger>
-            {canViewServiceRequests && (
-              <TabsTrigger value="requests">
-                Service Requests
-              </TabsTrigger>
-            )}
-          </TabsList>
+          {canViewServiceRequests && (
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="all">Services</TabsTrigger>
+              <TabsTrigger value="requests">Requests</TabsTrigger>
+            </TabsList>
+          )}
           
           <TabsContent value="all">
             {loading ? (
