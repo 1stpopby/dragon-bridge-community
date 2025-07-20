@@ -114,16 +114,13 @@ Conversation ID: ${originalResponse.id}
 Sender ID: ${user?.id}`;
 
       const { error } = await supabase
-        .from('service_inquiries')
+        .from('service_request_messages')
         .insert({
-          service_id: null,
-          inquirer_name: profile?.display_name || profile?.company_name || 'User',
-          inquirer_email: contactEmail,
-          inquirer_phone: contactPhone || '',
-          message: replyMessageContent,
-          inquiry_type: 'contact',
-          user_id: recipientId, // Send to the other party in the conversation
-          created_at: new Date().toISOString()
+          request_id: originalRequestId || originalResponse.id,
+          sender_id: user?.id,
+          recipient_id: recipientId,
+          message: replyMessage,
+          message_type: 'company_to_user'
         });
 
       if (error) {
