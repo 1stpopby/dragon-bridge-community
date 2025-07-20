@@ -64,6 +64,7 @@ Deno.serve(async (req) => {
       'service_request_messages',
       'service_inquiries',
       'company_services',
+      'services',
       'company_gallery',
       'company_reviews',
       'notifications',
