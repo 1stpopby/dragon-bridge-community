@@ -270,12 +270,8 @@ export function ServiceRequestManagementDialog({
         description: `Response status updated to ${newStatus}`,
       });
 
-      // Refresh data from database to ensure consistency
-      console.log('Fetching fresh data...');
-      setTimeout(async () => {
-        await fetchResponses();
-        console.log('Fresh data fetched');
-      }, 500);
+      // Don't fetch fresh data immediately to avoid overriding optimistic update
+      // The optimistic update should be sufficient since the database update succeeded
       
     } catch (error) {
       console.error('Error updating response status:', error);
@@ -284,7 +280,7 @@ export function ServiceRequestManagementDialog({
         description: "Failed to update status",
         variant: "destructive",
       });
-      // Revert local state on error
+      // Only revert local state on error by fetching fresh data
       fetchResponses();
     }
   };
