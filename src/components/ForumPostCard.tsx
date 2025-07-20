@@ -101,7 +101,7 @@ export const ForumPostCard = ({ post, onClick }: ForumPostCardProps) => {
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1 leading-tight hover:text-primary transition-colors">
                 {post.title}
               </h3>
-              <div className="flex items-center space-x-3 text-sm text-slate-600 dark:text-slate-400">
+                <div className="flex items-center space-x-3 text-sm text-slate-600 dark:text-slate-400">
                 <span 
                   className="font-medium hover:text-primary cursor-pointer transition-colors"
                   onClick={(e) => {
@@ -116,14 +116,6 @@ export const ForumPostCard = ({ post, onClick }: ForumPostCardProps) => {
                   <Clock className="h-4 w-4" />
                   <span>{formatTimeAgo(post.created_at)}</span>
                 </div>
-                {post.category && (
-                  <>
-                    <span>•</span>
-                    <Badge variant="secondary" className="text-xs">
-                      {post.category}
-                    </Badge>
-                  </>
-                )}
               </div>
             </div>
           </div>

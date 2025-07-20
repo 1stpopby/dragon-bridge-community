@@ -115,7 +115,7 @@ export const ForumPostDetailDialog = ({ post, open, onOpenChange, onReplyAdded }
           // Map the replies to include the avatar_url
           const mappedReplies = repliesData.map(reply => ({
             ...reply,
-            author_avatar: reply.user_id ? avatarMap.get(reply.user_id) : null
+            author_avatar: reply.user_id ? avatarMap.get(reply.user_id) || null : null
           }));
           
           setReplies(mappedReplies);
@@ -297,12 +297,6 @@ export const ForumPostDetailDialog = ({ post, open, onOpenChange, onReplyAdded }
                     <Clock className="h-4 w-4" />
                     <span>{formatTimeAgo(post.created_at)}</span>
                   </div>
-                  {post.category && (
-                    <>
-                      <span>•</span>
-                      <Badge variant="secondary">{post.category}</Badge>
-                    </>
-                  )}
                 </div>
                 
                 <div className="prose dark:prose-invert max-w-none">

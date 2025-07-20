@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { ServiceRequestResponsesDialog } from "@/components/ServiceRequestResponsesDialog";
+import { ServiceRequestManagementDialog } from "@/components/ServiceRequestManagementDialog";
 import { ServiceResponseDialog } from "@/components/ServiceResponseDialog";
 import { formatDistanceToNow } from "date-fns";
 
@@ -565,13 +566,14 @@ const ServiceManagement = () => {
                                   {request.responses_count || 0} responses received
                                 </span>
                               </div>
-                              <ServiceRequestResponsesDialog
+                              <ServiceRequestManagementDialog
                                 requestId={request.id}
                                 requestTitle={request.message.substring(0, 50) + '...'}
+                                requestStatus={request.status}
                                 triggerButton={
                                   <Button size="sm" variant="outline">
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    View Responses
+                                    <MessageSquare className="h-4 w-4 mr-2" />
+                                    Manage Request
                                   </Button>
                                 }
                               />
