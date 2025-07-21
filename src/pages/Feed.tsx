@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, TrendingUp, UserPlus, Users, Flame, Eye, Bookmark, Heart, UserCheck, Hash } from "lucide-react";
 import { AdvertisementBanner } from "@/components/AdvertisementBanner";
+import { AllSuggestionsDialog } from "@/components/AllSuggestionsDialog";
 
 interface Post {
   id: string;
@@ -58,6 +59,7 @@ const Feed = () => {
   const [followingLoading, setFollowingLoading] = useState(false);
   const [savedPosts, setSavedPosts] = useState<Post[]>([]);
   const [savedLoading, setSavedLoading] = useState(false);
+  const [showAllSuggestions, setShowAllSuggestions] = useState(false);
 
   const extractHashtags = (text: string): string[] => {
     const hashtags = text.match(/#[a-zA-Z0-9_]+/g) || [];
@@ -855,7 +857,12 @@ const Feed = () => {
                     </Button>
                   </div>
                 ))}
-                <Button variant="ghost" size="sm" className="w-full mt-3">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full mt-3"
+                  onClick={() => setShowAllSuggestions(true)}
+                >
                   View all suggestions
                 </Button>
               </CardContent>
@@ -864,6 +871,14 @@ const Feed = () => {
         </div>
       </div>
       <MobileNavigation />
+      
+      {/* All Suggestions Dialog */}
+      <AllSuggestionsDialog
+        open={showAllSuggestions}
+        onOpenChange={setShowAllSuggestions}
+        followedUsers={followedUsers}
+        onFollowUser={handleFollowUser}
+      />
     </div>
   );
 };
