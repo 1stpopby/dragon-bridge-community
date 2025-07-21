@@ -16,7 +16,7 @@ import MobileNavigation from "@/components/MobileNavigation";
 import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 
 const Profile = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -153,6 +153,9 @@ const Profile = () => {
       console.log('Update response:', { error, data });
 
       if (error) throw error;
+
+      // Refresh the profile data in the auth context
+      await refreshProfile();
 
       toast({
         title: "Profile updated",
