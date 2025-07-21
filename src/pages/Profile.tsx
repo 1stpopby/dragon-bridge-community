@@ -137,9 +137,17 @@ const Profile = () => {
     console.log('User ID:', user?.id);
 
     try {
+      // Prepare the data, converting empty strings to null for date fields
+      const updateData = {
+        ...formData,
+        company_founded: formData.company_founded || null, // Convert empty string to null
+      };
+
+      console.log('Prepared update data:', updateData);
+
       const { error, data } = await supabase
         .from('profiles')
-        .update(formData)
+        .update(updateData)
         .eq('user_id', user?.id);
 
       console.log('Update response:', { error, data });
