@@ -20,8 +20,10 @@ const Profile = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     display_name: profile?.display_name || '',
     bio: profile?.bio || '',
@@ -37,7 +39,8 @@ const Profile = () => {
     company_phone: (profile as any)?.company_phone || '',
     company_address: (profile as any)?.company_address || '',
     company_size: (profile as any)?.company_size || '',
-    company_founded: (profile as any)?.company_founded || ''
+    company_founded: (profile as any)?.company_founded || '',
+    company_cover_image: (profile as any)?.company_cover_image || ''
   });
 
   useEffect(() => {
@@ -57,7 +60,8 @@ const Profile = () => {
         company_phone: (profile as any)?.company_phone || '',
         company_address: (profile as any)?.company_address || '',
         company_size: (profile as any)?.company_size || '',
-        company_founded: (profile as any)?.company_founded || ''
+        company_founded: (profile as any)?.company_founded || '',
+        company_cover_image: (profile as any)?.company_cover_image || ''
       });
     }
   }, [profile]);
@@ -126,6 +130,73 @@ const Profile = () => {
       });
     } finally {
       setUploadingAvatar(false);
+    }
+  };
+
+  const uploadCoverImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `covers/${user?.id}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    return data.publicUrl;
+  };
+
+  const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit for cover images
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingCover(true);
+    try {
+      const coverUrl = await uploadCoverImage(file);
+      setFormData(prev => ({ ...prev, company_cover_image: coverUrl }));
+      
+      // Update profile immediately
+      const { error } = await supabase
+        .from('profiles')
+        .update({ company_cover_image: coverUrl })
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Cover image updated",
+        description: "Your company cover image has been uploaded successfully.",
+      });
+    } catch (error) {
+      console.error('Error uploading cover image:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload cover image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingCover(false);
     }
   };
 
@@ -341,6 +412,48 @@ const Profile = () => {
                       onChange={(e) => setFormData(prev => ({ ...prev, company_address: e.target.value }))}
                       placeholder="Full Company Address"
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="company_cover_image">Company Cover Image</Label>
+                    {formData.company_cover_image && (
+                      <div className="w-full h-32 mb-3 rounded-lg overflow-hidden border">
+                        <img
+                          src={formData.company_cover_image}
+                          alt="Company cover"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => coverInputRef.current?.click()}
+                      disabled={uploadingCover}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <Upload className="h-4 w-4" />
+                      {uploadingCover ? "Uploading Cover Image..." : "Upload Cover Image"}
+                    </Button>
+                    <input
+                      ref={coverInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverImageChange}
+                      className="hidden"
+                    />
+                    {formData.company_cover_image && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setFormData(prev => ({ ...prev, company_cover_image: '' }))}
+                        className="w-full"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Remove Cover Image
+                      </Button>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
