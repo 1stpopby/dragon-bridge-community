@@ -56,6 +56,7 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(post.user_liked || false);
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
+  const [commentsCount, setCommentsCount] = useState(post.comments_count || 0);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -65,6 +66,13 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
   const [likeAnimation, setLikeAnimation] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+
+  // Sync state when post prop changes
+  useEffect(() => {
+    setIsLiked(post.user_liked || false);
+    setLikesCount(post.likes_count || 0);
+    setCommentsCount(post.comments_count || 0);
+  }, [post.user_liked, post.likes_count, post.comments_count]);
 
   const fetchComments = async () => {
     try {
@@ -218,9 +226,16 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
   const handleLike = async () => {
     if (!user) return;
 
+    // Optimistic update
+    const wasLiked = isLiked;
+    const previousCount = likesCount;
+    
     try {
-      if (isLiked) {
-        // Unlike
+      if (wasLiked) {
+        // Optimistic update for unlike
+        setIsLiked(false);
+        setLikesCount(prev => Math.max(0, prev - 1)); // Prevent negative counts
+        
         const { error } = await supabase
           .from('post_likes')
           .delete()
@@ -228,11 +243,13 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
           .eq('user_id', user.id);
 
         if (error) throw error;
-        
-        setIsLiked(false);
-        setLikesCount(prev => prev - 1);
       } else {
-        // Like
+        // Optimistic update for like
+        setIsLiked(true);
+        setLikesCount(prev => prev + 1);
+        setLikeAnimation(true);
+        setTimeout(() => setLikeAnimation(false), 300);
+        
         const { error } = await supabase
           .from('post_likes')
           .insert({
@@ -240,15 +257,47 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
             user_id: user.id
           });
 
-        if (error) throw error;
-        
-        setIsLiked(true);
-        setLikesCount(prev => prev + 1);
-        setLikeAnimation(true);
-        setTimeout(() => setLikeAnimation(false), 300);
+        if (error) {
+          // Handle duplicate key error (user already liked)
+          if (error.code === '23505') {
+            // Already liked, just update UI
+            setIsLiked(true);
+            return;
+          }
+          throw error;
+        }
       }
+
+      // Fetch updated post data to sync with database triggers
+      setTimeout(async () => {
+        try {
+          const { data: updatedPost, error: fetchError } = await supabase
+            .from('posts')
+            .select('likes_count')
+            .eq('id', post.id)
+            .single();
+
+          if (!fetchError && updatedPost) {
+            setLikesCount(updatedPost.likes_count);
+            // Update parent component with new data
+            onUpdate({
+              ...post,
+              likes_count: updatedPost.likes_count,
+              user_liked: !wasLiked
+            });
+          }
+        } catch (syncError) {
+          console.error('Error syncing like count:', syncError);
+        }
+      }, 100);
+      
     } catch (error) {
       console.error('Error updating like:', error);
+      
+      // Revert optimistic updates on error
+      setIsLiked(wasLiked);
+      setLikesCount(previousCount);
+      
       toast({
         title: "Error",
         description: "Failed to update like. Please try again.",
@@ -278,11 +327,27 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
       setNewComment("");
       fetchComments();
       
-      // Update comments count
-      onUpdate({
-        ...post,
-        comments_count: post.comments_count + 1
-      });
+      // Fetch updated comments count from database after trigger has run
+      setTimeout(async () => {
+        try {
+          const { data: updatedPost, error: fetchError } = await supabase
+            .from('posts')
+            .select('comments_count')
+            .eq('id', post.id)
+            .single();
+
+          if (!fetchError && updatedPost) {
+            // Update parent component with new data
+            onUpdate({
+              ...post,
+              comments_count: updatedPost.comments_count
+            });
+          }
+        } catch (syncError) {
+          console.error('Error syncing comment count:', syncError);
+        }
+      }, 100);
+      
     } catch (error) {
       console.error('Error adding comment:', error);
       toast({
@@ -537,7 +602,7 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
                 className="gap-2 hover:text-blue-500 hover:bg-blue-50 transition-colors"
               >
                 <MessageCircle className="h-4 w-4" />
-                <span className="font-medium">{post.comments_count}</span>
+                <span className="font-medium">{commentsCount}</span>
               </Button>
 
               <Button
