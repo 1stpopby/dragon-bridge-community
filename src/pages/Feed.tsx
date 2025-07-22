@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, TrendingUp, UserPlus, Users, Flame, Eye, Bookmark, Heart, UserCheck, Hash } from "lucide-react";
 import { AdvertisementBanner } from "@/components/AdvertisementBanner";
+import { useNavigate } from "react-router-dom";
 import { AllSuggestionsDialog } from "@/components/AllSuggestionsDialog";
 
 interface Post {
@@ -49,6 +50,7 @@ interface SuggestedUser {
 const Feed = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);
@@ -616,43 +618,60 @@ const Feed = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Sidebar - Trending Topics */}
           <div className="lg:col-span-3 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Hash className="h-5 w-5" />
-                  Trending Hashtags
+            <Card className="bg-gradient-to-br from-background to-muted/20 border-0 shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Hash className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    Trending Hashtags
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {trendingTopics.length === 0 ? (
-                  <div className="text-center py-4">
-                    <Hash className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <div className="text-center py-8">
+                    <div className="p-4 rounded-full bg-muted/50 w-16 h-16 flex items-center justify-center mx-auto mb-3">
+                      <Hash className="h-8 w-8 text-muted-foreground" />
+                    </div>
                     <p className="text-sm text-muted-foreground">No hashtags yet</p>
-                    <p className="text-xs text-muted-foreground">Use #hashtags in your posts!</p>
+                    <p className="text-xs text-muted-foreground mt-1">Use #hashtags in your posts!</p>
                   </div>
                 ) : (
                   trendingTopics.map((topic, index) => (
-                    <div key={topic.hashtag} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-muted-foreground">#{index + 1}</span>
-                        <div>
-                          <p className="font-medium text-sm text-primary">{topic.hashtag}</p>
-                          <p className="text-xs text-muted-foreground">{topic.count} posts</p>
+                    <div key={topic.hashtag} className="group">
+                      <div className="flex items-center justify-between p-3 rounded-xl hover:bg-accent/50 transition-all duration-200 cursor-pointer border border-transparent hover:border-border/50">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary font-bold text-sm group-hover:bg-primary/20 transition-colors">
+                            #{index + 1}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm text-primary group-hover:text-primary/80 transition-colors">{topic.hashtag}</p>
+                            <p className="text-xs text-muted-foreground">{topic.count} posts</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {getTrendIcon(topic.trend)}
-                        <span className={`text-xs font-medium ${getTrendColor(topic.trend)}`}>
-                          {topic.trend === 'up' ? '+18%' : topic.trend === 'down' ? '-14%' : '8%'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 rounded-lg bg-background shadow-sm">
+                            {getTrendIcon(topic.trend)}
+                          </div>
+                          <span className={`text-xs font-semibold ${getTrendColor(topic.trend)}`}>
+                            {topic.trend === 'up' ? '+18%' : topic.trend === 'down' ? '-14%' : '8%'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))
                 )}
                 {trendingTopics.length > 0 && (
-                  <Button variant="ghost" size="sm" className="w-full mt-3">
-                    View all trending
-                  </Button>
+                  <div className="pt-2">
+                    <Button variant="ghost" size="sm" className="w-full font-medium hover:bg-primary/5 hover:text-primary transition-all duration-200">
+                      <span className="mr-2">View all trending</span>
+                      <div className="p-1 rounded-md bg-primary/10">
+                        <TrendingUp className="h-3 w-3 text-primary" />
+                      </div>
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -806,65 +825,105 @@ const Feed = () => {
 
           {/* Right Sidebar - People to Follow */}
           <div className="lg:col-span-3 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  People to Follow
+            <Card className="bg-gradient-to-br from-background to-muted/20 border-0 shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Users className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    People to Follow
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {suggestedUsers.map((suggestedUser) => (
-                  <div key={suggestedUser.id} className="flex flex-col space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12 flex-shrink-0">
-                        <AvatarImage src={suggestedUser.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                          {suggestedUser.display_name?.[0] || suggestedUser.email[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm leading-none truncate">
-                          {suggestedUser.display_name || suggestedUser.email.split('@')[0]}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {suggestedUser.followers_count} followers
-                        </p>
-                        {suggestedUser.is_company && (
-                          <Badge variant="secondary" className="text-xs mt-1">
-                            Company
-                          </Badge>
-                        )}
+                {suggestedUsers.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="p-4 rounded-full bg-muted/50 w-16 h-16 flex items-center justify-center mx-auto mb-3">
+                      <Users className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">No suggestions yet</p>
+                    <p className="text-xs text-muted-foreground mt-1">Check back later for new people to follow!</p>
+                  </div>
+                ) : (
+                  suggestedUsers.map((suggestedUser) => (
+                    <div key={suggestedUser.id} className="group">
+                      <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-accent/50 transition-all duration-200 border border-transparent hover:border-border/50">
+                        <div 
+                          className="cursor-pointer hover:scale-105 transition-transform"
+                          onClick={() => navigate(`/user/${suggestedUser.id}`)}
+                        >
+                          <Avatar className="h-12 w-12 ring-2 ring-background shadow-md group-hover:ring-primary/20 transition-all">
+                            <AvatarImage src={suggestedUser.avatar_url || undefined} />
+                            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-primary text-sm font-semibold">
+                              {suggestedUser.display_name?.[0] || suggestedUser.email[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-sm leading-none truncate text-foreground group-hover:text-primary transition-colors">
+                                {suggestedUser.display_name || suggestedUser.email.split('@')[0]}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <p className="text-xs text-muted-foreground">
+                                  {suggestedUser.followers_count} followers
+                                </p>
+                                {suggestedUser.is_company && (
+                                  <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-primary/20">
+                                    <span className="flex items-center gap-1">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                                      Company
+                                    </span>
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={suggestedUser.is_following ? "secondary" : "default"}
+                            onClick={() => handleFollowUser(suggestedUser.id)}
+                            className={`w-full mt-3 gap-2 transition-all duration-200 ${
+                              suggestedUser.is_following 
+                                ? 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground' 
+                                : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg'
+                            }`}
+                          >
+                            {suggestedUser.is_following ? (
+                              <>
+                                <UserCheck className="h-4 w-4" />
+                                Following
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="h-4 w-4" />
+                                Follow
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant={suggestedUser.is_following ? "default" : "outline"}
-                      onClick={() => handleFollowUser(suggestedUser.id)}
-                      className="w-full"
+                  ))
+                )}
+                
+                {suggestedUsers.length > 0 && (
+                  <div className="pt-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full font-medium hover:bg-primary/5 hover:text-primary transition-all duration-200"
+                      onClick={() => setShowAllSuggestions(true)}
                     >
-                      {suggestedUser.is_following ? (
-                        <>
-                          <UserCheck className="h-4 w-4 mr-2" />
-                          Following
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          Follow
-                        </>
-                      )}
+                      <span className="mr-2">View all suggestions</span>
+                      <div className="p-1 rounded-md bg-primary/10">
+                        <Users className="h-3 w-3 text-primary" />
+                      </div>
                     </Button>
                   </div>
-                ))}
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full mt-3"
-                  onClick={() => setShowAllSuggestions(true)}
-                >
-                  View all suggestions
-                </Button>
+                )}
               </CardContent>
             </Card>
           </div>
