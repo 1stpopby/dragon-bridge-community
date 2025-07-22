@@ -325,7 +325,12 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
       if (error) throw error;
 
       setNewComment("");
+      
+      // Refresh comments immediately
       fetchComments();
+      
+      // Update local count immediately
+      setCommentsCount(prev => prev + 1);
       
       // Fetch updated comments count from database after trigger has run
       setTimeout(async () => {
@@ -337,6 +342,7 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
             .single();
 
           if (!fetchError && updatedPost) {
+            setCommentsCount(updatedPost.comments_count);
             // Update parent component with new data
             onUpdate({
               ...post,
@@ -346,10 +352,12 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
         } catch (syncError) {
           console.error('Error syncing comment count:', syncError);
         }
-      }, 100);
+      }, 200);
       
     } catch (error) {
       console.error('Error adding comment:', error);
+      // Revert optimistic update on error
+      setCommentsCount(prev => Math.max(0, prev - 1));
       toast({
         title: "Error",
         description: "Failed to add comment. Please try again.",
