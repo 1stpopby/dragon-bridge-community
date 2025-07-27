@@ -232,101 +232,6 @@ const CompanyProfile = () => {
               </div>
               
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {company.company_website && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Globe className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Website</p>
-                      <a href={company.company_website} target="_blank" rel="noopener noreferrer" 
-                         className="text-primary hover:underline font-medium">
-                        {company.company_website.replace(/^https?:\/\//, '')}
-                      </a>
-                    </div>
-                  </div>
-                )}
-                
-                {company.contact_email && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Mail className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Email</p>
-                      <a href={`mailto:${company.contact_email}`} className="text-primary hover:underline font-medium">
-                        {company.contact_email}
-                      </a>
-                    </div>
-                  </div>
-                )}
-                
-                {company.company_phone && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Phone className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Phone</p>
-                      <span className="font-medium">{company.company_phone}</span>
-                    </div>
-                  </div>
-                )}
-                
-                {company.company_address && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <MapPin className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Address</p>
-                      <span className="font-medium">{company.company_address}</span>
-                    </div>
-                  </div>
-                )}
-                
-                {company.company_founded && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Calendar className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Founded</p>
-                      <span className="font-medium">{new Date(company.company_founded).getFullYear()}</span>
-                    </div>
-                  </div>
-                )}
-                
-                {company.company_size && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Users className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Team Size</p>
-                      <span className="font-medium">{company.company_size} employees</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {company.company_services && company.company_services.length > 0 && (
-                <div className="mt-6">
-                  <p className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Services Offered</p>
-                  <div className="flex flex-wrap gap-2">
-                    {company.company_services.map((service, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary" 
-                        className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 transition-colors"
-                      >
-                        {service}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -383,19 +288,124 @@ const CompanyProfile = () => {
               <CardHeader>
                 <CardTitle>About {company.company_name || company.display_name}</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-6">
+                {/* Company Description */}
                 {company.company_description ? (
-                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {company.company_description}
-                  </p>
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Company Description</h4>
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      {company.company_description}
+                    </p>
+                  </div>
                 ) : (
-                  <div className="text-center py-12">
+                  <div className="text-center py-6">
                     <p className="text-muted-foreground">No company description available</p>
                     {user && user.id === company.user_id && (
                       <p className="text-sm text-muted-foreground mt-2">
                         Click "Edit Profile" to add a company description
                       </p>
                     )}
+                  </div>
+                )}
+
+                {/* Company Information */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Company Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {company.company_website && (
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Globe className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Website</p>
+                          <a href={company.company_website} target="_blank" rel="noopener noreferrer" 
+                             className="text-primary hover:underline font-medium">
+                            {company.company_website.replace(/^https?:\/\//, '')}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {company.contact_email && (
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Mail className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Email</p>
+                          <a href={`mailto:${company.contact_email}`} className="text-primary hover:underline font-medium">
+                            {company.contact_email}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {company.company_phone && (
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Phone className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Phone</p>
+                          <span className="font-medium">{company.company_phone}</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {company.company_address && (
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <MapPin className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Address</p>
+                          <span className="font-medium">{company.company_address}</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {company.company_founded && (
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Calendar className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Founded</p>
+                          <span className="font-medium">{new Date(company.company_founded).getFullYear()}</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {company.company_size && (
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Users className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Team Size</p>
+                          <span className="font-medium">{company.company_size} employees</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Services Offered */}
+                {company.company_services && company.company_services.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Services Offered</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {company.company_services.map((service, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="secondary" 
+                          className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 transition-colors"
+                        >
+                          {service}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>
