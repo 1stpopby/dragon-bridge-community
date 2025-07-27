@@ -289,25 +289,6 @@ const CompanyProfile = () => {
                 <CardTitle>About {company.company_name || company.display_name}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Company Description */}
-                {company.company_description ? (
-                  <div>
-                    <h4 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Company Description</h4>
-                    <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                      {company.company_description}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <p className="text-muted-foreground">No company description available</p>
-                    {user && user.id === company.user_id && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Click "Edit Profile" to add a company description
-                      </p>
-                    )}
-                  </div>
-                )}
-
                 {/* Company Information */}
                 <div>
                   <h4 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Company Information</h4>
@@ -390,6 +371,25 @@ const CompanyProfile = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Company Description */}
+                {company.company_description ? (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Company Description</h4>
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      {company.company_description}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <p className="text-muted-foreground">No company description available</p>
+                    {user && user.id === company.user_id && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Click "Edit Profile" to add a company description
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Services Offered */}
                 {company.company_services && company.company_services.length > 0 && (
