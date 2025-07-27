@@ -231,11 +231,6 @@ const CompanyProfile = () => {
                 )}
               </div>
               
-              {company.company_description && (
-                <p className="text-muted-foreground mb-6 text-lg leading-relaxed">
-                  {company.company_description}
-                </p>
-              )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {company.company_website && (
@@ -338,9 +333,10 @@ const CompanyProfile = () => {
 
         {/* Content Tabs */}
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="posts">Posts ({posts.length})</TabsTrigger>
             <TabsTrigger value="events">Events ({events.length})</TabsTrigger>
+            <TabsTrigger value="about">About</TabsTrigger>
             <TabsTrigger value="services">Services</TabsTrigger>
             <TabsTrigger value="gallery">Gallery</TabsTrigger>
             <TabsTrigger value="feedback">Feedback</TabsTrigger>
@@ -380,6 +376,30 @@ const CompanyProfile = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="about" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>About {company.company_name || company.display_name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {company.company_description ? (
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {company.company_description}
+                  </p>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No company description available</p>
+                    {user && user.id === company.user_id && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Click "Edit Profile" to add a company description
+                      </p>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="services" className="mt-6">
