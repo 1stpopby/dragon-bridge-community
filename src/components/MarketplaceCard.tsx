@@ -382,6 +382,7 @@ export function MarketplaceCard({ item, onItemChanged, showActions = true }: Mar
         item={item}
         open={fullAdOpen}
         onOpenChange={setFullAdOpen}
+        onItemChanged={onItemChanged}
       />
     </>
   );

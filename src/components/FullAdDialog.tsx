@@ -14,14 +14,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { MapPin, Package, MessageCircle, Calendar, User, Phone, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { MarketplaceDialog } from "./MarketplaceDialog";
 
 interface FullAdDialogProps {
   item: any;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onItemChanged?: () => void;
 }
 
-export function FullAdDialog({ item, open, onOpenChange }: FullAdDialogProps) {
+export function FullAdDialog({ item, open, onOpenChange, onItemChanged }: FullAdDialogProps) {
   const [loading, setLoading] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
   const [inquiryData, setInquiryData] = useState({
@@ -30,6 +33,10 @@ export function FullAdDialog({ item, open, onOpenChange }: FullAdDialogProps) {
     message: ''
   });
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Check if current user is the owner of this item
+  const isOwner = user && item.user_id === user.id;
 
   const handleInquiry = async () => {
     if (!inquiryData.inquirer_name.trim() || !inquiryData.inquirer_contact.trim() || !inquiryData.message.trim()) {
@@ -207,63 +214,75 @@ export function FullAdDialog({ item, open, onOpenChange }: FullAdDialogProps) {
             </div>
           </div>
 
-          {/* Contact Section */}
+          {/* Actions Section */}
           {item.status === 'available' && (
             <div className="border-t pt-6">
-              {!showContactForm ? (
-                <div className="text-center">
-                  <Button 
-                    onClick={() => setShowContactForm(true)}
-                    size="lg"
-                    className="w-full sm:w-auto"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Contact Seller
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Send Message to Seller</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="inquirer_name">Your Name</Label>
-                      <Input
-                        id="inquirer_name"
-                        value={inquiryData.inquirer_name}
-                        onChange={(e) => setInquiryData(prev => ({ ...prev, inquirer_name: e.target.value }))}
-                        placeholder="Enter your name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="inquirer_contact">Your Contact Info</Label>
-                      <Input
-                        id="inquirer_contact"
-                        value={inquiryData.inquirer_contact}
-                        onChange={(e) => setInquiryData(prev => ({ ...prev, inquirer_contact: e.target.value }))}
-                        placeholder="Email or phone number"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="message">Message</Label>
-                    <Textarea
-                      id="message"
-                      value={inquiryData.message}
-                      onChange={(e) => setInquiryData(prev => ({ ...prev, message: e.target.value }))}
-                      placeholder="Hi, I'm interested in this item. Is it still available?"
-                      rows={4}
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setShowContactForm(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleInquiry} disabled={loading}>
-                      {loading ? 'Sending...' : 'Send Message'}
-                    </Button>
-                  </div>
-                </div>
-              )}
+              <div className="text-center">
+                {isOwner ? (
+                  // Owner sees Edit Item button
+                  <MarketplaceDialog
+                    item={item}
+                    onItemSaved={onItemChanged}
+                    mode="edit"
+                  />
+                ) : (
+                  // Non-owner sees Contact Seller
+                  <>
+                    {!showContactForm ? (
+                      <Button 
+                        onClick={() => setShowContactForm(true)}
+                        size="lg"
+                        className="w-full sm:w-auto"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Contact Seller
+                      </Button>
+                    ) : (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Send Message to Seller</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="inquirer_name">Your Name</Label>
+                            <Input
+                              id="inquirer_name"
+                              value={inquiryData.inquirer_name}
+                              onChange={(e) => setInquiryData(prev => ({ ...prev, inquirer_name: e.target.value }))}
+                              placeholder="Enter your name"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="inquirer_contact">Your Contact Info</Label>
+                            <Input
+                              id="inquirer_contact"
+                              value={inquiryData.inquirer_contact}
+                              onChange={(e) => setInquiryData(prev => ({ ...prev, inquirer_contact: e.target.value }))}
+                              placeholder="Email or phone number"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="message">Message</Label>
+                          <Textarea
+                            id="message"
+                            value={inquiryData.message}
+                            onChange={(e) => setInquiryData(prev => ({ ...prev, message: e.target.value }))}
+                            placeholder="Hi, I'm interested in this item. Is it still available?"
+                            rows={4}
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <Button variant="outline" onClick={() => setShowContactForm(false)}>
+                            Cancel
+                          </Button>
+                          <Button onClick={handleInquiry} disabled={loading}>
+                            {loading ? 'Sending...' : 'Send Message'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>
