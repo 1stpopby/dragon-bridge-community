@@ -184,7 +184,7 @@ const Marketplace = () => {
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center text-muted-foreground">
                 <MapPin className="h-4 w-4 mr-1" />
-                <span className="truncate">{item.location}</span>
+                <span className="truncate">{item.location.split(',').slice(-2, -1)[0]?.trim() || item.location}</span>
               </div>
               <span className="text-xs text-muted-foreground">
                 by {item.seller_name}
