@@ -231,7 +231,7 @@ export function MarketplaceCard({ item, onItemChanged, showActions = true }: Mar
               <div className="flex flex-col gap-1 text-xs text-muted-foreground">
                 <div className="flex items-center">
                   <MapPin className="h-3 w-3 mr-1" />
-                  <span className="truncate max-w-[120px]">{item.location}</span>
+                  <span>{item.location.split(',').slice(-3, -1).join(',').trim()}</span>
                 </div>
                 <div>Category: {item.category}</div>
                 <div>Seller: {item.seller_name}</div>
