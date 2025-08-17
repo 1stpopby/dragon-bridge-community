@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit2, Upload, X, Lock } from "lucide-react";
+import { Plus, Edit2, Upload, X, Lock, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -124,6 +124,24 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setSelectedFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -136,6 +154,7 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
   const removeImage = () => {
     setSelectedFile(null);
     setPreviewUrl('');
+    setFormData(prev => ({ ...prev, image_url: '' }));
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -380,38 +399,14 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
               />
             </div>
             <div className="col-span-2">
-              <Label htmlFor="image">Item Image (optional)</Label>
+              <Label htmlFor="image">Item Image</Label>
               <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingImage}
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Choose Image
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                  {selectedFile && (
-                    <span className="text-sm text-muted-foreground">
-                      {selectedFile.name}
-                    </span>
-                  )}
-                </div>
-
                 {previewUrl && (
-                  <div className="relative">
+                  <div className="relative w-full h-48 rounded-lg overflow-hidden border">
                     <img
                       src={previewUrl}
                       alt="Item preview"
-                      className="w-full h-32 object-cover rounded-md border"
+                      className="w-full h-full object-cover"
                     />
                     <Button
                       type="button"
@@ -423,6 +418,30 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
+                )}
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="w-full flex items-center gap-2"
+                >
+                  <Camera className="h-4 w-4" />
+                  {uploadingImage ? "Uploading Image..." : previewUrl ? "Change Image" : "Upload Image"}
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                
+                {selectedFile && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {selectedFile.name}
+                  </p>
                 )}
               </div>
             </div>
