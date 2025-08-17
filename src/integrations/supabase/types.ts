@@ -1924,6 +1924,10 @@ export type Database = {
           service_type: string
         }[]
       }
+      get_item_inquiry_count: {
+        Args: { item_uuid: string }
+        Returns: number
+      }
       get_safe_profile_data: {
         Args: { profile_user_id: string }
         Returns: {
