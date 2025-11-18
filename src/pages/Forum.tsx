@@ -24,12 +24,12 @@ const Forum = () => {
   });
 
   const categories = [
-    { name: "General Discussion", posts: 1250, color: "bg-blue-100 text-blue-800" },
-    { name: "Food & Dining", posts: 890, color: "bg-orange-100 text-orange-800" },
-    { name: "Healthcare", posts: 654, color: "bg-green-100 text-green-800" },
-    { name: "Education", posts: 543, color: "bg-purple-100 text-purple-800" },
-    { name: "Housing", posts: 432, color: "bg-yellow-100 text-yellow-800" },
-    { name: "Jobs & Careers", posts: 321, color: "bg-pink-100 text-pink-800" }
+    { name: "Discuții Generale", posts: 1250, color: "bg-blue-100 text-blue-800" },
+    { name: "Mâncare & Restaurante", posts: 890, color: "bg-orange-100 text-orange-800" },
+    { name: "Sănătate", posts: 654, color: "bg-green-100 text-green-800" },
+    { name: "Educație", posts: 543, color: "bg-purple-100 text-purple-800" },
+    { name: "Locuințe", posts: 432, color: "bg-yellow-100 text-yellow-800" },
+    { name: "Joburi & Cariere", posts: 321, color: "bg-pink-100 text-pink-800" }
   ];
 
   const fetchStats = async () => {
@@ -208,10 +208,10 @@ const Forum = () => {
               <MessageSquare className="h-8 w-8 text-primary" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-              Professional Forum
+              Forum Profesional
             </h1>
             <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-              Engage in meaningful discussions with our community of professionals and residents across the UK.
+              Participă la discuții semnificative cu comunitatea noastră de profesioniști și rezidenți din România și UE.
             </p>
           </div>
           
@@ -220,7 +220,7 @@ const Forum = () => {
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input 
-                placeholder="Search discussions, topics, or users..." 
+                placeholder="Caută discuții, subiecte sau utilizatori..." 
                 className="pl-12 h-12 text-base border-slate-300 dark:border-slate-600 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
@@ -239,7 +239,7 @@ const Forum = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="text-slate-900 dark:text-white flex items-center">
                   <TrendingUp className="h-5 w-5 mr-2 text-primary" />
-                  Community Pulse
+                  Pulsul Comunității
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -253,14 +253,14 @@ const Forum = () => {
                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <MessageSquare className="h-4 w-4 text-purple-600" />
-                    <span className="text-sm font-medium">Today</span>
+                    <span className="text-sm font-medium">Astăzi</span>
                   </div>
                   <span className="font-bold text-purple-600">{stats.todayPosts.toLocaleString()}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Users className="h-4 w-4 text-orange-600" />
-                    <span className="text-sm font-medium">Members</span>
+                    <span className="text-sm font-medium">Membri</span>
                   </div>
                   <span className="font-bold text-orange-600">{stats.totalMembers.toLocaleString()}</span>
                 </div>
@@ -270,7 +270,7 @@ const Forum = () => {
             {/* Professional Categories */}
             <Card className="bg-white dark:bg-slate-800 border-0 shadow-lg rounded-xl">
               <CardHeader className="pb-3">
-                <CardTitle className="text-slate-900 dark:text-white">Discussion Topics</CardTitle>
+                <CardTitle className="text-slate-900 dark:text-white">Subiecte de Discuție</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {categories.map((category, index) => (
@@ -282,7 +282,7 @@ const Forum = () => {
                           {category.name}
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">
-                          {category.posts.toLocaleString()} discussions
+                          {category.posts.toLocaleString()} discuții
                         </div>
                       </div>
                     </div>
@@ -298,7 +298,7 @@ const Forum = () => {
             <div className="bg-transparent rounded-xl overflow-hidden">
               <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-t-xl px-6 py-4 mb-6 shadow-sm">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Latest Discussions</h2>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Ultimele Discuții</h2>
                   <div className="flex gap-2">
                     <Button
                       variant={currentFilter === 'latest' ? 'default' : 'ghost'}
@@ -316,7 +316,7 @@ const Forum = () => {
                       onClick={() => handleFilterChange('trending')}
                     >
                       <TrendingUp className="h-4 w-4 mr-2" />
-                      Trending
+                      În Tendință
                     </Button>
                     <Button
                       variant={currentFilter === 'unanswered' ? 'default' : 'ghost'}
@@ -325,7 +325,7 @@ const Forum = () => {
                       onClick={() => handleFilterChange('unanswered')}
                     >
                       <MessageSquare className="h-4 w-4 mr-2" />
-                      Unanswered
+                      Fără Răspuns
                     </Button>
                   </div>
                 </div>
@@ -335,13 +335,13 @@ const Forum = () => {
                 {loading ? (
                   <div className="text-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-slate-600 dark:text-slate-400">Loading discussions...</p>
+                    <p className="text-slate-600 dark:text-slate-400">Se încarcă discuțiile...</p>
                   </div>
                 ) : posts.length === 0 ? (
                   <div className="text-center py-12">
                     <MessageSquare className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No discussions yet</h3>
-                    <p className="text-slate-600 dark:text-slate-400">Be the first to start a meaningful conversation!</p>
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">Încă nu există discuții</h3>
+                    <p className="text-slate-600 dark:text-slate-400">Fii primul care începe o conversație semnificativă!</p>
                   </div>
                 ) : (
                   posts.map((post, index) => (
