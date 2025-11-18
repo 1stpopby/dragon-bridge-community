@@ -7,23 +7,23 @@ const HeroSection = () => {
   const features = [
     {
       icon: MessageSquare,
-      title: "Community Forum",
-      description: "Connect with fellow Chinese residents across the UK"
+      title: "Forum Comunitar",
+      description: "Conectează-te cu români și europeni din întreaga Românie și UE"
     },
     {
       icon: Calendar,
-      title: "Local Events",
-      description: "Discover cultural events and meetups in your area"
+      title: "Evenimente Locale",
+      description: "Descoperă evenimente culturale și întâlniri în zona ta"
     },
     {
       icon: Users,
-      title: "Support Network",
-      description: "Find help and offer assistance within our community"
+      title: "Rețea de Sprijin",
+      description: "Găsește ajutor și oferă asistență în cadrul comunității noastre"
     },
     {
       icon: Globe,
-      title: "Cultural Bridge",
-      description: "Maintain connections to Chinese culture while embracing UK life"
+      title: "Punte Culturală",
+      description: "Menține legăturile cu cultura română în contextul european"
     }
   ];
 
@@ -33,19 +33,19 @@ const HeroSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            Welcome to the
-            <span className="text-primary block mt-2">UK Chinese Community</span>
+            Bine ai venit la
+            <span className="text-primary block mt-2">RoEu Comunitate</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Connect, share, and thrive together. Join thousands of Chinese residents 
-            across the UK sharing experiences, offering support, and celebrating our culture.
+            Conectează-te, împărtășește și prosperă împreună. Alătură-te miilor de români 
+            din toată Europa care împărtășesc experiențe, oferă sprijin și celebrează cultura noastră.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="text-lg px-8 py-3" asChild>
-              <Link to="/auth">Join Our Community</Link>
+              <Link to="/auth">Alătură-te Comunității</Link>
             </Button>
             <Button variant="outline" size="lg" className="text-lg px-8 py-3" asChild>
-              <Link to="/forum">Explore Forum</Link>
+              <Link to="/forum">Explorează Forumul</Link>
             </Button>
           </div>
         </div>

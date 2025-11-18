@@ -56,21 +56,21 @@ const Auth = () => {
       
       if (error) {
         toast({
-          title: "Sign in failed",
+          title: "Autentificare eșuată",
           description: error.message,
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in."
+          title: "Bine ai revenit!",
+          description: "Autentificare reușită."
         });
         navigate('/');
       }
     } catch (error) {
       toast({
-        title: "Sign in failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Autentificare eșuată",
+        description: "A apărut o eroare neașteptată. Vă rugăm să încercați din nou.",
         variant: "destructive"
       });
     } finally {
@@ -83,8 +83,8 @@ const Auth = () => {
     
     if (signUpData.password !== signUpData.confirmPassword) {
       toast({
-        title: "Password mismatch",
-        description: "Passwords do not match. Please try again.",
+        title: "Parolele nu se potrivesc",
+        description: "Parolele nu se potrivesc. Vă rugăm să încercați din nou.",
         variant: "destructive"
       });
       return;
@@ -92,8 +92,8 @@ const Auth = () => {
 
     if (signUpData.password.length < 6) {
       toast({
-        title: "Password too short",
-        description: "Password must be at least 6 characters long.",
+        title: "Parola prea scurtă",
+        description: "Parola trebuie să aibă cel puțin 6 caractere.",
         variant: "destructive"
       });
       return;
@@ -116,13 +116,13 @@ const Auth = () => {
       if (error) {
         if (error.message.includes('already registered')) {
           toast({
-            title: "Account exists",
-            description: "An account with this email already exists. Please sign in instead.",
+            title: "Contul există deja",
+            description: "Un cont cu acest email există deja. Vă rugăm să vă autentificați.",
             variant: "destructive"
           });
         } else {
           toast({
-            title: "Sign up failed",
+            title: "Înregistrare eșuată",
             description: error.message,
             variant: "destructive"
           });

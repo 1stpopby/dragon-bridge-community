@@ -78,14 +78,14 @@ const UpcomingEvents = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Upcoming Events
+              Evenimente Viitoare
             </h2>
             <p className="text-lg text-muted-foreground">
-              Join local events and connect with community members near you
+              Alătură-te evenimentelor locale și conectează-te cu membrii comunității din zona ta
             </p>
           </div>
           <Button variant="outline" asChild>
-            <a href="/events">View All Events</a>
+            <a href="/events">Vezi Toate Evenimentele</a>
           </Button>
         </div>
 
@@ -96,8 +96,8 @@ const UpcomingEvents = () => {
         ) : events.length === 0 ? (
           <div className="text-center py-12">
             <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground text-lg">No upcoming events</p>
-            <p className="text-muted-foreground text-sm">Check back soon for new events!</p>
+            <p className="text-muted-foreground text-lg">Nu există evenimente viitoare</p>
+            <p className="text-muted-foreground text-sm">Revino în curând pentru evenimente noi!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

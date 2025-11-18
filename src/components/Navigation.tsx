@@ -49,14 +49,14 @@ const Navigation = () => {
   }, []);
 
   const navItems = [
-    { name: "Home", href: "/", icon: Home },
-    { name: "Feed", href: "/feed", icon: Rss },
+    { name: "Acasă", href: "/", icon: Home },
+    { name: "Flux", href: "/feed", icon: Rss },
     { name: "Forum", href: "/forum", icon: MessageSquare },
-    { name: "Events", href: "/events", icon: Calendar },
-    { name: "Community", href: "/community", icon: Users },
-    { name: "Marketplace", href: "/marketplace", icon: ShoppingBag },
+    { name: "Evenimente", href: "/events", icon: Calendar },
+    { name: "Comunitate", href: "/community", icon: Users },
+    { name: "Piață", href: "/marketplace", icon: ShoppingBag },
 
-    { name: "Services", href: "/services", icon: MapPin },
+    { name: "Servicii", href: "/services", icon: MapPin },
   ];
 
   const isActive = (href: string) => location.pathname === href;

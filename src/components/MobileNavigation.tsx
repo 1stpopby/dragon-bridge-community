@@ -6,11 +6,11 @@ const MobileNavigation = () => {
   const location = useLocation();
 
   const navItems = [
-    { name: "Home", href: "/", icon: Home },
-    { name: "Feed", href: "/feed", icon: Rss },
+    { name: "Acasă", href: "/", icon: Home },
+    { name: "Flux", href: "/feed", icon: Rss },
     { name: "Forum", href: "/forum", icon: MessageSquare },
-    { name: "Events", href: "/events", icon: Calendar },
-    { name: "Services", href: "/services", icon: MapPin },
+    { name: "Evenimente", href: "/events", icon: Calendar },
+    { name: "Servicii", href: "/services", icon: MapPin },
   ];
 
   const isActive = (href: string) => location.pathname === href;
