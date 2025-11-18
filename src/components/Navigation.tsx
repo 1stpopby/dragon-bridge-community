@@ -50,7 +50,7 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Acasă", href: "/", icon: Home },
-    { name: "Flux", href: "/feed", icon: Rss },
+    { name: "Feed", href: "/feed", icon: Rss },
     { name: "Forum", href: "/forum", icon: MessageSquare },
     { name: "Evenimente", href: "/events", icon: Calendar },
     { name: "Comunitate", href: "/community", icon: Users },
