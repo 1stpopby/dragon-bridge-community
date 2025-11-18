@@ -62,10 +62,10 @@ const CommunityStats = () => {
   };
 
   const statsData = [
-    { number: formatNumber(stats.totalMembers), label: "Community Members" },
-    { number: formatNumber(stats.totalGroups), label: "Active Groups" },
-    { number: formatNumber(stats.totalEvents), label: "Events Hosted" },
-    { number: formatNumber(stats.totalPosts), label: "Discussions Started" }
+    { number: formatNumber(stats.totalMembers), label: "Membri Comunitate" },
+    { number: formatNumber(stats.totalGroups), label: "Grupuri Active" },
+    { number: formatNumber(stats.totalEvents), label: "Evenimente Organizate" },
+    { number: formatNumber(stats.totalPosts), label: "Discuții Inițiate" }
   ];
 
   return (
@@ -73,11 +73,11 @@ const CommunityStats = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Growing Together Across the UK
+            Creștem Împreună în Toată Europa
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Our community spans from London to Edinburgh, creating connections and 
-            opportunities for Chinese residents throughout the United Kingdom.
+            Comunitatea noastră se întinde de la București la Bruxelles, creând conexiuni și 
+            oportunități pentru români din întreaga Uniune Europeană.
           </p>
         </div>
         

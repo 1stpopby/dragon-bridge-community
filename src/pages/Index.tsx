@@ -119,7 +119,7 @@ const Index = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <Shield className="h-5 w-5 text-primary" />
-              <span>Admin Login</span>
+              <DialogTitle>Autentificare Admin</DialogTitle>
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAdminLogin} className="space-y-4">
@@ -137,12 +137,12 @@ const Index = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="admin-password">Password</Label>
+              <Label htmlFor="admin-password">Parolă</Label>
               <div className="relative">
                 <Input
                   id="admin-password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder="Introduceți parola"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -182,10 +182,10 @@ const Index = () => {
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Signing in...
+                    Autentificare...
                   </>
                 ) : (
-                  'Sign In'
+                  'Autentifică-te'
                 )}
               </Button>
             </div>
