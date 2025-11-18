@@ -1905,10 +1905,7 @@ export type Database = {
         Args: { user_email: string }
         Returns: undefined
       }
-      can_create_events: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      can_create_events: { Args: { _user_id: string }; Returns: boolean }
       get_completed_services_for_company: {
         Args: { company_uuid: string }
         Returns: {
@@ -1924,10 +1921,7 @@ export type Database = {
           service_type: string
         }[]
       }
-      get_item_inquiry_count: {
-        Args: { item_uuid: string }
-        Returns: number
-      }
+      get_item_inquiry_count: { Args: { item_uuid: string }; Returns: number }
       get_safe_profile_data: {
         Args: { profile_user_id: string }
         Returns: {
@@ -1943,22 +1937,13 @@ export type Database = {
           user_id: string
         }[]
       }
-      has_role: {
-        Args: { _role: string; _user_id: string }
-        Returns: boolean
-      }
-      is_admin_user: {
-        Args: { check_user_id: string }
-        Returns: boolean
-      }
+      has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
+      is_admin_user: { Args: { check_user_id: string }; Returns: boolean }
       is_group_member: {
         Args: { group_id: string; user_id: string }
         Returns: boolean
       }
-      is_user_banned: {
-        Args: { check_user_id: string }
-        Returns: boolean
-      }
+      is_user_banned: { Args: { check_user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
