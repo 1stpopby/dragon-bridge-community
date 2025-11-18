@@ -33,12 +33,12 @@ const HeroSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            Bine ai venit la
-            <span className="text-primary block mt-2">RoEu Comunitate</span>
+            Bine ai venit în
+            <span className="text-primary block mt-2">Comunitatea RoEu</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Conectează-te, împărtășește și prosperă împreună. Alătură-te miilor de români 
-            din toată Europa care împărtășesc experiențe, oferă sprijin și celebrează cultura noastră.
+            Conectează-te, împărtășește și crește alături de comunitate.
+Fă parte din miile de români din întreaga Europă care își împărtășesc experiențele, se sprijină reciproc și celebrează cultura ce ne unește.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="text-lg px-8 py-3" asChild>
