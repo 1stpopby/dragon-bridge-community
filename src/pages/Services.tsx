@@ -65,8 +65,8 @@ const Services = () => {
     } catch (error) {
       console.error('Error fetching services:', error);
       toast({
-        title: "Error loading services",
-        description: "Failed to load services from the database.",
+        title: "Eroare la încărcarea serviciilor",
+        description: "Nu s-au putut încărca serviciile din baza de date.",
         variant: "destructive",
       });
     } finally {
@@ -105,12 +105,12 @@ const Services = () => {
                 {service.verified && (
                   <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 border-green-200">
                     <CheckCircle className="h-3 w-3 mr-1" />
-                    Verified
+                    Verificat
                   </Badge>
                 )}
                 {service.featured && (
                   <Badge className="text-xs bg-red-100 text-red-700 border-red-200">
-                    Featured
+                    Recomandat
                   </Badge>
                 )}
               </div>
@@ -159,7 +159,7 @@ const Services = () => {
             service={service}
             triggerButton={
               <Button size="sm" variant="outline" className="flex-1">
-                Details
+                Detalii
               </Button>
             }
           />
@@ -167,7 +167,7 @@ const Services = () => {
             <Link to={`/company/${service.profiles.id}`} className="flex-1">
               <Button size="sm" className="w-full bg-primary hover:bg-primary/90">
                 <ExternalLink className="h-4 w-4 mr-2" />
-                Visit Our Page
+                Vizitează Pagina
               </Button>
             </Link>
           )}
@@ -185,14 +185,14 @@ const Services = () => {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">All Services ({services.length})</h1>
+              <h1 className="text-2xl font-bold text-foreground">Toate Serviciile ({services.length})</h1>
             </div>
             <div className="flex gap-2">
               <ServiceRequestDialog
-                triggerButton={<Button size="sm" variant="outline">Request Service</Button>}
+                triggerButton={<Button size="sm" variant="outline">Solicită Serviciu</Button>}
               />
               <ListBusinessDialog
-                triggerButton={<Button size="sm">List Business</Button>}
+                triggerButton={<Button size="sm">Listează Afacerea</Button>}
               />
             </div>
           </div>
@@ -221,7 +221,7 @@ const Services = () => {
           <TabsContent value="all">
             {loading ? (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">Loading services...</p>
+                <p className="text-muted-foreground">Se încarcă serviciile...</p>
               </div>
             ) : filterServices().length === 0 ? (
               <div className="text-center py-12">

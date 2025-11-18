@@ -88,8 +88,8 @@ const Profile = () => {
 
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "Invalid file type",
-        description: "Please select an image file.",
+        title: "Tip de fișier invalid",
+        description: "Te rog selectează un fișier imagine.",
         variant: "destructive",
       });
       return;
@@ -97,8 +97,8 @@ const Profile = () => {
 
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
       toast({
-        title: "File too large",
-        description: "Please select an image smaller than 5MB.",
+        title: "Fișier prea mare",
+        description: "Te rog selectează o imagine mai mică de 5MB.",
         variant: "destructive",
       });
       return;
@@ -118,14 +118,14 @@ const Profile = () => {
       if (error) throw error;
 
       toast({
-        title: "Avatar updated",
-        description: "Your profile picture has been uploaded successfully.",
+        title: "Avatar actualizat",
+        description: "Poza ta de profil a fost încărcată cu succes.",
       });
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast({
-        title: "Upload failed",
-        description: "Failed to upload avatar. Please try again.",
+        title: "Încărcare eșuată",
+        description: "Nu s-a putut încărca avatarul. Te rog încearcă din nou.",
         variant: "destructive",
       });
     } finally {
@@ -155,8 +155,8 @@ const Profile = () => {
 
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "Invalid file type",
-        description: "Please select an image file.",
+        title: "Tip de fișier invalid",
+        description: "Te rog selectează un fișier imagine.",
         variant: "destructive",
       });
       return;
@@ -164,8 +164,8 @@ const Profile = () => {
 
     if (file.size > 10 * 1024 * 1024) { // 10MB limit for cover images
       toast({
-        title: "File too large",
-        description: "Please select an image smaller than 10MB.",
+        title: "Fișier prea mare",
+        description: "Te rog selectează o imagine mai mică de 10MB.",
         variant: "destructive",
       });
       return;
@@ -185,14 +185,14 @@ const Profile = () => {
       if (error) throw error;
 
       toast({
-        title: "Cover image updated",
-        description: "Your company cover image has been uploaded successfully.",
+        title: "Imagine copertă actualizată",
+        description: "Imaginea de copertă a companiei tale a fost încărcată cu succes.",
       });
     } catch (error) {
       console.error('Error uploading cover image:', error);
       toast({
-        title: "Upload failed",
-        description: "Failed to upload cover image. Please try again.",
+        title: "Încărcare eșuată",
+        description: "Nu s-a putut încărca imaginea de copertă. Te rog încearcă din nou.",
         variant: "destructive",
       });
     } finally {

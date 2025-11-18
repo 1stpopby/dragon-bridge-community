@@ -33,11 +33,11 @@ const Marketplace = () => {
   const { toast } = useToast();
 
   const conditions = [
-    { value: "new", label: "New", color: "bg-green-100 text-green-800" },
-    { value: "like_new", label: "Like New", color: "bg-emerald-100 text-emerald-800" },
-    { value: "good", label: "Good", color: "bg-blue-100 text-blue-800" },
-    { value: "fair", label: "Fair", color: "bg-yellow-100 text-yellow-800" },
-    { value: "poor", label: "Poor", color: "bg-red-100 text-red-800" }
+    { value: "new", label: "Nou", color: "bg-green-100 text-green-800" },
+    { value: "like_new", label: "Ca Nou", color: "bg-emerald-100 text-emerald-800" },
+    { value: "good", label: "Bună", color: "bg-blue-100 text-blue-800" },
+    { value: "fair", label: "Acceptabilă", color: "bg-yellow-100 text-yellow-800" },
+    { value: "poor", label: "Slabă", color: "bg-red-100 text-red-800" }
   ];
 
   const fetchItems = async () => {
@@ -54,8 +54,8 @@ const Marketplace = () => {
     } catch (error) {
       console.error('Error fetching items:', error);
       toast({
-        title: "Error loading items",
-        description: "Failed to load marketplace items from the database.",
+        title: "Eroare la încărcarea produselor",
+        description: "Nu s-au putut încărca produsele din baza de date.",
         variant: "destructive",
       });
     } finally {

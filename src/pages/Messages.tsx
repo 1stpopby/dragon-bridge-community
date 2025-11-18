@@ -88,8 +88,8 @@ const Messages = () => {
             <MessageSquare className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Messages</h1>
-            <p className="text-muted-foreground">Your private messages from other community members</p>
+            <h1 className="text-3xl font-bold">Mesaje</h1>
+            <p className="text-muted-foreground">Mesajele tale private de la alți membri ai comunității</p>
           </div>
         </div>
 
@@ -97,10 +97,10 @@ const Messages = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
-              Private Messages
+              Mesaje Private
             </CardTitle>
             <CardDescription>
-              Direct messages from other community members
+              Mesaje directe de la alți membri ai comunității
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -108,8 +108,8 @@ const Messages = () => {
               {messages.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium mb-2">No messages yet</p>
-                  <p className="text-sm">When someone sends you a direct message, it will appear here</p>
+                  <p className="text-lg font-medium mb-2">Încă nu ai mesaje</p>
+                  <p className="text-sm">Când cineva îți trimite un mesaj direct, va apărea aici</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -123,9 +123,9 @@ const Messages = () => {
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">Private Message</span>
+                          <span className="font-medium">Mesaj Privat</span>
                           {!message.is_read && (
-                            <Badge variant="default" className="text-xs">New</Badge>
+                            <Badge variant="default" className="text-xs">Nou</Badge>
                           )}
                         </div>
                         <span className="text-xs text-muted-foreground">

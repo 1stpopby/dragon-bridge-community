@@ -109,8 +109,8 @@ const Notifications = () => {
             <Bell className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Notifications</h1>
-            <p className="text-muted-foreground">Stay updated with community activities</p>
+            <h1 className="text-3xl font-bold">Notificări</h1>
+            <p className="text-muted-foreground">Rămâi la curent cu activitățile comunității</p>
           </div>
         </div>
 
@@ -118,9 +118,9 @@ const Notifications = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Activity Feed ({notifications.length})</CardTitle>
+                <CardTitle>Flux de Activitate ({notifications.length})</CardTitle>
                 <CardDescription>
-                  {unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
+                  {unreadCount > 0 ? `${unreadCount} notificări necitite` : 'Totul la zi!'}
                 </CardDescription>
               </div>
               {unreadCount > 0 && (
@@ -128,7 +128,7 @@ const Notifications = () => {
                   onClick={markAllAsRead}
                   className="text-sm text-primary hover:underline"
                 >
-                  Mark all as read
+                  Marchează tot ca citit
                 </button>
               )}
             </div>
@@ -138,8 +138,8 @@ const Notifications = () => {
               {notifications.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Bell className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium mb-2">No notifications yet</p>
-                  <p className="text-sm">When there's activity in the community, you'll see it here</p>
+                  <p className="text-lg font-medium mb-2">Încă nu ai notificări</p>
+                  <p className="text-sm">Când există activitate în comunitate, o vei vedea aici</p>
                 </div>
               ) : (
                 <div className="space-y-3">
