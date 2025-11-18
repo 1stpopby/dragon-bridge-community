@@ -198,22 +198,22 @@ const Auth = () => {
           </Link>
           <h1 className="text-3xl font-bold">Welcome</h1>
           <p className="text-muted-foreground">
-            Join our community marketplace and forum
+            Alătură-te piață noastre comunitare și forumului
           </p>
         </div>
 
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsTrigger value="signin">Autentificare</TabsTrigger>
+            <TabsTrigger value="signup">Înregistrare</TabsTrigger>
           </TabsList>
 
           <TabsContent value="signin">
             <Card>
               <CardHeader>
-                <CardTitle>Sign In</CardTitle>
+                <CardTitle>Autentificare</CardTitle>
                 <CardDescription>
-                  Welcome back! Please sign in to your account.
+                  Bine ai revenit! Te rugăm să te autentifici în contul tău.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -223,18 +223,18 @@ const Auth = () => {
                     <Input
                       id="signin-email"
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder="Introduceți adresa de email"
                       value={signInData.email}
                       onChange={(e) => setSignInData(prev => ({ ...prev, email: e.target.value }))}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
+                    <Label htmlFor="signin-password">Parolă</Label>
                     <Input
                       id="signin-password"
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder="Introduceți parola"
                       value={signInData.password}
                       onChange={(e) => setSignInData(prev => ({ ...prev, password: e.target.value }))}
                       required
@@ -248,11 +248,11 @@ const Auth = () => {
                       className="px-0 h-auto text-sm text-muted-foreground hover:text-foreground"
                       onClick={() => setShowForgotPassword(true)}
                     >
-                      Forgot password?
+                      Ai uitat parola?
                     </Button>
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Signing in..." : "Sign In"}
+                    {isLoading ? "Se autentifică..." : "Autentifică-te"}
                   </Button>
                 </form>
 
@@ -263,10 +263,10 @@ const Auth = () => {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <Mail className="h-5 w-5" />
-                          Reset Password
+                          Resetare Parolă
                         </CardTitle>
                         <CardDescription>
-                          Enter your email address and we'll send you a link to reset your password.
+                          Introduceți adresa de email și vă vom trimite un link pentru resetarea parolei.
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -276,7 +276,7 @@ const Auth = () => {
                             <Input
                               id="reset-email"
                               type="email"
-                              placeholder="Enter your email"
+                              placeholder="Introduceți adresa de email"
                               value={resetEmail}
                               onChange={(e) => setResetEmail(e.target.value)}
                               required
@@ -284,7 +284,7 @@ const Auth = () => {
                           </div>
                           <div className="flex gap-2">
                             <Button type="submit" disabled={isLoading} className="flex-1">
-                              {isLoading ? "Sending..." : "Send Reset Link"}
+                              {isLoading ? "Se trimite..." : "Trimite Link Resetare"}
                             </Button>
                             <Button
                               type="button"
@@ -294,7 +294,7 @@ const Auth = () => {
                                 setResetEmail('');
                               }}
                             >
-                              Cancel
+                              Anulează
                             </Button>
                           </div>
                         </form>
@@ -309,15 +309,15 @@ const Auth = () => {
           <TabsContent value="signup">
             <Card>
               <CardHeader>
-                <CardTitle>Create Account</CardTitle>
+                <CardTitle>Creare Cont</CardTitle>
                 <CardDescription>
-                  Join our community as an individual or company.
+                  Alătură-te comunității noastre ca persoană fizică sau companie.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-3">
-                    <Label>Account Type</Label>
+                    <Label>Tip Cont</Label>
                     <RadioGroup
                       value={signUpData.accountType}
                       onValueChange={(value) => setSignUpData(prev => ({ ...prev, accountType: value }))}
@@ -327,14 +327,14 @@ const Auth = () => {
                         <RadioGroupItem value="user" id="user" />
                         <Label htmlFor="user" className="flex items-center gap-2 cursor-pointer">
                           <User className="h-4 w-4" />
-                          Individual
+                          Persoană Fizică
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="company" id="company" />
                         <Label htmlFor="company" className="flex items-center gap-2 cursor-pointer">
                           <Building2 className="h-4 w-4" />
-                          Company
+                          Companie
                         </Label>
                       </div>
                     </RadioGroup>

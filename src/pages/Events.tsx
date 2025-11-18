@@ -30,8 +30,8 @@ const Events = () => {
     } catch (error) {
       console.error('Error fetching events:', error);
       toast({
-        title: "Error loading events",
-        description: "Failed to load events from the database.",
+        title: "Eroare la încărcarea evenimentelor",
+        description: "Nu s-au putut încărca evenimentele din bază de date.",
         variant: "destructive",
       });
     } finally {
@@ -72,11 +72,11 @@ const Events = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Community Events
+              Evenimente Comunitare
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Join our vibrant community events, from cultural celebrations to professional 
-              networking and educational workshops across the UK.
+              Alătură-te evenimentelor noastre vibrante, de la celebrări culturale la networking 
+              profesional și ateliere educaționale în toată România și UE.
             </p>
           </div>
           
@@ -84,7 +84,7 @@ const Events = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search events..." 
+                placeholder="Caută evenimente..." 
                 className="pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -100,22 +100,22 @@ const Events = () => {
         <Tabs defaultValue="upcoming" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="upcoming">
-              Upcoming Events ({upcomingEvents.length})
+              Evenimente Viitoare ({upcomingEvents.length})
             </TabsTrigger>
             <TabsTrigger value="past">
-              Past Events ({pastEvents.length})
+              Evenimente Trecute ({pastEvents.length})
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="upcoming">
             {loading ? (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">Loading events...</p>
+                <p className="text-muted-foreground">Se încarcă evenimentele...</p>
               </div>
             ) : upcomingEvents.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
-                  {searchTerm ? 'No upcoming events match your search.' : 'No upcoming events yet. Create the first one!'}
+                  {searchTerm ? 'Niciun eveniment viitor nu corespunde căutării.' : 'Încă nu există evenimente viitoare. Creează primul!'}
                 </p>
               </div>
             ) : (
@@ -145,12 +145,12 @@ const Events = () => {
           <TabsContent value="past">
             {loading ? (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">Loading events...</p>
+                <p className="text-muted-foreground">Se încarcă evenimentele...</p>
               </div>
             ) : pastEvents.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
-                  {searchTerm ? 'No past events match your search.' : 'No past events found.'}
+                  {searchTerm ? 'Niciun eveniment trecut nu corespunde căutării.' : 'Nu au fost găsite evenimente trecute.'}
                 </p>
               </div>
             ) : (

@@ -406,8 +406,8 @@ const Feed = () => {
     } catch (error) {
       console.error('Error fetching saved posts:', error);
       toast({
-        title: "Error loading saved posts",
-        description: "Failed to load your saved posts.",
+        title: "Eroare la încărcarea postărilor salvate",
+        description: "Nu s-au putut încărca postările salvate.",
         variant: "destructive",
       });
     } finally {
@@ -435,8 +435,8 @@ const Feed = () => {
 
         setSavedPosts(prev => prev.filter(p => p.id !== post.id));
         toast({
-          title: "Post unsaved",
-          description: "Post removed from saved posts.",
+          title: "Postare desalvată",
+          description: "Postarea a fost eliminată din postările salvate.",
         });
       } else {
         const { error } = await supabase
@@ -453,15 +453,15 @@ const Feed = () => {
 
         setSavedPosts(prev => [...prev, post]);
         toast({
-          title: "Post saved",
-          description: "Post saved for later!",
+          title: "Postare salvată",
+          description: "Postare salvată pentru mai târziu!",
         });
       }
     } catch (error: any) {
       console.error('Error saving/unsaving post:', error.message || error);
       toast({
-        title: "Error",
-        description: `Failed to update saved post: ${error.message || 'Please try again.'}`,
+        title: "Eroare",
+        description: `Actualizare eșuată: ${error.message || 'Vă rugăm să încercați din nou.'}`,
         variant: "destructive",
       });
     }
@@ -489,8 +489,8 @@ const Feed = () => {
         });
 
         toast({
-          title: "User unfollowed",
-          description: "You have unfollowed this user.",
+          title: "Utilizator ne-mai-urmat",
+          description: "Nu mai urmăriți acest utilizator.",
         });
       } else {
         const { error } = await supabase
@@ -505,8 +505,8 @@ const Feed = () => {
         setFollowedUsers(prev => new Set([...prev, userId]));
 
         toast({
-          title: "User followed",
-          description: "You are now following this user!",
+          title: "Utilizator urmat",
+          description: "Acum urmăriți acest utilizator!",
         });
       }
 
@@ -526,8 +526,8 @@ const Feed = () => {
     } catch (error) {
       console.error('Error following/unfollowing user:', error);
       toast({
-        title: "Error",
-        description: "Failed to update follow status. Please try again.",
+        title: "Eroare",
+        description: "Actualizare stare urmărire eșuată. Vă rugăm să încercați din nou.",
         variant: "destructive",
       });
     }
@@ -635,8 +635,8 @@ const Feed = () => {
                     <div className="p-4 rounded-full bg-muted/50 w-16 h-16 flex items-center justify-center mx-auto mb-3">
                       <Hash className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <p className="text-sm text-muted-foreground">No hashtags yet</p>
-                    <p className="text-xs text-muted-foreground mt-1">Use #hashtags in your posts!</p>
+                    <p className="text-sm text-muted-foreground">Încă nu există hashtag-uri</p>
+                    <p className="text-xs text-muted-foreground mt-1">Folosește #hashtag-uri în postările tale!</p>
                   </div>
                 ) : (
                   trendingTopics.map((topic, index) => (
@@ -648,7 +648,7 @@ const Feed = () => {
                           </div>
                           <div>
                             <p className="font-semibold text-sm text-primary group-hover:text-primary/80 transition-colors">{topic.hashtag}</p>
-                            <p className="text-xs text-muted-foreground">{topic.count} posts</p>
+                            <p className="text-xs text-muted-foreground">{topic.count} postări</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -666,7 +666,7 @@ const Feed = () => {
                 {trendingTopics.length > 0 && (
                   <div className="pt-2">
                     <Button variant="ghost" size="sm" className="w-full font-medium hover:bg-primary/5 hover:text-primary transition-all duration-200">
-                      <span className="mr-2">View all trending</span>
+                      <span className="mr-2">Vezi toate tendințele</span>
                       <div className="p-1 rounded-md bg-primary/10">
                         <TrendingUp className="h-3 w-3 text-primary" />
                       </div>
