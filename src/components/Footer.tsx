@@ -1,7 +1,34 @@
 import { Link } from "react-router-dom";
-import roeuLogo from "@/assets/roeu-logo.png";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Footer = () => {
+  const [logoUrl, setLogoUrl] = useState("");
+
+  useEffect(() => {
+    const fetchLogoUrl = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('app_settings')
+          .select('setting_value')
+          .eq('setting_key', 'app_logo_url')
+          .single();
+
+        if (error) throw error;
+        
+        const url = typeof data.setting_value === 'string' 
+          ? JSON.parse(data.setting_value)
+          : data.setting_value;
+        
+        setLogoUrl(url);
+      } catch (error) {
+        console.error('Error fetching logo:', error);
+      }
+    };
+
+    fetchLogoUrl();
+  }, []);
+
   return (
     <footer className="bg-background border-t">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -9,10 +36,16 @@ const Footer = () => {
           {/* Logo and Description */}
           <div className="md:col-span-2">
             <Link to="/" className="flex items-center mb-4">
-              <img src={roeuLogo} alt="RoEu" className="h-10 w-auto" />
+              {logoUrl ? (
+                <img src={logoUrl} alt="RoEu" className="h-10 w-auto object-contain" />
+              ) : (
+                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-lg">中</span>
+                </div>
+              )}
             </Link>
             <p className="text-muted-foreground mb-4 max-w-md">
-              Conectează românii din Regatul Unit. Împărtășește experiențe, 
+              Conectează românii de pretutindeni. Împărtășește experiențe, 
               găsește suport și celebrează cultura noastră împreună.
             </p>
             <div className="text-sm text-muted-foreground">
