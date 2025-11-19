@@ -218,7 +218,7 @@ const Marketplace = () => {
             Descoperă Oferte Uimitoare
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8 animate-fade-in">
-            Cumpără și vinde produse în cadrul comunității noastre vibrante. Găsește comori unice, 
+            Cumpără și vinde produse în cadrul comunității noastre vibrante. Găsește 
             oferte excelente și conectează-te cu membri comunității.
           </p>
 
