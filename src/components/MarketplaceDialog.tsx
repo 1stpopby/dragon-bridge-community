@@ -36,7 +36,7 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>(item?.image_url || '');
+  const [previewUrl, setPreviewUrl] = useState<string>('');
   const [categories, setCategories] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -52,7 +52,7 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
     condition: item?.condition || 'good',
     location: item?.location || profile?.location || '',
     seller_name: item?.seller_name || profile?.display_name || '',
-    seller_contact: item?.seller_contact || profile?.contact_email || '',
+    seller_contact: item?.seller_contact || profile?.phone || '',
     image_url: item?.image_url || ''
   });
 
@@ -84,17 +84,36 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
     }
   };
 
-  // Update form data when profile changes (for create mode)
+  // Update form data and preview when dialog opens
   useEffect(() => {
-    if (mode === 'create' && profile) {
-      setFormData(prev => ({
-        ...prev,
-        location: prev.location || profile.location || '',
-        seller_name: prev.seller_name || profile.display_name || '',
-        seller_contact: prev.seller_contact || profile.contact_email || ''
-      }));
+    if (open) {
+      if (mode === 'edit' && item) {
+        // Reset form data for edit mode
+        setFormData({
+          title: item.title || '',
+          description: item.description || '',
+          price: item.price || '',
+          currency: item.currency || 'GBP',
+          category: item.category || 'Electronics',
+          condition: item.condition || 'good',
+          location: item.location || '',
+          seller_name: item.seller_name || '',
+          seller_contact: item.seller_contact || '',
+          image_url: item.image_url || ''
+        });
+        setPreviewUrl(item.image_url || '');
+        setSelectedFile(null);
+      } else if (mode === 'create' && profile) {
+        // Set profile data for create mode
+        setFormData(prev => ({
+          ...prev,
+          location: prev.location || profile.location || '',
+          seller_name: prev.seller_name || profile.display_name || '',
+          seller_contact: prev.seller_contact || profile.phone || ''
+        }));
+      }
     }
-  }, [profile, mode]);
+  }, [open, mode, item, profile]);
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -106,19 +125,29 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('event-images')
-      .upload(filePath, file);
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('event-images')
+        .upload(filePath, file);
 
-    if (uploadError) {
-      throw uploadError;
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('event-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Eroare la încărcarea imaginii",
+        description: "Te rugăm să încerci din nou.",
+        variant: "destructive",
+      });
+      throw error;
     }
-
-    const { data } = supabase.storage
-      .from('event-images')
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,8 +155,8 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
     if (file) {
       if (!file.type.startsWith('image/')) {
         toast({
-          title: "Invalid file type",
-          description: "Please select an image file.",
+          title: "Tip de fișier invalid",
+          description: "Te rugăm să selectezi o imagine.",
           variant: "destructive",
         });
         return;
@@ -135,8 +164,8 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
 
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
         toast({
-          title: "File too large",
-          description: "Please select an image smaller than 5MB.",
+          title: "Fișier prea mare",
+          description: "Te rugăm să selectezi o imagine mai mică de 5MB.",
           variant: "destructive",
         });
         return;
@@ -166,8 +195,8 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
     // Check authentication for create mode
     if (mode === 'create' && !user) {
       toast({
-        title: "Authentication required",
-        description: "Please sign in to list items on the marketplace.",
+        title: "Autentificare necesară",
+        description: "Te rugăm să te conectezi pentru a lista produse pe piață.",
         variant: "destructive",
       });
       return;
@@ -200,8 +229,8 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
         if (error) throw error;
 
         toast({
-          title: "Item listed successfully!",
-          description: "Your item has been added to the marketplace.",
+          title: "Produs listat cu succes!",
+          description: "Produsul tău a fost adăugat pe piață.",
         });
       } else {
         const { error } = await supabase
@@ -212,8 +241,8 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
         if (error) throw error;
 
         toast({
-          title: "Item updated successfully!",
-          description: "Your changes have been saved.",
+          title: "Produs actualizat cu succes!",
+          description: "Modificările tale au fost salvate.",
         });
       }
 
@@ -243,8 +272,8 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
     } catch (error) {
       console.error('Error saving item:', error);
       toast({
-        title: "Error saving item",
-        description: "Please try again later.",
+        title: "Eroare la salvarea produsului",
+        description: "Te rugăm să încerci din nou.",
         variant: "destructive",
       });
     } finally {
@@ -265,58 +294,58 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
             <Button asChild size="default" className="sm:w-auto">
               <Link to="/auth">
                 <Lock className="h-4 w-4 mr-2" />
-                Sign in to List Item
+                Conectează-te pentru a Lista Produs
               </Link>
             </Button>
           ) : (
             <Button size="default" className="sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              List Item
+              Listează Produs
             </Button>
           )
         ) : (
           <Button variant="outline" size="sm">
             <Edit2 className="h-4 w-4 mr-1" />
-            Edit
+            Editează
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create' ? 'List New Item' : 'Edit Item'}
+            {mode === 'create' ? 'Listează Produs Nou' : 'Editează Produs'}
           </DialogTitle>
           <DialogDescription>
             {mode === 'create' 
-              ? 'Fill in the details to list your item on the marketplace.'
-              : 'Update the item details below.'
+              ? 'Completează detaliile pentru a lista produsul tău pe piață.'
+              : 'Actualizează detaliile produsului mai jos.'
             }
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <Label htmlFor="title">Item Title</Label>
+              <Label htmlFor="title">Titlu Produs</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                placeholder="Enter item title"
+                placeholder="Introdu titlul produsului"
                 required
               />
             </div>
             <div className="col-span-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Descriere</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Describe your item"
+                placeholder="Descrie produsul tău"
                 rows={3}
               />
             </div>
             <div>
-              <Label htmlFor="price">Price</Label>
+              <Label htmlFor="price">Preț</Label>
               <Input
                 id="price"
                 type="number"
@@ -328,10 +357,10 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
               />
             </div>
             <div>
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency">Monedă</Label>
               <Select value={formData.currency} onValueChange={(value) => handleInputChange('currency', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select currency" />
+                  <SelectValue placeholder="Selectează moneda" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="GBP">GBP (£)</SelectItem>
@@ -341,10 +370,10 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
               </Select>
             </div>
             <div>
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Categorie</Label>
               <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Selectează categoria" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map(category => (
@@ -356,56 +385,55 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
               </Select>
             </div>
             <div>
-              <Label htmlFor="condition">Condition</Label>
+              <Label htmlFor="condition">Condiție</Label>
               <Select value={formData.condition} onValueChange={(value) => handleInputChange('condition', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select condition" />
+                  <SelectValue placeholder="Selectează condiția" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="like_new">Like New</SelectItem>
-                  <SelectItem value="good">Good</SelectItem>
-                  <SelectItem value="fair">Fair</SelectItem>
-                  <SelectItem value="poor">Poor</SelectItem>
+                  <SelectItem value="new">Nou</SelectItem>
+                  <SelectItem value="like_new">Ca Nou</SelectItem>
+                  <SelectItem value="good">Bună</SelectItem>
+                  <SelectItem value="fair">Acceptabilă</SelectItem>
+                  <SelectItem value="poor">Slabă</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="col-span-2">
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">Locație</Label>
               <LocationPicker
                 onLocationSelect={(location) => handleInputChange('location', location.address)}
                 initialLocation={formData.location}
-                placeholder="Enter item location or click on map"
+                placeholder="Introdu locația produsului sau apasă pe hartă"
               />
             </div>
             <div>
-              <Label htmlFor="seller_name">Your Name</Label>
+              <Label htmlFor="seller_name">Numele Tău</Label>
               <Input
                 id="seller_name"
                 value={formData.seller_name}
                 onChange={(e) => handleInputChange('seller_name', e.target.value)}
-                placeholder="Your name"
+                placeholder="Numele tău"
                 required
               />
             </div>
             <div>
-              <Label htmlFor="seller_contact">Contact Info</Label>
+              <Label htmlFor="seller_contact">Telefon (Opțional)</Label>
               <Input
                 id="seller_contact"
                 value={formData.seller_contact}
                 onChange={(e) => handleInputChange('seller_contact', e.target.value)}
-                placeholder="Email or phone number"
-                required
+                placeholder="+40 700 000 000"
               />
             </div>
             <div className="col-span-2">
-              <Label htmlFor="image">Item Image</Label>
+              <Label htmlFor="image">Imagine Produs</Label>
               <div className="space-y-4">
                 {previewUrl && (
                   <div className="relative w-full h-48 rounded-lg overflow-hidden border">
                     <img
                       src={previewUrl}
-                      alt="Item preview"
+                      alt="Previzualizare produs"
                       className="w-full h-full object-cover"
                     />
                     <Button
@@ -428,7 +456,7 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
                   className="w-full flex items-center gap-2"
                 >
                   <Camera className="h-4 w-4" />
-                  {uploadingImage ? "Uploading Image..." : previewUrl ? "Change Image" : "Upload Image"}
+                  {uploadingImage ? "Se încarcă imaginea..." : previewUrl ? "Schimbă Imaginea" : "Încarcă Imagine"}
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -440,7 +468,7 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
                 
                 {selectedFile && (
                   <p className="text-sm text-muted-foreground">
-                    Selected: {selectedFile.name}
+                    Selectat: {selectedFile.name}
                   </p>
                 )}
               </div>
@@ -448,10 +476,10 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
           </div>
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              Anulează
             </Button>
             <Button type="submit" disabled={loading || uploadingImage}>
-              {loading ? 'Saving...' : mode === 'create' ? 'List Item' : 'Update Item'}
+              {loading ? 'Se salvează...' : mode === 'create' ? 'Listează Produs' : 'Actualizează Produs'}
             </Button>
           </div>
         </form>
