@@ -78,13 +78,22 @@ const ContactForm = () => {
     setIsSubmitting(true);
 
     try {
-      // In a real app, you would send this to your backend
-      // For now, we'll just show a success message
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      // Save message to database
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+          status: 'unread'
+        });
+
+      if (error) throw error;
       
       toast({
-        title: "Message sent successfully!",
-        description: "We'll get back to you within 24 hours.",
+        title: "Mesaj trimis cu succes!",
+        description: "Îți vom răspunde în cel mult 24 de ore.",
       });
 
       // Reset form
@@ -97,9 +106,10 @@ const ContactForm = () => {
         message: ''
       });
     } catch (error) {
+      console.error('Error sending message:', error);
       toast({
-        title: "Error sending message",
-        description: "Please try again later or contact us directly.",
+        title: "Eroare la trimiterea mesajului",
+        description: "Te rugăm să încerci din nou mai târziu.",
         variant: "destructive",
       });
     } finally {

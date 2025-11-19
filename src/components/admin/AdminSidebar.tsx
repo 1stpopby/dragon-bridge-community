@@ -163,6 +163,12 @@ const menuGroups = [
         value: "reports",
         icon: Flag,
         description: "Rapoarte utilizatori"
+      },
+      {
+        title: "Mesaje Contact",
+        value: "contact-messages",
+        icon: MessageSquare,
+        description: "Mesaje formular contact"
       }
     ]
   },
