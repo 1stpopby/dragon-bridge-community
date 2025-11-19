@@ -15,6 +15,7 @@ import Marketplace from "./pages/Marketplace";
 import FooterPage from "./pages/FooterPage";
 import Services from "./pages/Services";
 import MyServices from "./pages/MyServices";
+import UserProfile from "./pages/UserProfile";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -65,6 +66,7 @@ const App = () => {
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/user/:userId" element={<UserProfile />} />
               <Route path="/company/:companyId" element={<CompanyProfile />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/notifications" element={<Notifications />} />
