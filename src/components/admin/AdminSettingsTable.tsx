@@ -438,6 +438,39 @@ export const AdminSettingsTable = ({ onDataChange }: AdminSettingsTableProps) =>
                 </div>
               </div>
 
+              <Separator />
+
+              <div className="space-y-2">
+                <Label htmlFor="favicon_file" className="flex items-center space-x-2">
+                  <FileImage className="h-4 w-4" />
+                  <span>Favicon Upload</span>
+                </Label>
+                <input
+                  id="favicon_file"
+                  type="file"
+                  accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/svg+xml"
+                  onChange={(e) => handleFaviconUpload(e)}
+                  disabled={saving}
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50"
+                />
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p>Upload your browser favicon (ICO, PNG, SVG)</p>
+                  <p>• Recommended size: 16x16, 32x32, or 48x48 pixels</p>
+                  <p>• Max file size: 2MB</p>
+                  <p>• Will appear in browser tab and bookmarks</p>
+                </div>
+                {formData.favicon_url && (
+                  <div className="mt-2 p-3 border rounded-lg bg-muted/50">
+                    <p className="text-sm font-medium mb-2">Current Favicon:</p>
+                    <img 
+                      src={formData.favicon_url} 
+                      alt="Current favicon" 
+                      className="h-8 w-8 object-contain border rounded"
+                    />
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="app_description">Application Description</Label>
                 <Textarea
