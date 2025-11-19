@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, LogOut, Building2, Settings, MessageSquare, Bell, Store, Briefcase } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -20,12 +20,19 @@ export const UserButton = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   if (!user || !profile) {
     return (
-      <Link to="/auth">
-        <Button variant="default">Autentificare</Button>
-      </Link>
+      <Button 
+        variant="default" 
+        onClick={(e) => {
+          e.preventDefault();
+          navigate('/auth');
+        }}
+      >
+        Autentificare
+      </Button>
     );
   }
 
