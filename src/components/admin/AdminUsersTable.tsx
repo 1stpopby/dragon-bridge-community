@@ -31,7 +31,8 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  ShieldCheck
+  ShieldCheck,
+  Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -158,43 +159,91 @@ export const AdminUsersTable = ({ onDataChange }: AdminUsersTableProps) => {
     }
   };
 
-  const handleVerification = async (companyId: string, action: 'approve' | 'reject') => {
+  const handleDeleteUser = async (userId: string, displayName: string) => {
     try {
       setActionLoading(true);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const updateData: any = {
-        verification_notes: verificationNotes.trim() || null,
-      };
-
-      if (action === 'approve') {
-        updateData.is_verified = true;
-        updateData.verified_at = new Date().toISOString();
-        updateData.verified_by = user.id;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No authentication session');
       }
 
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', companyId);
+      const { error } = await supabase.functions.invoke('delete-user-account', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: { userId }
+      });
 
       if (error) throw error;
 
       toast({
-        title: `Company ${action === 'approve' ? 'verified' : 'rejected'}`,
-        description: `Company has been ${action === 'approve' ? 'verified successfully' : 'rejected'}`,
+        title: "Utilizator șters",
+        description: `Contul utilizatorului ${displayName} a fost șters permanent.`,
+      });
+
+      await fetchUsers();
+      onDataChange();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut șterge utilizatorul",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleVerification = async (companyId: string, action: 'approve' | 'reject') => {
+    try {
+      setActionLoading(true);
+      
+      const updateData = action === 'approve' 
+        ? { 
+            is_verified: true,
+            verified_at: new Date().toISOString(),
+            verification_notes: verificationNotes || null
+          }
+        : { 
+            is_verified: false,
+            verified_at: null,
+            verification_notes: verificationNotes || null
+          };
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', companyId);
+
+      if (updateError) throw updateError;
+
+      // Update verification request status
+      const { error: requestError } = await supabase
+        .from('company_verification_requests')
+        .update({
+          status: action === 'approve' ? 'approved' : 'rejected',
+          reviewed_at: new Date().toISOString(),
+          admin_notes: verificationNotes
+        })
+        .eq('company_id', companyId);
+
+      if (requestError) throw requestError;
+
+      toast({
+        title: action === 'approve' ? "Company verified" : "Verification rejected",
+        description: `The company has been ${action === 'approve' ? 'verified' : 'rejected'} successfully.`,
       });
 
       setSelectedCompany(null);
       setVerificationNotes("");
-      fetchUsers();
+      await fetchUsers();
       onDataChange();
     } catch (error) {
-      console.error('Error updating verification:', error);
+      console.error('Error handling verification:', error);
       toast({
-        title: "Error updating verification",
+        title: "Error",
         description: "Failed to update company verification status",
         variant: "destructive",
       });
@@ -413,6 +462,35 @@ export const AdminUsersTable = ({ onDataChange }: AdminUsersTableProps) => {
                               onBanComplete={fetchUsers}
                             />
                           )}
+                          
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Ești sigur?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Această acțiune nu poate fi anulată. Contul utilizatorului <strong>{user.display_name}</strong> și toate datele asociate vor fi șterse permanent.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Anulează</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteUser(user.user_id, user.display_name)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Șterge utilizatorul
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </TableCell>
                     </TableRow>
