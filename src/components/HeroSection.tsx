@@ -34,7 +34,7 @@ const HeroSection = () => {
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
             Bine ai venit în
-            <span className="text-primary block mt-2">Comunitatea RoEu</span>
+            <span className="text-gradient-primary block mt-2">Comunitatea RoEu</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
             Conectează-te, împărtășește și crește alături de comunitate.
@@ -57,8 +57,8 @@ Fă parte din miile de români din întreaga Europă care își împărtășesc 
           {features.map((feature, index) => (
             <Card key={index} className="border-border hover:shadow-lg transition-shadow">
               <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <feature.icon className="h-6 w-6 text-primary" />
+                <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <feature.icon className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground text-sm">{feature.description}</p>
