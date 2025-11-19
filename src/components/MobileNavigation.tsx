@@ -9,7 +9,7 @@ const MobileNavigation = () => {
     { name: "Acasă", href: "/", icon: Home },
     { name: "Flux", href: "/feed", icon: Rss },
     { name: "Forum", href: "/forum", icon: MessageSquare },
-    { name: "Evenimente", href: "/events", icon: Calendar },
+    { name: "Piață", href: "/marketplace", icon: ShoppingBag },
     { name: "Servicii", href: "/services", icon: MapPin },
   ];
 
