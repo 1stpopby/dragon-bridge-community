@@ -475,12 +475,19 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
+              <div className="space-y-1 flex-1 min-w-0">
+                <div 
+                  className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer truncate"
+                  onClick={() => navigate(`/user/${post.user_id}`)}
+                >
+                  {post.author_name}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
                   <CompanyLink 
                     authorName={post.author_name} 
                     userId={post.user_id}
-                    className="font-semibold text-foreground hover:text-primary transition-colors"
+                    className="text-sm"
+                    showBadge={true}
                   />
                   {isRecent && (
                     <Badge variant="secondary" className="text-xs px-2 py-0.5">
@@ -488,7 +495,7 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                   <span>{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
                   <span>•</span>
                   <div className="flex items-center gap-1">
@@ -499,7 +506,7 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-start gap-2">
               {/* Follow button - only show if not the current user and user is logged in */}
               {user && user.id !== post.user_id && (
                 <Button
