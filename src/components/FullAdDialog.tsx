@@ -178,11 +178,19 @@ export function FullAdDialog({ item, open, onOpenChange, onItemChanged }: FullAd
                   <span className="font-medium">Categorie:</span>
                   <span>{item.category}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Locație:</span>
-                  <span>{item.location}</span>
-                </div>
+                {item.location && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">Locație:</span>
+                    <span>{item.location}</span>
+                  </div>
+                )}
+                {!item.location && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    <span className="italic">Locație nespecificată</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">Listat:</span>
