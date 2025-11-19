@@ -422,10 +422,10 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
-                      className="h-8 px-3 text-sm"
+                      className="h-8 w-8 p-0"
+                      title="Photo"
                     >
-                      <ImageIcon className="h-4 w-4 mr-1" />
-                      Photo
+                      <ImageIcon className="h-4 w-4" />
                     </Button>
                     
                     <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
@@ -435,10 +435,10 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                           variant="ghost"
                           size="sm"
                           disabled={uploading}
-                          className="h-8 px-3 text-sm"
+                          className="h-8 w-8 p-0"
+                          title="Emoji"
                         >
-                          <Smile className="h-4 w-4 mr-1" />
-                          Emoji
+                          <Smile className="h-4 w-4" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-80 z-50">
@@ -470,10 +470,10 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                         setTimeout(() => textareaRef.current?.focus(), 0);
                       }}
                       disabled={uploading}
-                      className="h-8 px-3 text-sm"
+                      className="h-8 w-8 p-0"
+                      title="Hashtag"
                     >
-                      <Hash className="h-4 w-4 mr-1" />
-                      Hashtag
+                      <Hash className="h-4 w-4" />
                     </Button>
 
                     <Button
@@ -490,10 +490,10 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                         setTimeout(() => textareaRef.current?.focus(), 0);
                       }}
                       disabled={uploading}
-                      className="h-8 px-3 text-sm"
+                      className="h-8 w-8 p-0"
+                      title="Mention"
                     >
-                      <AtSign className="h-4 w-4 mr-1" />
-                      Mention
+                      <AtSign className="h-4 w-4" />
                     </Button>
                   </div>
 
