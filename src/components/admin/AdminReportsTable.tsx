@@ -67,6 +67,8 @@ export const AdminReportsTable = ({ onDataChange }: AdminReportsTableProps) => {
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [reportedContent, setReportedContent] = useState<any>(null);
+  const [contentLoading, setContentLoading] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
@@ -107,6 +109,48 @@ export const AdminReportsTable = ({ onDataChange }: AdminReportsTableProps) => {
     fetchReports();
   }, [filterStatus]);
 
+  const fetchReportedContent = async (report: any) => {
+    if (!report) return;
+    
+    try {
+      setContentLoading(true);
+      const tableName = report.content_type === "group_discussion" 
+        ? "group_discussions" 
+        : report.content_type === "forum_reply"
+        ? "forum_replies"
+        : report.content_type === "marketplace_item"
+        ? "marketplace_items"
+        : report.content_type === "forum_post"
+        ? "forum_posts"
+        : "posts";
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .select("*")
+        .eq("id", report.content_id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching reported content:", error);
+        setReportedContent({ error: "Conținutul nu mai există sau a fost șters" });
+      } else {
+        setReportedContent(data);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setReportedContent({ error: "Eroare la încărcarea conținutului" });
+    } finally {
+      setContentLoading(false);
+    }
+  };
+
+  const handleViewReport = (report: any) => {
+    setSelectedReport(report);
+    setAdminNotes(report.admin_notes || "");
+    setViewDialogOpen(true);
+    fetchReportedContent(report);
+  };
+
   const handleDismissReport = async () => {
     if (!selectedReport) return;
 
@@ -131,6 +175,7 @@ export const AdminReportsTable = ({ onDataChange }: AdminReportsTableProps) => {
 
       setViewDialogOpen(false);
       setSelectedReport(null);
+      setReportedContent(null);
       setAdminNotes("");
       await fetchReports();
       onDataChange();
@@ -190,6 +235,7 @@ export const AdminReportsTable = ({ onDataChange }: AdminReportsTableProps) => {
       setDeleteDialogOpen(false);
       setViewDialogOpen(false);
       setSelectedReport(null);
+      setReportedContent(null);
       setAdminNotes("");
       await fetchReports();
       onDataChange();
@@ -294,11 +340,7 @@ export const AdminReportsTable = ({ onDataChange }: AdminReportsTableProps) => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
-                            setSelectedReport(report);
-                            setAdminNotes(report.admin_notes || "");
-                            setViewDialogOpen(true);
-                          }}
+                          onClick={() => handleViewReport(report)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -313,7 +355,14 @@ export const AdminReportsTable = ({ onDataChange }: AdminReportsTableProps) => {
       </Card>
 
       {/* View Report Dialog */}
-      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+      <Dialog open={viewDialogOpen} onOpenChange={(open) => {
+        setViewDialogOpen(open);
+        if (!open) {
+          setReportedContent(null);
+          setSelectedReport(null);
+          setAdminNotes("");
+        }
+      }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Detalii raportare</DialogTitle>
@@ -360,6 +409,69 @@ export const AdminReportsTable = ({ onDataChange }: AdminReportsTableProps) => {
                   <p className="text-sm text-muted-foreground">{selectedReport.description}</p>
                 </div>
               )}
+
+              {/* Reported Content */}
+              <div className="border-t pt-4">
+                <Label className="text-sm font-medium">Conținutul raportat</Label>
+                {contentLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  </div>
+                ) : reportedContent?.error ? (
+                  <div className="rounded-md bg-destructive/10 p-4 mt-2">
+                    <p className="text-sm text-destructive">{reportedContent.error}</p>
+                  </div>
+                ) : reportedContent ? (
+                  <div className="rounded-md bg-muted p-4 mt-2 space-y-2">
+                    {reportedContent.title && (
+                      <div>
+                        <p className="text-xs text-muted-foreground font-medium">Titlu:</p>
+                        <p className="text-sm font-medium">{reportedContent.title}</p>
+                      </div>
+                    )}
+                    {reportedContent.content && (
+                      <div>
+                        <p className="text-xs text-muted-foreground font-medium">Conținut:</p>
+                        <p className="text-sm whitespace-pre-wrap max-h-60 overflow-y-auto">
+                          {reportedContent.content}
+                        </p>
+                      </div>
+                    )}
+                    {reportedContent.author_name && (
+                      <div>
+                        <p className="text-xs text-muted-foreground font-medium">Autor:</p>
+                        <p className="text-sm">{reportedContent.author_name}</p>
+                      </div>
+                    )}
+                    {reportedContent.message && (
+                      <div>
+                        <p className="text-xs text-muted-foreground font-medium">Mesaj:</p>
+                        <p className="text-sm whitespace-pre-wrap max-h-60 overflow-y-auto">
+                          {reportedContent.message}
+                        </p>
+                      </div>
+                    )}
+                    {reportedContent.description && (
+                      <div>
+                        <p className="text-xs text-muted-foreground font-medium">Descriere:</p>
+                        <p className="text-sm whitespace-pre-wrap max-h-40 overflow-y-auto">
+                          {reportedContent.description}
+                        </p>
+                      </div>
+                    )}
+                    {reportedContent.image_url && (
+                      <div>
+                        <p className="text-xs text-muted-foreground font-medium">Imagine:</p>
+                        <img 
+                          src={reportedContent.image_url} 
+                          alt="Conținut raportat" 
+                          className="mt-2 max-h-40 rounded-md object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </div>
 
               <div>
                 <Label htmlFor="admin-notes">Note admin</Label>
