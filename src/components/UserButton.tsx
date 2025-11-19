@@ -26,7 +26,10 @@ export const UserButton = () => {
     return (
       <Button 
         variant="default" 
-        onClick={() => navigate('/auth')}
+        onClick={() => {
+          console.log('Navigating to /auth');
+          navigate('/auth');
+        }}
       >
         Autentificare
       </Button>
