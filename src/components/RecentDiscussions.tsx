@@ -6,6 +6,7 @@ import { MessageSquare, Clock, TrendingUp, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import { Link } from "react-router-dom";
 
 interface Discussion {
   id: string;
@@ -131,7 +132,7 @@ const RecentDiscussions = () => {
             </p>
           </div>
           <Button variant="outline" asChild>
-            <a href="/feed">View All Discussions</a>
+            <Link to="/forum">View All Discussions</Link>
           </Button>
         </div>
 
@@ -148,38 +149,40 @@ const RecentDiscussions = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {discussions.map((discussion) => (
-              <Card key={discussion.id} className="border-border hover:shadow-md transition-shadow cursor-pointer">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg font-semibold line-clamp-2 flex-1 mr-2">
-                      {discussion.title}
-                    </CardTitle>
-                    {discussion.trending && (
-                      <TrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
-                    )}
-                  </div>
-                  <Badge 
-                    variant="secondary" 
-                    className={`w-fit ${getCategoryColor(discussion.category)}`}
-                  >
-                    {discussion.category}
-                  </Badge>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <MessageSquare className="h-4 w-4" />
-                        <span>{discussion.replies} replies</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{formatTimeAgo(discussion.created_at)}</span>
+              <Link key={discussion.id} to={`/forum/${discussion.id}`}>
+                <Card className="border-border hover:shadow-md transition-shadow cursor-pointer">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="text-lg font-semibold line-clamp-2 flex-1 mr-2">
+                        {discussion.title}
+                      </CardTitle>
+                      {discussion.trending && (
+                        <TrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
+                      )}
+                    </div>
+                    <Badge 
+                      variant="secondary" 
+                      className={`w-fit ${getCategoryColor(discussion.category)}`}
+                    >
+                      {discussion.category}
+                    </Badge>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-1">
+                          <MessageSquare className="h-4 w-4" />
+                          <span>{discussion.replies} replies</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-4 w-4" />
+                          <span>{formatTimeAgo(discussion.created_at)}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         )}
