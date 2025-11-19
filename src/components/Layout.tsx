@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import Navigation from "./Navigation";
 import MobileNavigation from "./MobileNavigation";
 import Footer from "./Footer";
+import PWAInstallPrompt from "./PWAInstallPrompt";
 
 interface LayoutProps {
   children: ReactNode;
@@ -17,6 +18,7 @@ const Layout = ({ children, showFooter = true }: LayoutProps) => {
       </main>
       {showFooter && <Footer />}
       <MobileNavigation />
+      <PWAInstallPrompt />
     </div>
   );
 };
