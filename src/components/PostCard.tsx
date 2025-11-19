@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import CompanyLink from "@/components/CompanyLink";
-import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Send, Share2, Bookmark, Eye, UserPlus, UserCheck } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Send, Share2, Bookmark, Eye, UserPlus, UserCheck, Flag } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { ReportDialog } from "@/components/ReportDialog";
 
 interface Comment {
   id: string;
@@ -540,6 +541,19 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+              )}
+              
+              {/* Report button for other users */}
+              {user && user.id !== post.user_id && (
+                <ReportDialog
+                  contentType="post"
+                  contentId={post.id}
+                  trigger={
+                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Flag className="h-4 w-4" />
+                    </Button>
+                  }
+                />
               )}
             </div>
           </div>

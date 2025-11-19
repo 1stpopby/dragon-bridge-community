@@ -37,7 +37,8 @@ import {
   Megaphone,
   FileText as FileTextIcon,
   Zap,
-  Database
+  Database,
+  Flag
 } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -156,6 +157,12 @@ const menuGroups = [
         value: "notifications",
         icon: Bell,
         description: "System alerts"
+      },
+      {
+        title: "Raportări",
+        value: "reports",
+        icon: Flag,
+        description: "Rapoarte utilizatori"
       }
     ]
   },

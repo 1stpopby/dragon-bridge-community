@@ -3,9 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Clock, Heart, ThumbsUp, TrendingUp, Eye } from "lucide-react";
+import { MessageSquare, Clock, Heart, ThumbsUp, TrendingUp, Eye, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { ReportDialog } from "@/components/ReportDialog";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ForumPost {
   id: string;
@@ -27,6 +29,7 @@ export const ForumPostCard = ({ post, onClick }: ForumPostCardProps) => {
   const [replyCount, setReplyCount] = useState(0);
   const [reactionCount, setReactionCount] = useState(0);
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const handleCardClick = () => {
     navigate(`/forum/${post.id}`);
@@ -143,18 +146,36 @@ export const ForumPostCard = ({ post, onClick }: ForumPostCardProps) => {
               )}
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-primary hover:text-primary/80 hover:bg-primary/5 rounded-lg"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCardClick();
-              }}
-            >
-              <Eye className="h-4 w-4 mr-1" />
-              View Discussion
-            </Button>
+            <div className="flex items-center gap-2">
+              {user && user.id !== post.user_id && (
+                <ReportDialog
+                  contentType="forum_post"
+                  contentId={post.id}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Flag className="h-4 w-4" />
+                    </Button>
+                  }
+                />
+              )}
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary hover:text-primary/80 hover:bg-primary/5 rounded-lg"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCardClick();
+                }}
+              >
+                <Eye className="h-4 w-4 mr-1" />
+                View Discussion
+              </Button>
+            </div>
           </div>
         </div>
       </div>
