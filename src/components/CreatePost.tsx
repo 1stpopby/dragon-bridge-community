@@ -49,6 +49,24 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const [isPublic, setIsPublic] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mentionDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close mention dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mentionDropdownRef.current && !mentionDropdownRef.current.contains(event.target as Node)) {
+        setShowMentionSuggestions(false);
+      }
+    };
+
+    if (showMentionSuggestions) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMentionSuggestions]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -323,7 +341,10 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 
                 {/* Mention suggestions */}
                 {showMentionSuggestions && mentionUsers.length > 0 && (
-                  <div className="absolute top-full left-0 mt-1 w-64 bg-background border rounded-lg shadow-lg z-10">
+                  <div 
+                    ref={mentionDropdownRef}
+                    className="absolute top-full left-0 mt-1 w-64 bg-background border rounded-lg shadow-lg z-50"
+                  >
                     <div className="p-2 border-b">
                       <p className="text-sm font-medium">Mention someone</p>
                     </div>

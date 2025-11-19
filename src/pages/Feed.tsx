@@ -617,7 +617,7 @@ const Feed = () => {
       <div className="max-w-6xl mx-auto py-6 px-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Sidebar - Trending Topics */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="hidden lg:block lg:col-span-3 space-y-6">
             <Card className="bg-gradient-to-br from-background to-muted/20 border-0 shadow-lg">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg">
