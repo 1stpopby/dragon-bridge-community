@@ -82,6 +82,12 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     onLocationSelect(location);
   };
 
+  const handleManualInput = (value: string) => {
+    setAddress(value);
+    // Update parent component with manually typed address
+    onLocationSelect({ lat: mapCenter.lat, lng: mapCenter.lng, address: value });
+  };
+
   if (loadError) {
     return (
       <div className="space-y-4">
@@ -90,7 +96,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              onChange={(e) => handleManualInput(e.target.value)}
               placeholder={placeholder}
               className="pl-10"
             />
@@ -111,7 +117,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           <Input
             ref={inputRef}
             value={address}
-            onChange={(e) => setAddress(e.target.value)}
+            onChange={(e) => handleManualInput(e.target.value)}
             placeholder={placeholder}
             className="pl-10"
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
