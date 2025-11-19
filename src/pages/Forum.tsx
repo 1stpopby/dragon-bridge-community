@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MessageSquare, Plus, Search, TrendingUp, Clock, Users, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ForumPostDialog } from "@/components/ForumPostDialog";
@@ -23,6 +23,7 @@ const Forum = () => {
     todayPosts: 0,
     totalMembers: 0
   });
+  const [showGuidelinesModal, setShowGuidelinesModal] = useState(true);
 
   const categories = [
     { name: "Discuții Generale", posts: 1250, color: "bg-blue-100 text-blue-800" },
@@ -201,6 +202,39 @@ const Forum = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 pb-16 md:pb-0">
       <Navigation />
       
+      {/* Community Guidelines Modal */}
+      <Dialog open={showGuidelinesModal} onOpenChange={setShowGuidelinesModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+              <DialogTitle className="text-xl">Regulamentul Comunității</DialogTitle>
+            </div>
+            <DialogDescription className="text-left space-y-3 text-base">
+              <p className="font-semibold text-foreground">
+                Vă rugăm să păstrați disciplina în cadrul acestei comunități.
+              </p>
+              <p>
+                Respectați-i pe ceilalți membri și evitați limbajul jignitor, injuriile, 
+                atacurile la persoană sau orice formă de abuz.
+              </p>
+              <p>
+                Dorim să menținem un mediu prietenos și constructiv pentru toți, 
+                iar respectul reciproc este esențial.
+              </p>
+              <p className="italic text-muted-foreground">
+                Vă mulțumim pentru înțelegere și colaborare! RoEu.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button onClick={() => setShowGuidelinesModal(false)}>
+              Am înțeles
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
       {/* Professional Header */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -215,19 +249,6 @@ const Forum = () => {
               Participă la discuții semnificative cu comunitatea noastră de profesioniști și rezidenți din România și UE.
             </p>
           </div>
-          
-          {/* Community Guidelines Alert */}
-          <Alert className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-950/20 max-w-3xl mx-auto">
-            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
-            <AlertDescription className="text-left text-sm text-amber-800 dark:text-amber-200">
-              <strong>Vă rugăm să păstrați disciplina în cadrul acestei comunități.</strong>
-              <br />
-              Respectați-i pe ceilalți membri și evitați limbajul jignitor, injuriile, atacurile la persoană sau orice formă de abuz.
-              Dorim să menținem un mediu prietenos și constructiv pentru toți, iar respectul reciproc este esențial.
-              <br />
-              <em>Vă mulțumim pentru înțelegere și colaborare! RoEu.</em>
-            </AlertDescription>
-          </Alert>
           
           {/* Enhanced Search and Actions */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-3xl mx-auto">
