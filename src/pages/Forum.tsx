@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageSquare, Plus, Search, TrendingUp, Clock, Users } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { MessageSquare, Plus, Search, TrendingUp, Clock, Users, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ForumPostDialog } from "@/components/ForumPostDialog";
 import { ForumPostCard } from "@/components/ForumPostCard";
@@ -214,6 +215,19 @@ const Forum = () => {
               Participă la discuții semnificative cu comunitatea noastră de profesioniști și rezidenți din România și UE.
             </p>
           </div>
+          
+          {/* Community Guidelines Alert */}
+          <Alert className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-950/20 max-w-3xl mx-auto">
+            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+            <AlertDescription className="text-left text-sm text-amber-800 dark:text-amber-200">
+              <strong>Vă rugăm să păstrați disciplina în cadrul acestei comunități.</strong>
+              <br />
+              Respectați-i pe ceilalți membri și evitați limbajul jignitor, injuriile, atacurile la persoană sau orice formă de abuz.
+              Dorim să menținem un mediu prietenos și constructiv pentru toți, iar respectul reciproc este esențial.
+              <br />
+              <em>Vă mulțumim pentru înțelegere și colaborare! RoEu.</em>
+            </AlertDescription>
+          </Alert>
           
           {/* Enhanced Search and Actions */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-3xl mx-auto">
