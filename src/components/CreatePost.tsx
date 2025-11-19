@@ -290,102 +290,12 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex gap-4">
-            {/* Left column - Avatar and Actions */}
-            <div className="flex flex-col items-center gap-4 flex-shrink-0">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={profile?.avatar_url || undefined} alt="Your avatar" />
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              
-              {/* Action buttons - Only show when focused */}
-              {isFocused && (
-                <div className="action-buttons flex flex-col gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="h-8 w-8 p-0"
-                    title="Photo"
-                  >
-                    <ImageIcon className="h-4 w-4" />
-                  </Button>
-                  
-                  <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={uploading}
-                        className="h-8 w-8 p-0"
-                        title="Emoji"
-                      >
-                        <Smile className="h-4 w-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 z-50">
-                      <div className="grid grid-cols-10 gap-2">
-                        {EMOJI_REACTIONS.map((emoji) => (
-                          <button
-                            key={emoji}
-                            type="button"
-                            onClick={() => insertEmoji(emoji)}
-                            className="p-2 hover:bg-muted rounded text-lg"
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const hashtagText = '#';
-                      const newContent = content + hashtagText;
-                      setContent(newContent);
-                      setCursorPosition(newContent.length);
-                      setShowHashtagSuggestions(true);
-                      setTimeout(() => textareaRef.current?.focus(), 0);
-                    }}
-                    disabled={uploading}
-                    className="h-8 w-8 p-0"
-                    title="Hashtag"
-                  >
-                    <Hash className="h-4 w-4" />
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const mentionText = '@';
-                      const newContent = content + mentionText;
-                      setContent(newContent);
-                      setCursorPosition(newContent.length);
-                      setShowMentionSuggestions(true);
-                      fetchMentionUsers('');
-                      setTimeout(() => textareaRef.current?.focus(), 0);
-                    }}
-                    disabled={uploading}
-                    className="h-8 w-8 p-0"
-                    title="Mention"
-                  >
-                    <AtSign className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Right column - Textarea and content */}
+            <Avatar className="h-12 w-12 flex-shrink-0">
+              <AvatarImage src={profile?.avatar_url || undefined} alt="Your avatar" />
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 min-w-0">
               <div className="relative">
                 <Textarea
@@ -502,49 +412,133 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                 </div>
               )}
 
-              {/* Bottom actions - Public/Private and Post button */}
+              {/* Actions - Only show when focused */}
               {isFocused && (
-                <div className="flex items-center justify-between pt-4 border-t mt-4">
-                  <div className="flex items-center gap-2">
+                <div className="action-buttons mt-4 space-y-3">
+                  <div className="flex items-center gap-1 flex-wrap">
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => setIsPublic(!isPublic)}
+                      onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
                       className="h-8 px-3 text-sm"
                     >
-                      {isPublic ? (
+                      <ImageIcon className="h-4 w-4 mr-1" />
+                      Photo
+                    </Button>
+                    
+                    <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={uploading}
+                          className="h-8 px-3 text-sm"
+                        >
+                          <Smile className="h-4 w-4 mr-1" />
+                          Emoji
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 z-50">
+                        <div className="grid grid-cols-10 gap-2">
+                          {EMOJI_REACTIONS.map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => insertEmoji(emoji)}
+                              className="p-2 hover:bg-muted rounded text-lg"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const hashtagText = '#';
+                        const newContent = content + hashtagText;
+                        setContent(newContent);
+                        setCursorPosition(newContent.length);
+                        setShowHashtagSuggestions(true);
+                        setTimeout(() => textareaRef.current?.focus(), 0);
+                      }}
+                      disabled={uploading}
+                      className="h-8 px-3 text-sm"
+                    >
+                      <Hash className="h-4 w-4 mr-1" />
+                      Hashtag
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const mentionText = '@';
+                        const newContent = content + mentionText;
+                        setContent(newContent);
+                        setCursorPosition(newContent.length);
+                        setShowMentionSuggestions(true);
+                        fetchMentionUsers('');
+                        setTimeout(() => textareaRef.current?.focus(), 0);
+                      }}
+                      disabled={uploading}
+                      className="h-8 px-3 text-sm"
+                    >
+                      <AtSign className="h-4 w-4 mr-1" />
+                      Mention
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsPublic(!isPublic)}
+                        disabled={uploading}
+                        className="h-8 px-3 text-sm"
+                      >
+                        {isPublic ? (
+                          <>
+                            <Globe className="h-4 w-4 mr-1" />
+                            Public
+                          </>
+                        ) : (
+                          <>
+                            <LockIcon className="h-4 w-4 mr-1" />
+                            Private
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    
+                    <Button
+                      type="submit"
+                      disabled={uploading || (!content.trim() && !selectedImage)}
+                      className="min-w-[80px] bg-gradient-to-r from-primary to-primary/80"
+                    >
+                      {uploading ? (
                         <>
-                          <Globe className="h-4 w-4 mr-1" />
-                          Public
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-foreground mr-2" />
+                          Posting...
                         </>
                       ) : (
                         <>
-                          <LockIcon className="h-4 w-4 mr-1" />
-                          Private
+                          <Send className="h-4 w-4 mr-2" />
+                          Post
                         </>
                       )}
                     </Button>
                   </div>
-                  
-                  <Button
-                    type="submit"
-                    disabled={uploading || (!content.trim() && !selectedImage)}
-                    className="min-w-[80px] bg-gradient-to-r from-primary to-primary/80"
-                  >
-                    {uploading ? (
-                      <>
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-foreground mr-2" />
-                        Posting...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4 mr-2" />
-                        Post
-                      </>
-                    )}
-                  </Button>
                 </div>
               )}
             </div>
