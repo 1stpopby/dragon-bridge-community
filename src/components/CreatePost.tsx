@@ -51,7 +51,13 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   // Close mention dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (mentionDropdownRef.current && !mentionDropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        mentionDropdownRef.current && 
+        !mentionDropdownRef.current.contains(target) &&
+        textareaRef.current &&
+        !textareaRef.current.contains(target)
+      ) {
         setShowMentionSuggestions(false);
       }
     };
@@ -68,7 +74,13 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   // Close hashtag dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (hashtagDropdownRef.current && !hashtagDropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        hashtagDropdownRef.current && 
+        !hashtagDropdownRef.current.contains(target) &&
+        textareaRef.current &&
+        !textareaRef.current.contains(target)
+      ) {
         setShowHashtagSuggestions(false);
       }
     };
@@ -107,6 +119,7 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 
   const fetchTrendingHashtags = async (query: string) => {
     try {
+      console.log('Fetching trending hashtags with query:', query);
       // Get recent posts to extract hashtags
       const { data: postsData, error } = await supabase
         .from('posts')
@@ -115,6 +128,8 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
         .limit(1000);
 
       if (error) throw error;
+
+      console.log('Posts data:', postsData?.length, 'posts');
 
       // Extract and count hashtags
       const hashtagCount: Record<string, number> = {};
@@ -128,11 +143,14 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
         });
       });
 
+      console.log('Hashtag count:', hashtagCount);
+
       // Sort by count and take top 10
       const trending = Object.keys(hashtagCount)
         .sort((a, b) => hashtagCount[b] - hashtagCount[a])
         .slice(0, 10);
 
+      console.log('Suggested hashtags:', trending);
       setSuggestedHashtags(trending);
     } catch (error) {
       console.error('Error fetching hashtags:', error);
