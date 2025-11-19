@@ -52,7 +52,7 @@ export function SelfEmployedListingDialog({ triggerButton }: SelfEmployedListing
       const { data, error } = await supabase
         .from('categories')
         .select('id, name')
-        .eq('type', 'service')
+        .eq('type', 'service_self_employed')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
