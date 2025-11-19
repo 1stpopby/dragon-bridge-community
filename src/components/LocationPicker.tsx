@@ -119,6 +119,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           />
         </div>
         <Button 
+          type="button"
           variant="outline" 
           size="icon" 
           onClick={handleSearch}
@@ -141,6 +142,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
       {isLoaded && (
         <Button
+          type="button"
           variant="outline"
           onClick={() => setShowMap(!showMap)}
           className="w-full"
