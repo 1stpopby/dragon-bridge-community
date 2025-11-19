@@ -740,6 +740,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          parent_reply_id: string | null
           post_id: string
           updated_at: string
           user_id: string | null
@@ -749,6 +750,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          parent_reply_id?: string | null
           post_id: string
           updated_at?: string
           user_id?: string | null
@@ -758,11 +760,19 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          parent_reply_id?: string | null
           post_id?: string
           updated_at?: string
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "forum_replies_parent_reply_id_fkey"
+            columns: ["parent_reply_id"]
+            isOneToOne: false
+            referencedRelation: "forum_replies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "forum_replies_post_id_fkey"
             columns: ["post_id"]

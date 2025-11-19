@@ -31,7 +31,97 @@ interface ForumReply {
   author_name: string;
   created_at: string;
   user_id?: string;
+  parent_reply_id?: string;
+  replies?: ForumReply[];
 }
+
+// ReplyItem component for rendering individual replies with nesting
+const ReplyItem = ({ 
+  reply, 
+  user, 
+  onReply, 
+  isLast, 
+  depth = 0 
+}: { 
+  reply: ForumReply; 
+  user: any; 
+  onReply: (replyId: string, authorName: string) => void;
+  isLast: boolean;
+  depth?: number;
+}) => {
+  const maxDepth = 3; // Maximum nesting depth
+  const hasReplies = reply.replies && reply.replies.length > 0;
+
+  return (
+    <div className={depth > 0 ? "ml-8 mt-4" : ""}>
+      <div className="flex items-start gap-4">
+        <Avatar className="h-10 w-10 flex-shrink-0">
+          <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-sm">
+            {reply.author_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 mb-2 flex-wrap">
+            <span className="font-medium text-sm">{reply.author_name}</span>
+            <span className="text-xs text-muted-foreground">
+              {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true })}
+            </span>
+          </div>
+          <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed mb-3">
+            {reply.content}
+          </p>
+          <div className="flex items-center gap-2">
+            {user && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onReply(reply.id, reply.author_name)}
+                className="h-7 text-xs gap-1.5"
+              >
+                <MessageCircle className="h-3 w-3" />
+                Răspunde
+              </Button>
+            )}
+            {user && user.id !== reply.user_id && (
+              <ReportDialog
+                contentType="forum_reply"
+                contentId={reply.id}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                  >
+                    <Flag className="h-3 w-3" />
+                    <span className="text-xs">Raportează</span>
+                  </Button>
+                }
+              />
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Nested replies */}
+      {hasReplies && depth < maxDepth && (
+        <div className="mt-4 space-y-4">
+          {reply.replies!.map((nestedReply, index) => (
+            <ReplyItem
+              key={nestedReply.id}
+              reply={nestedReply}
+              user={user}
+              onReply={onReply}
+              isLast={index === reply.replies!.length - 1}
+              depth={depth + 1}
+            />
+          ))}
+        </div>
+      )}
+      
+      {!isLast && depth === 0 && <Separator className="mt-6" />}
+    </div>
+  );
+};
 
 const ForumPost = () => {
   const { postId } = useParams();
@@ -46,6 +136,7 @@ const ForumPost = () => {
   const [likeCount, setLikeCount] = useState(0);
   const [dislikeCount, setDislikeCount] = useState(0);
   const [userReaction, setUserReaction] = useState<'like' | 'dislike' | null>(null);
+  const [replyingTo, setReplyingTo] = useState<{ id: string; author: string } | null>(null);
 
   const fetchPost = async () => {
     if (!postId) return;
@@ -69,7 +160,9 @@ const ForumPost = () => {
 
       if (repliesError) throw repliesError;
 
-      setReplies(repliesData || []);
+      // Organize replies into a tree structure
+      const organizedReplies = organizeReplies(repliesData || []);
+      setReplies(organizedReplies);
     } catch (error) {
       console.error('Error fetching post:', error);
       toast({
@@ -80,6 +173,36 @@ const ForumPost = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to organize flat replies into a tree structure
+  const organizeReplies = (flatReplies: ForumReply[]): ForumReply[] => {
+    const repliesMap = new Map<string, ForumReply>();
+    const rootReplies: ForumReply[] = [];
+
+    // First pass: create a map of all replies
+    flatReplies.forEach(reply => {
+      repliesMap.set(reply.id, { ...reply, replies: [] });
+    });
+
+    // Second pass: organize into tree structure
+    flatReplies.forEach(reply => {
+      const replyWithChildren = repliesMap.get(reply.id)!;
+      if (reply.parent_reply_id) {
+        const parent = repliesMap.get(reply.parent_reply_id);
+        if (parent) {
+          parent.replies = parent.replies || [];
+          parent.replies.push(replyWithChildren);
+        } else {
+          // Parent not found, treat as root
+          rootReplies.push(replyWithChildren);
+        }
+      } else {
+        rootReplies.push(replyWithChildren);
+      }
+    });
+
+    return rootReplies;
   };
 
   const handleReply = async (e: React.FormEvent) => {
@@ -94,23 +217,27 @@ const ForumPost = () => {
           post_id: postId,
           content: replyContent.trim(),
           author_name: profile.display_name,
-          user_id: user.id
+          user_id: user.id,
+          parent_reply_id: replyingTo?.id || null
         });
 
       if (error) throw error;
 
       setReplyContent("");
+      setReplyingTo(null);
       fetchPost(); // Refresh to get the new reply
       
       toast({
-        title: "Reply posted",
-        description: "Your reply has been posted successfully.",
+        title: "Răspuns publicat",
+        description: replyingTo 
+          ? `Răspunsul tău către ${replyingTo.author} a fost publicat.`
+          : "Răspunsul tău a fost publicat cu succes.",
       });
     } catch (error) {
       console.error('Error posting reply:', error);
       toast({
-        title: "Error",
-        description: "Failed to post reply. Please try again.",
+        title: "Eroare",
+        description: "Nu s-a putut publica răspunsul. Te rugăm să încerci din nou.",
         variant: "destructive",
       });
     } finally {
@@ -336,12 +463,28 @@ const ForumPost = () => {
             {user && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Post a Reply</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">
+                      {replyingTo ? `Răspunzi lui ${replyingTo.author}` : 'Postează un răspuns'}
+                    </CardTitle>
+                    {replyingTo && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setReplyingTo(null);
+                          setReplyContent("");
+                        }}
+                      >
+                        Anulează
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleReply} className="space-y-4">
                     <Textarea
-                      placeholder="Write your reply..."
+                      placeholder={replyingTo ? `Răspunzi lui ${replyingTo.author}...` : "Scrie răspunsul tău..."}
                       value={replyContent}
                       onChange={(e) => setReplyContent(e.target.value)}
                       rows={4}
@@ -357,7 +500,7 @@ const ForumPost = () => {
                         ) : (
                           <Send className="h-4 w-4 mr-2" />
                         )}
-                        Post Reply
+                        Postează răspunsul
                       </Button>
                     </div>
                   </form>
@@ -370,56 +513,29 @@ const ForumPost = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MessageCircle className="h-5 w-5" />
-                  Replies ({replies.length})
+                  Răspunsuri ({replies.reduce((count, reply) => count + 1 + (reply.replies?.length || 0), 0)})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {replies.length > 0 ? (
                   <div className="space-y-6">
                     {replies.map((reply, index) => (
-                      <div key={reply.id}>
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-sm">
-                              {reply.author_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="font-medium text-sm">{reply.author_name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true })}
-                              </span>
-                              {user && user.id !== reply.user_id && (
-                                <ReportDialog
-                                  contentType="forum_reply"
-                                  contentId={reply.id}
-                                  trigger={
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="ml-auto h-7 gap-1 hover:text-red-500 hover:bg-red-50 transition-colors"
-                                    >
-                                      <Flag className="h-3 w-3" />
-                                      <span className="text-xs">Raportează</span>
-                                    </Button>
-                                  }
-                                />
-                              )}
-                            </div>
-                            <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                              {reply.content}
-                            </p>
-                          </div>
-                        </div>
-                        {index < replies.length - 1 && <Separator className="mt-6" />}
-                      </div>
+                      <ReplyItem
+                        key={reply.id}
+                        reply={reply}
+                        user={user}
+                        onReply={(replyId, authorName) => {
+                          setReplyingTo({ id: replyId, author: authorName });
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        isLast={index === replies.length - 1}
+                      />
                     ))}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No replies yet. Be the first to comment!</p>
+                    <p>Niciun răspuns încă. Fii primul care comentează!</p>
                   </div>
                 )}
               </CardContent>
