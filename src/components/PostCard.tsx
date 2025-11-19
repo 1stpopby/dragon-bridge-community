@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import CompanyLink from "@/components/CompanyLink";
-import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Send, Share2, Bookmark, Eye, UserPlus, UserCheck, Flag } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, Send, Share2, Bookmark, Globe, Lock, UserPlus, UserCheck, Flag } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -476,19 +476,13 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
                 </Avatar>
               </div>
               <div className="space-y-1 flex-1 min-w-0">
-                <div 
-                  className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer truncate"
-                  onClick={() => navigate(`/user/${post.user_id}`)}
-                >
-                  {post.author_name}
-                </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <CompanyLink 
-                    authorName={post.author_name} 
-                    userId={post.user_id}
-                    className="text-sm"
-                    showBadge={true}
-                  />
+                  <span 
+                    className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer"
+                    onClick={() => navigate(`/user/${post.user_id}`)}
+                  >
+                    {post.author_name}
+                  </span>
                   {isRecent && (
                     <Badge variant="secondary" className="text-xs px-2 py-0.5">
                       New
@@ -499,7 +493,7 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
                   <span>{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
                   <span>•</span>
                   <div className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" />
+                    <Globe className="h-3 w-3" />
                     <span className="text-xs">Public</span>
                   </div>
                 </div>
