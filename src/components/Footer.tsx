@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import roeuLogo from "@/assets/roeu-logo.png";
 
 const Footer = () => {
   return (
@@ -7,15 +8,12 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and Description */}
           <div className="md:col-span-2">
-            <Link to="/" className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">中</span>
-              </div>
-              <span className="font-bold text-xl text-foreground">UK Chinese Community</span>
+            <Link to="/" className="flex items-center mb-4">
+              <img src={roeuLogo} alt="RoEu" className="h-10 w-auto" />
             </Link>
             <p className="text-muted-foreground mb-4 max-w-md">
-              Connecting Chinese residents across the United Kingdom. Share experiences, 
-              find support, and celebrate our culture together.
+              Conectează românii din Regatul Unit. Împărtășește experiențe, 
+              găsește suport și celebrează cultura noastră împreună.
             </p>
             <div className="text-sm text-muted-foreground">
               © 2024 UK Chinese Community. All rights reserved.
