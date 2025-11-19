@@ -40,7 +40,10 @@ const Profile = () => {
     company_address: (profile as any)?.company_address || '',
     company_size: (profile as any)?.company_size || '',
     company_founded: (profile as any)?.company_founded || '',
-    company_cover_image: (profile as any)?.company_cover_image || ''
+    company_cover_image: (profile as any)?.company_cover_image || '',
+    // Password fields
+    new_password: '',
+    confirm_password: ''
   });
 
   useEffect(() => {
@@ -61,7 +64,10 @@ const Profile = () => {
         company_address: (profile as any)?.company_address || '',
         company_size: (profile as any)?.company_size || '',
         company_founded: (profile as any)?.company_founded || '',
-        company_cover_image: (profile as any)?.company_cover_image || ''
+        company_cover_image: (profile as any)?.company_cover_image || '',
+        // Password fields
+        new_password: '',
+        confirm_password: ''
       });
     }
   }, [profile]);
@@ -204,39 +210,73 @@ const Profile = () => {
     e.preventDefault();
     setLoading(true);
 
-    console.log('Starting profile update with data:', formData);
-    console.log('User ID:', user?.id);
-
     try {
       // Prepare the data, converting empty strings to null for date fields
-      const updateData = {
-        ...formData,
-        company_founded: formData.company_founded || null, // Convert empty string to null
+      const updateData: any = {
+        display_name: formData.display_name,
+        bio: formData.bio,
+        location: formData.location,
+        phone: formData.phone,
+        company_name: formData.company_name,
+        contact_email: formData.contact_email,
+        account_type: formData.account_type,
+        company_description: formData.company_description,
+        company_website: formData.company_website,
+        company_phone: formData.company_phone,
+        company_address: formData.company_address,
+        company_size: formData.company_size,
+        company_founded: formData.company_founded || null,
       };
 
-      console.log('Prepared update data:', updateData);
-
-      const { error, data } = await supabase
+      // Update profile
+      const { error: profileError } = await supabase
         .from('profiles')
         .update(updateData)
         .eq('user_id', user?.id);
 
-      console.log('Update response:', { error, data });
+      if (profileError) throw profileError;
 
-      if (error) throw error;
+      // Handle password change
+      if (formData.new_password) {
+        if (formData.new_password !== formData.confirm_password) {
+          throw new Error("Parolele nu se potrivesc");
+        }
+
+        if (formData.new_password.length < 6) {
+          throw new Error("Parola trebuie să aibă cel puțin 6 caractere");
+        }
+
+        const { error: passwordError } = await supabase.auth.updateUser({
+          password: formData.new_password
+        });
+
+        if (passwordError) throw passwordError;
+
+        // Clear password fields
+        setFormData(prev => ({
+          ...prev,
+          new_password: '',
+          confirm_password: '',
+        }));
+
+        toast({
+          title: "Parolă schimbată",
+          description: "Parola ta a fost actualizată cu succes",
+        });
+      }
 
       // Refresh the profile data in the auth context
       await refreshProfile();
 
       toast({
-        title: "Profile updated",
-        description: "Your profile has been updated.",
+        title: "Profil actualizat",
+        description: "Profilul tău a fost actualizat",
       });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: "Profile update failed",
-        description: error instanceof Error ? error.message : "Please try again later.",
+        title: "Eroare actualizare profil",
+        description: error instanceof Error ? error.message : "Te rog încearcă din nou",
         variant: "destructive",
       });
     } finally {
@@ -497,31 +537,29 @@ const Profile = () => {
                 />
               </div>
 
-              {/* Language Settings */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <span>🇺🇸</span>
-                  <span>English</span>
-                </Label>
-                <Select value="en" onValueChange={() => {}}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">
-                      <div className="flex items-center gap-2">
-                        <span>🇺🇸</span>
-                        <span>English</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="zh">
-                      <div className="flex items-center gap-2">
-                        <span>🇨🇳</span>
-                        <span>Chinese</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+              {/* Password Change */}
+              <div className="space-y-4 pt-4 border-t">
+                <h3 className="text-lg font-semibold">Schimbă Parola</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new_password">Parolă Nouă</Label>
+                    <Input
+                      id="new_password"
+                      type="password"
+                      placeholder="Introdu parola nouă"
+                      onChange={(e) => setFormData(prev => ({ ...prev, new_password: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm_password">Confirmă Parola</Label>
+                    <Input
+                      id="confirm_password"
+                      type="password"
+                      placeholder="Confirmă parola"
+                      onChange={(e) => setFormData(prev => ({ ...prev, confirm_password: e.target.value }))}
+                    />
+                  </div>
+                </div>
               </div>
 
               <Button type="submit" disabled={loading} className="w-full">
