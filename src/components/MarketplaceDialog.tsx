@@ -89,6 +89,9 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
     if (open) {
       if (mode === 'edit' && item) {
         // Reset form data for edit mode
+        // Filter out emails from seller_contact - only allow phone numbers
+        const contactValue = item.seller_contact?.includes('@') ? '' : item.seller_contact || '';
+        
         setFormData({
           title: item.title || '',
           description: item.description || '',
@@ -98,18 +101,20 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
           condition: item.condition || 'good',
           location: item.location || '',
           seller_name: item.seller_name || '',
-          seller_contact: item.seller_contact || '',
+          seller_contact: contactValue,
           image_url: item.image_url || ''
         });
         setPreviewUrl(item.image_url || '');
         setSelectedFile(null);
       } else if (mode === 'create' && profile) {
-        // Set profile data for create mode
+        // Set profile data for create mode - use phone only
+        const phoneValue = profile.phone || '';
+        
         setFormData(prev => ({
           ...prev,
           location: prev.location || profile.location || '',
           seller_name: prev.seller_name || profile.display_name || '',
-          seller_contact: prev.seller_contact || profile.phone || ''
+          seller_contact: phoneValue
         }));
       }
     }
