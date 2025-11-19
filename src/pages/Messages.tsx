@@ -5,10 +5,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import MobileNavigation from "@/components/MobileNavigation";
-import { MessageDialog } from "@/components/MessageDialog";
 import { formatDistanceToNow } from "date-fns";
 
 interface Message {
@@ -31,10 +30,9 @@ interface Conversation {
 
 const Messages = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -126,15 +124,7 @@ const Messages = () => {
   };
 
   const handleConversationClick = (conversation: Conversation) => {
-    setSelectedConversation(conversation);
-    setMessageDialogOpen(true);
-  };
-
-  const handleMessageDialogClose = () => {
-    setMessageDialogOpen(false);
-    setSelectedConversation(null);
-    // Refresh messages to update read status
-    fetchMessages();
+    navigate(`/messages/conversation/${conversation.other_user_id}`);
   };
 
   if (!user) {
@@ -217,16 +207,6 @@ const Messages = () => {
             </ScrollArea>
           </CardContent>
         </Card>
-
-        {/* Message Dialog */}
-        {selectedConversation && (
-          <MessageDialog
-            open={messageDialogOpen}
-            onOpenChange={handleMessageDialogClose}
-            conversationPartnerId={selectedConversation.other_user_id}
-            initialMessage={selectedConversation.latest_message}
-          />
-        )}
       </div>
       <MobileNavigation />
     </div>
