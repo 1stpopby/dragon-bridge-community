@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Clock, Heart, ThumbsUp, TrendingUp, Eye, Flag } from "lucide-react";
+import { MessageSquare, Clock, Heart, ThumbsUp, TrendingUp, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { ReportDialog } from "@/components/ReportDialog";
@@ -131,53 +131,36 @@ export const ForumPostCard = ({ post, onClick }: ForumPostCardProps) => {
           </div>
 
           {/* Post Stats */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6 text-sm text-slate-500 dark:text-slate-400">
-              <div className="flex items-center space-x-1">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-1.5">
                 <MessageSquare className="h-4 w-4" />
-                <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
+                <span className="whitespace-nowrap">{replyCount} răspunsuri</span>
               </div>
               
-              {reactionCount > 0 && (
-                <div className="flex items-center space-x-1">
-                  <Heart className="h-4 w-4" />
-                  <span>{reactionCount} {reactionCount === 1 ? 'reaction' : 'reactions'}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-1.5">
+                <Heart className="h-4 w-4" />
+                <span className="whitespace-nowrap">{reactionCount} reacții</span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-primary hover:text-primary/80 hover:bg-primary/5 rounded-lg"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCardClick();
-                }}
-              >
-                <Eye className="h-4 w-4 mr-1" />
-                View Discussion
-              </Button>
-
-              {user && user.id !== post.user_id && (
-                <ReportDialog
-                  contentType="forum_post"
-                  contentId={post.id}
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-1 hover:text-red-500 hover:bg-red-50 transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Flag className="h-4 w-4" />
-                      <span className="font-medium">Raportează</span>
-                    </Button>
-                  }
-                />
-              )}
-            </div>
+            {user && user.id !== post.user_id && (
+              <ReportDialog
+                contentType="forum_post"
+                contentId={post.id}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Flag className="h-4 w-4" />
+                    <span className="font-medium">Raportează</span>
+                  </Button>
+                }
+              />
+            )}
           </div>
         </div>
       </div>
