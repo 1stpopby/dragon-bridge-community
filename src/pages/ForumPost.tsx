@@ -10,9 +10,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, MessageCircle, Heart, Send, Clock, User } from "lucide-react";
+import { ArrowLeft, MessageCircle, Heart, Send, Clock, User, ThumbsUp, ThumbsDown, Flag } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { AdvertisementBanner } from "@/components/AdvertisementBanner";
+import { ReportDialog } from "@/components/ReportDialog";
 
 interface ForumPost {
   id: string;
@@ -42,6 +43,9 @@ const ForumPost = () => {
   const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [dislikeCount, setDislikeCount] = useState(0);
+  const [userReaction, setUserReaction] = useState<'like' | 'dislike' | null>(null);
 
   const fetchPost = async () => {
     if (!postId) return;
@@ -116,7 +120,94 @@ const ForumPost = () => {
 
   useEffect(() => {
     fetchPost();
+    if (postId) {
+      fetchReactions();
+    }
   }, [postId]);
+
+  const fetchReactions = async () => {
+    if (!postId) return;
+
+    try {
+      const { data: reactions, error } = await supabase
+        .from('forum_post_reactions')
+        .select('*')
+        .eq('post_id', postId);
+
+      if (error) throw error;
+
+      const likes = reactions?.filter(r => r.emoji === '👍').length || 0;
+      const dislikes = reactions?.filter(r => r.emoji === '👎').length || 0;
+      
+      setLikeCount(likes);
+      setDislikeCount(dislikes);
+
+      if (user) {
+        const userLike = reactions?.find(r => r.user_id === user.id && r.emoji === '👍');
+        const userDislike = reactions?.find(r => r.user_id === user.id && r.emoji === '👎');
+        
+        if (userLike) setUserReaction('like');
+        else if (userDislike) setUserReaction('dislike');
+        else setUserReaction(null);
+      }
+    } catch (error) {
+      console.error('Error fetching reactions:', error);
+    }
+  };
+
+  const handleReaction = async (type: 'like' | 'dislike') => {
+    if (!user || !profile || !postId) {
+      toast({
+        title: "Autentificare necesară",
+        description: "Trebuie să fii autentificat pentru a reacționa",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const emoji = type === 'like' ? '👍' : '👎';
+      
+      // Check if user already has this reaction
+      if (userReaction === type) {
+        // Remove reaction
+        await supabase
+          .from('forum_post_reactions')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id)
+          .eq('emoji', emoji);
+      } else {
+        // Remove any existing reaction first
+        if (userReaction) {
+          await supabase
+            .from('forum_post_reactions')
+            .delete()
+            .eq('post_id', postId)
+            .eq('user_id', user.id);
+        }
+
+        // Add new reaction
+        await supabase
+          .from('forum_post_reactions')
+          .insert({
+            post_id: postId,
+            emoji: emoji,
+            author_name: profile.display_name,
+            user_id: user.id
+          });
+      }
+
+      fetchReactions();
+    } catch (error) {
+      console.error('Error handling reaction:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut actualiza reacția",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -193,10 +284,50 @@ const ForumPost = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="prose max-w-none">
+                <div className="prose max-w-none mb-6">
                   <p className="whitespace-pre-wrap text-foreground leading-relaxed">
                     {post.content}
                   </p>
+                </div>
+
+                {/* Reactions and Report */}
+                <div className="flex items-center gap-3 pt-4 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleReaction('like')}
+                    className={`gap-2 ${userReaction === 'like' ? 'text-primary bg-primary/10' : ''}`}
+                  >
+                    <ThumbsUp className="h-4 w-4" />
+                    <span className="font-medium">{likeCount}</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleReaction('dislike')}
+                    className={`gap-2 ${userReaction === 'dislike' ? 'text-destructive bg-destructive/10' : ''}`}
+                  >
+                    <ThumbsDown className="h-4 w-4" />
+                    <span className="font-medium">{dislikeCount}</span>
+                  </Button>
+
+                  {user && user.id !== post.user_id && (
+                    <ReportDialog
+                      contentType="forum_post"
+                      contentId={post.id}
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-2 hover:text-red-500 hover:bg-red-50 transition-colors ml-auto"
+                        >
+                          <Flag className="h-4 w-4" />
+                          <span className="font-medium">Raportează</span>
+                        </Button>
+                      }
+                    />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -259,6 +390,22 @@ const ForumPost = () => {
                               <span className="text-xs text-muted-foreground">
                                 {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true })}
                               </span>
+                              {user && user.id !== reply.user_id && (
+                                <ReportDialog
+                                  contentType="forum_reply"
+                                  contentId={reply.id}
+                                  trigger={
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="ml-auto h-7 gap-1 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                    >
+                                      <Flag className="h-3 w-3" />
+                                      <span className="text-xs">Raportează</span>
+                                    </Button>
+                                  }
+                                />
+                              )}
                             </div>
                             <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                               {reply.content}

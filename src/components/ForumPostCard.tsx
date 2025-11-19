@@ -147,22 +147,6 @@ export const ForumPostCard = ({ post, onClick }: ForumPostCardProps) => {
             </div>
 
             <div className="flex items-center gap-2">
-              {user && user.id !== post.user_id && (
-                <ReportDialog
-                  contentType="forum_post"
-                  contentId={post.id}
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Flag className="h-4 w-4" />
-                    </Button>
-                  }
-                />
-              )}
-              
               <Button
                 variant="ghost"
                 size="sm"
@@ -175,6 +159,24 @@ export const ForumPostCard = ({ post, onClick }: ForumPostCardProps) => {
                 <Eye className="h-4 w-4 mr-1" />
                 View Discussion
               </Button>
+
+              {user && user.id !== post.user_id && (
+                <ReportDialog
+                  contentType="forum_post"
+                  contentId={post.id}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Flag className="h-4 w-4" />
+                      <span className="font-medium">Raportează</span>
+                    </Button>
+                  }
+                />
+              )}
             </div>
           </div>
         </div>
