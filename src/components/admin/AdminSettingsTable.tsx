@@ -270,6 +270,67 @@ export const AdminSettingsTable = ({ onDataChange }: AdminSettingsTableProps) =>
     img.src = URL.createObjectURL(file);
   };
 
+  const handleFaviconUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type - favicons support ICO, PNG, SVG
+    const allowedTypes = ['image/x-icon', 'image/vnd.microsoft.icon', 'image/png', 'image/svg+xml'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an ICO, PNG, or SVG file for favicon.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 2MB for favicon)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload a file smaller than 2MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `favicon-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      updateFormData('favicon_url', publicUrl);
+      
+      // Auto-save the favicon URL
+      await handleSave('favicon_url');
+      
+      toast({
+        title: "Favicon uploaded",
+        description: "Favicon has been uploaded and saved successfully. It will appear on browser refresh.",
+      });
+    } catch (error) {
+      console.error('Error uploading favicon:', error);
+      toast({
+        title: "Error uploading favicon",
+        description: "Failed to upload favicon. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   useEffect(() => {
     fetchSettings();
   }, []);
