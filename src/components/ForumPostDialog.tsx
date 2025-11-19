@@ -64,7 +64,7 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
       <Button asChild size="default" className="sm:w-auto">
         <Link to="/auth" className="flex items-center gap-2">
           <Lock className="h-4 w-4" />
-          Sign in to Post
+          Autentifică-te pentru a posta
         </Link>
       </Button>
     );
@@ -75,8 +75,8 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
     
     if (!title.trim() || !content.trim() || !category) {
       toast({
-        title: "Missing information",
-        description: "Please fill in all fields including category",
+        title: "Informații lipsă",
+        description: "Te rugăm să completezi toate câmpurile inclusiv categoria",
         variant: "destructive",
       });
       return;
@@ -98,8 +98,8 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
       if (error) throw error;
 
       toast({
-        title: "Post created successfully!",
-        description: "Your post has been added to the forum.",
+        title: "Postarea a fost creată cu succes!",
+        description: "Postarea ta a fost adăugată în forum.",
       });
 
       setTitle("");
@@ -110,8 +110,8 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
     } catch (error) {
       console.error('Error creating post:', error);
       toast({
-        title: "Error creating post",
-        description: "Please try again later.",
+        title: "Eroare la crearea postării",
+        description: "Te rugăm să încerci din nou mai târziu.",
         variant: "destructive",
       });
     } finally {
@@ -124,16 +124,16 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
       <DialogTrigger asChild>
         <Button size="default" className="sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
-          New Post
+          Postare Nouă
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Post</DialogTitle>
+          <DialogTitle>Creează Postare Nouă</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label>Posting as</Label>
+            <Label>Postezi ca</Label>
             <div className="p-3 bg-muted rounded-md">
               <p className="text-sm font-medium">{profile.display_name}</p>
               {profile.company_name && (
@@ -142,10 +142,10 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="category">Categorie</Label>
             <Select value={category} onValueChange={setCategory} required>
               <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder="Selectează o categorie" />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (
@@ -163,22 +163,22 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">Titlu</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="What's your question or topic?"
+              placeholder="Care este întrebarea sau subiectul tău?"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="content">Content</Label>
+            <Label htmlFor="content">Conținut</Label>
             <Textarea
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Share your thoughts, ask a question, or start a discussion..."
+              placeholder="Împărtășește-ți gândurile, pune o întrebare sau începe o discuție..."
               rows={4}
               required
             />
@@ -189,10 +189,10 @@ export const ForumPostDialog = ({ onPostCreated }: ForumPostDialogProps) => {
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              Anulează
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Post"}
+              {isSubmitting ? "Se creează..." : "Creează Postarea"}
             </Button>
           </div>
         </form>

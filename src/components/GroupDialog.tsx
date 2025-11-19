@@ -116,8 +116,8 @@ export function GroupDialog({ group, onGroupSaved, mode = 'create' }: GroupDialo
         if (error) throw error;
 
         toast({
-          title: "Group created successfully!",
-          description: "Your community group has been added.",
+          title: "Grupul a fost creat cu succes!",
+          description: "Grupul tău comunitar a fost adăugat.",
         });
       } else {
         const { error } = await supabase
@@ -128,8 +128,8 @@ export function GroupDialog({ group, onGroupSaved, mode = 'create' }: GroupDialo
         if (error) throw error;
 
         toast({
-          title: "Group updated successfully!",
-          description: "Your changes have been saved.",
+          title: "Grupul a fost actualizat cu succes!",
+          description: "Modificările tale au fost salvate.",
         });
       }
 
@@ -155,8 +155,8 @@ export function GroupDialog({ group, onGroupSaved, mode = 'create' }: GroupDialo
     } catch (error) {
       console.error('Error saving group:', error);
       toast({
-        title: "Error saving group",
-        description: "Please try again later.",
+        title: "Eroare la salvarea grupului",
+        description: "Te rugăm să încerci din nou mai târziu.",
         variant: "destructive",
       });
     } finally {
@@ -177,85 +177,85 @@ export function GroupDialog({ group, onGroupSaved, mode = 'create' }: GroupDialo
             <Button asChild size="default" className="sm:w-auto">
               <Link to="/auth" className="flex items-center gap-2">
                 <Lock className="h-4 w-4" />
-                Sign in to Create Group
+                Autentifică-te pentru a crea un grup
               </Link>
             </Button>
           ) : (
             <Button size="default" className="sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              Create Group
+              Creează Grup
             </Button>
           )
         ) : (
           <Button variant="outline" size="sm">
             <Edit2 className="h-4 w-4 mr-1" />
-            Edit
+            Editează
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create' ? 'Create New Group' : 'Edit Group'}
+            {mode === 'create' ? 'Creează Grup Nou' : 'Editează Grup'}
           </DialogTitle>
           <DialogDescription>
             {mode === 'create' 
-              ? 'Fill in the details to create a new community group.'
-              : 'Update the group details below.'
+              ? 'Completează detaliile pentru a crea un grup comunitar nou.'
+              : 'Actualizează detaliile grupului mai jos.'
             }
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <Label htmlFor="name">Group Name</Label>
+              <Label htmlFor="name">Numele Grupului</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Enter group name"
+                placeholder="Introdu numele grupului"
                 required
               />
             </div>
             <div className="col-span-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Descriere</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Describe your group"
+                placeholder="Descrie grupul tău"
                 rows={3}
               />
             </div>
             <div>
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">Locație</Label>
               <Input
                 id="location"
                 value={formData.location}
                 onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="Group location"
+                placeholder="Locația grupului"
                 required
               />
             </div>
             <div>
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Categorie</Label>
               <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Selectează categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Professional">Professional</SelectItem>
-                  <SelectItem value="Family">Family</SelectItem>
-                  <SelectItem value="Students">Students</SelectItem>
+                  <SelectItem value="Professional">Profesional</SelectItem>
+                  <SelectItem value="Family">Familie</SelectItem>
+                  <SelectItem value="Students">Studenți</SelectItem>
                   <SelectItem value="Cultural">Cultural</SelectItem>
                   <SelectItem value="Social">Social</SelectItem>
-                  <SelectItem value="Sports">Sports</SelectItem>
-                  <SelectItem value="Health">Health</SelectItem>
+                  <SelectItem value="Sports">Sport</SelectItem>
+                  <SelectItem value="Health">Sănătate</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="col-span-2">
-              <Label>Organizer</Label>
+              <Label>Organizator</Label>
               {mode === 'create' && profile ? (
                 <div className="p-3 bg-muted rounded-md">
                   <p className="text-sm font-medium">{profile.display_name}</p>
@@ -268,13 +268,13 @@ export function GroupDialog({ group, onGroupSaved, mode = 'create' }: GroupDialo
                   id="organizer_name"
                   value={formData.organizer_name}
                   onChange={(e) => handleInputChange('organizer_name', e.target.value)}
-                  placeholder="Organizer name"
+                  placeholder="Numele organizatorului"
                   required
                 />
               )}
             </div>
             <div className="col-span-2">
-              <Label htmlFor="image">Group Image (optional)</Label>
+              <Label htmlFor="image">Imagine Grup (opțional)</Label>
               <div className="space-y-4">
                 {/* File Input */}
                 <div className="flex items-center gap-2">
@@ -285,7 +285,7 @@ export function GroupDialog({ group, onGroupSaved, mode = 'create' }: GroupDialo
                     disabled={uploadingImage}
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    Choose Image
+                    Alege Imagine
                   </Button>
                   <input
                     ref={fileInputRef}
@@ -306,7 +306,7 @@ export function GroupDialog({ group, onGroupSaved, mode = 'create' }: GroupDialo
                   <div className="relative">
                     <img
                       src={previewUrl}
-                      alt="Group preview"
+                      alt="Previzualizare grup"
                       className="w-full h-32 object-cover rounded-md border"
                     />
                     <Button
@@ -325,10 +325,10 @@ export function GroupDialog({ group, onGroupSaved, mode = 'create' }: GroupDialo
           </div>
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              Anulează
             </Button>
             <Button type="submit" disabled={loading || uploadingImage}>
-              {loading ? 'Saving...' : mode === 'create' ? 'Create Group' : 'Update Group'}
+              {loading ? 'Se salvează...' : mode === 'create' ? 'Creează Grupul' : 'Actualizează Grupul'}
             </Button>
           </div>
         </form>
