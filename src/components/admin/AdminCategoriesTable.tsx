@@ -142,6 +142,24 @@ export const AdminCategoriesTable = ({ onDataChange }: AdminCategoriesTableProps
     e.preventDefault();
     try {
       if (editingCategory) {
+        // Check if another category with the same name and type exists
+        const { data: existingCategory } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('name', formData.name)
+          .eq('type', formData.type)
+          .neq('id', editingCategory.id)
+          .single();
+
+        if (existingCategory) {
+          toast({
+            title: "Duplicate category",
+            description: "A category with this name and type already exists.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         const { error } = await supabase
           .from('categories')
           .update(formData)
