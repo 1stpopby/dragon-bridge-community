@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Phone, Mail, Search, CheckCircle, Calendar, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +24,8 @@ const Services = () => {
   const [companyJobs, setCompanyJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categories, setCategories] = useState<any[]>([]);
   const { toast } = useToast();
   const { user, profile } = useAuth();
 
@@ -79,18 +82,44 @@ const Services = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .in('type', ['service', 'service_self_employed'])
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
   const filterListings = (listings: any[]) => {
-    if (!searchTerm) return listings;
-    return listings.filter(listing => 
-      listing.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      listing.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      listing.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      listing.specialty?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    let filtered = listings;
+    
+    if (searchTerm) {
+      filtered = filtered.filter(listing => 
+        listing.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.specialty?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (categoryFilter && categoryFilter !== 'all') {
+      filtered = filtered.filter(listing => listing.category === categoryFilter);
+    }
+
+    return filtered;
   };
 
   useEffect(() => {
     fetchListings();
+    fetchCategories();
   }, []);
 
   const SelfEmployedCard = ({ listing }: { listing: any }) => (
@@ -223,15 +252,30 @@ const Services = () => {
         </div>
 
         <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-            <Input
-              type="text"
-              placeholder="Caută după nume, specializare, locație..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+              <Input
+                type="text"
+                placeholder="Caută după nume, specializare, locație..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Toate categoriile" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate categoriile</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.name}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
