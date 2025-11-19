@@ -24,15 +24,11 @@ export const UserButton = () => {
 
   if (!user || !profile) {
     return (
-      <Button 
-        variant="default" 
-        onClick={() => {
-          console.log('Navigating to /auth');
-          navigate('/auth');
-        }}
-      >
-        Autentificare
-      </Button>
+      <Link to="/auth">
+        <Button variant="default">
+          Autentificare
+        </Button>
+      </Link>
     );
   }
 

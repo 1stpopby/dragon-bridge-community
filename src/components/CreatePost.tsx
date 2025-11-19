@@ -26,12 +26,7 @@ const EMOJI_REACTIONS = [
   '🎉', '😎', '🤗', '😢', '😡', '🙏', '👏', '🚀', '💪', '🌟'
 ];
 
-// Common hashtags
-const SUGGESTED_HASHTAGS = [
-  '#ChineseCommunity', '#UKLife', '#London', '#Edinburgh', '#Business',
-  '#Networking', '#Events', '#Culture', '#Food', '#Travel', '#Career',
-  '#Education', '#Technology', '#Healthcare', '#Legal', '#Finance'
-];
+// Hashtags will be fetched dynamically from posts
 
 const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const { user, profile } = useAuth();
@@ -47,9 +42,11 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const [mentionUsers, setMentionUsers] = useState<MentionUser[]>([]);
   const [cursorPosition, setCursorPosition] = useState(0);
   const [isPublic, setIsPublic] = useState(true);
+  const [suggestedHashtags, setSuggestedHashtags] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mentionDropdownRef = useRef<HTMLDivElement>(null);
+  const hashtagDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close mention dropdown when clicking outside
   useEffect(() => {
@@ -67,6 +64,23 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showMentionSuggestions]);
+
+  // Close hashtag dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (hashtagDropdownRef.current && !hashtagDropdownRef.current.contains(event.target as Node)) {
+        setShowHashtagSuggestions(false);
+      }
+    };
+
+    if (showHashtagSuggestions) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showHashtagSuggestions]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -88,6 +102,41 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       setMentionUsers(data || []);
     } catch (error) {
       console.error('Error fetching mention users:', error);
+    }
+  };
+
+  const fetchTrendingHashtags = async (query: string) => {
+    try {
+      // Get recent posts to extract hashtags
+      const { data: postsData, error } = await supabase
+        .from('posts')
+        .select('content')
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // Last 30 days
+        .limit(1000);
+
+      if (error) throw error;
+
+      // Extract and count hashtags
+      const hashtagCount: Record<string, number> = {};
+      postsData?.forEach(post => {
+        const hashtags = post.content.match(/#[a-zA-Z0-9_]+/g) || [];
+        hashtags.forEach(tag => {
+          const cleanTag = tag.toLowerCase();
+          if (!query || cleanTag.includes(query.toLowerCase())) {
+            hashtagCount[cleanTag] = (hashtagCount[cleanTag] || 0) + 1;
+          }
+        });
+      });
+
+      // Sort by count and take top 10
+      const trending = Object.keys(hashtagCount)
+        .sort((a, b) => hashtagCount[b] - hashtagCount[a])
+        .slice(0, 10);
+
+      setSuggestedHashtags(trending);
+    } catch (error) {
+      console.error('Error fetching hashtags:', error);
+      setSuggestedHashtags([]);
     }
   };
 
@@ -119,12 +168,14 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
     const lastHashIndex = value.lastIndexOf('#', position - 1);
     if (lastHashIndex !== -1 && lastHashIndex === position - 1) {
       setShowHashtagSuggestions(true);
+      fetchTrendingHashtags('');
     } else if (lastHashIndex !== -1) {
       const hashtagText = value.substring(lastHashIndex + 1, position);
       if (hashtagText.includes(' ')) {
         setShowHashtagSuggestions(false);
       } else {
         setShowHashtagSuggestions(true);
+        fetchTrendingHashtags(hashtagText);
       }
     } else {
       setShowHashtagSuggestions(false);
@@ -370,13 +421,16 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                 )}
 
                 {/* Hashtag suggestions */}
-                {showHashtagSuggestions && (
-                  <div className="absolute top-full left-0 mt-1 w-64 bg-background border rounded-lg shadow-lg z-10">
+                {showHashtagSuggestions && suggestedHashtags.length > 0 && (
+                  <div 
+                    ref={hashtagDropdownRef}
+                    className="absolute top-full left-0 mt-1 w-64 bg-background border rounded-lg shadow-lg z-50"
+                  >
                     <div className="p-2 border-b">
                       <p className="text-sm font-medium">Suggested hashtags</p>
                     </div>
                     <div className="max-h-48 overflow-y-auto">
-                      {SUGGESTED_HASHTAGS.map((hashtag) => (
+                      {suggestedHashtags.map((hashtag) => (
                         <button
                           key={hashtag}
                           type="button"
