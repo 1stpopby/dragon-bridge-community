@@ -1762,19 +1762,26 @@ export type Database = {
           description: string | null
           email: string | null
           featured: boolean | null
+          has_cscs: boolean | null
           id: string
           image_url: string | null
           languages: string[] | null
+          listing_type: string | null
           location: string
           name: string
+          nino: string | null
           phone: string | null
           rating: number | null
           reviews_count: number | null
+          right_to_work: boolean | null
           specialty: string
           updated_at: string
           user_id: string | null
+          utr_number: string | null
+          valid_from: string | null
           verified: boolean | null
           website: string | null
+          years_experience: number | null
         }
         Insert: {
           business_hours?: Json | null
@@ -1784,19 +1791,26 @@ export type Database = {
           description?: string | null
           email?: string | null
           featured?: boolean | null
+          has_cscs?: boolean | null
           id?: string
           image_url?: string | null
           languages?: string[] | null
+          listing_type?: string | null
           location: string
           name: string
+          nino?: string | null
           phone?: string | null
           rating?: number | null
           reviews_count?: number | null
+          right_to_work?: boolean | null
           specialty: string
           updated_at?: string
           user_id?: string | null
+          utr_number?: string | null
+          valid_from?: string | null
           verified?: boolean | null
           website?: string | null
+          years_experience?: number | null
         }
         Update: {
           business_hours?: Json | null
@@ -1806,19 +1820,26 @@ export type Database = {
           description?: string | null
           email?: string | null
           featured?: boolean | null
+          has_cscs?: boolean | null
           id?: string
           image_url?: string | null
           languages?: string[] | null
+          listing_type?: string | null
           location?: string
           name?: string
+          nino?: string | null
           phone?: string | null
           rating?: number | null
           reviews_count?: number | null
+          right_to_work?: boolean | null
           specialty?: string
           updated_at?: string
           user_id?: string | null
+          utr_number?: string | null
+          valid_from?: string | null
           verified?: boolean | null
           website?: string | null
+          years_experience?: number | null
         }
         Relationships: []
       }

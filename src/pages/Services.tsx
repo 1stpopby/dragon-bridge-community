@@ -2,71 +2,76 @@ import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import MobileNavigation from "@/components/MobileNavigation";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MapPin, Phone, Globe, Star, Search, Filter, CheckCircle, Users, ChevronRight, ExternalLink } from "lucide-react";
+import { MapPin, Phone, Mail, Search, CheckCircle, Calendar, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { ServiceContactDialog } from "@/components/ServiceContactDialog";
-import { ServiceDetailsDialog } from "@/components/ServiceDetailsDialog";
-import { ServiceRequestDialog } from "@/components/ServiceRequestDialog";
-import { ListBusinessDialog } from "@/components/ListBusinessDialog";
-import { ServiceRequestsTab } from "@/components/ServiceRequestsTab";
+import { SelfEmployedListingDialog } from "@/components/SelfEmployedListingDialog";
+import { CompanyJobListingDialog } from "@/components/CompanyJobListingDialog";
 import { AdvertisementBanner } from "@/components/AdvertisementBanner";
-import { Link } from "react-router-dom";
+import { format } from "date-fns";
+import { ro } from "date-fns/locale";
 
 const Services = () => {
-  const [services, setServices] = useState<any[]>([]);
+  const [selfEmployedListings, setSelfEmployedListings] = useState<any[]>([]);
+  const [companyJobs, setCompanyJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTab, setSelectedTab] = useState("all");
   const { toast } = useToast();
   const { user, profile } = useAuth();
 
-  // Check if user is a company or service provider who should see service requests
-  const canViewServiceRequests = profile?.account_type === 'company' || 
-    (user && services.some(service => service.user_id === user.id));
-
-  const fetchServices = async () => {
+  const fetchListings = async () => {
     try {
       setLoading(true);
       
-      // First fetch services
-      const { data: servicesData, error: servicesError } = await supabase
+      // Fetch self-employed listings
+      const { data: selfEmployedData, error: selfError } = await supabase
         .from('services')
         .select('*')
-        .order('featured', { ascending: false })
-        .order('rating', { ascending: false });
+        .eq('listing_type', 'self_employed')
+        .order('created_at', { ascending: false });
 
-      if (servicesError) throw servicesError;
+      if (selfError) throw selfError;
 
-      // Then fetch profile data for each service
-      const servicesWithProfiles = await Promise.all(
-        (servicesData || []).map(async (service) => {
+      // Fetch company job listings
+      const { data: companyData, error: companyError } = await supabase
+        .from('services')
+        .select('*')
+        .eq('listing_type', 'company')
+        .order('created_at', { ascending: false });
+
+      if (companyError) throw companyError;
+
+      // Fetch profiles for all listings
+      const allListings = [...(selfEmployedData || []), ...(companyData || [])];
+      const listingsWithProfiles = await Promise.all(
+        allListings.map(async (listing) => {
           const { data: profile } = await supabase
             .from('profiles')
             .select('id, avatar_url, display_name, company_name, account_type')
-            .eq('user_id', service.user_id)
+            .eq('user_id', listing.user_id)
             .single();
 
           return {
-            ...service,
+            ...listing,
             profiles: profile
           };
         })
       );
 
-      setServices(servicesWithProfiles);
+      setSelfEmployedListings(listingsWithProfiles.filter(l => l.listing_type === 'self_employed'));
+      setCompanyJobs(listingsWithProfiles.filter(l => l.listing_type === 'company'));
     } catch (error) {
-      console.error('Error fetching services:', error);
+      console.error('Error fetching listings:', error);
       toast({
-        title: "Eroare la încărcarea serviciilor",
-        description: "Nu s-au putut încărca serviciile din baza de date.",
+        title: "Eroare la încărcarea anunțurilor",
+        description: "Nu s-au putut încărca anunțurile din baza de date.",
         variant: "destructive",
       });
     } finally {
@@ -74,103 +79,132 @@ const Services = () => {
     }
   };
 
-  const filterServices = () => {
-    if (!searchTerm) return services;
-    return services.filter(service => 
-      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.specialty.toLowerCase().includes(searchTerm.toLowerCase())
+  const filterListings = (listings: any[]) => {
+    if (!searchTerm) return listings;
+    return listings.filter(listing => 
+      listing.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      listing.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      listing.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      listing.specialty?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
   useEffect(() => {
-    fetchServices();
+    fetchListings();
   }, []);
 
-  const ServiceListItem = ({ service }: { service: any }) => (
-    <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-primary/20 hover:border-l-primary">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12 border-2 border-primary/10">
-              <AvatarImage src={service.profiles?.avatar_url || ""} />
-              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                {(service.profiles?.company_name || service.profiles?.display_name || service.name).charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-foreground text-lg">{service.name}</h3>
-                {service.verified && (
-                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 border-green-200">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Verificat
-                  </Badge>
-                )}
-                {service.featured && (
-                  <Badge className="text-xs bg-red-100 text-red-700 border-red-200">
-                    Recomandat
-                  </Badge>
-                )}
+  const SelfEmployedCard = ({ listing }: { listing: any }) => (
+    <Card className="hover:shadow-lg transition-all duration-200">
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <Avatar className="h-16 w-16 border-2 border-primary/20">
+            <AvatarImage src={listing.profiles?.avatar_url || ""} />
+            <AvatarFallback>{listing.name?.charAt(0)}</AvatarFallback>
+          </Avatar>
+          
+          <div className="flex-1 space-y-3">
+            <div>
+              <h3 className="text-xl font-semibold text-foreground">{listing.name}</h3>
+              <p className="text-lg text-primary font-medium">{listing.specialty}</p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {listing.has_cscs && (
+                <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-400">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  CSCS
+                </Badge>
+              )}
+              {listing.right_to_work && (
+                <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 dark:text-blue-400">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Right to Work
+                </Badge>
+              )}
+              {listing.years_experience > 0 && (
+                <Badge variant="secondary">
+                  <Briefcase className="h-3 w-3 mr-1" />
+                  {listing.years_experience} ani experiență
+                </Badge>
+              )}
+              {listing.valid_from && (
+                <Badge variant="secondary">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Valabil din {format(new Date(listing.valid_from), 'MMM yyyy', { locale: ro })}
+                </Badge>
+              )}
+            </div>
+
+            {listing.description && (
+              <p className="text-muted-foreground line-clamp-2">{listing.description}</p>
+            )}
+
+            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                <span>{listing.location}</span>
               </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <div className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  {service.location}
+              {listing.phone && (
+                <div className="flex items-center gap-1">
+                  <Phone className="h-4 w-4" />
+                  <span>{listing.phone}</span>
                 </div>
-                <div className="flex items-center">
-                  <Star className="h-4 w-4 text-yellow-500 mr-1 fill-current" />
-                  <span className="font-medium">{service.rating}</span>
-                  <span className="text-muted-foreground">({service.reviews_count})</span>
+              )}
+              {listing.email && (
+                <div className="flex items-center gap-1">
+                  <Mail className="h-4 w-4" />
+                  <span>{listing.email}</span>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
-        
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-2 leading-relaxed">
-          {service.description}
-        </p>
-        
-        <div className="space-y-2 mb-4">
-          {service.phone && (
-            <div className="flex items-center text-sm">
-              <Phone className="h-4 w-4 mr-2 text-primary" />
-              <span className="font-medium">{service.phone}</span>
+      </CardContent>
+    </Card>
+  );
+
+  const CompanyJobCard = ({ listing }: { listing: any }) => (
+    <Card className="hover:shadow-lg transition-all duration-200">
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <Avatar className="h-16 w-16 border-2 border-primary/20">
+            <AvatarImage src={listing.profiles?.avatar_url || ""} />
+            <AvatarFallback>{listing.name?.charAt(0)}</AvatarFallback>
+          </Avatar>
+          
+          <div className="flex-1 space-y-3">
+            <div>
+              <h3 className="text-xl font-semibold text-foreground">{listing.name}</h3>
+              <p className="text-lg text-primary font-medium">Căutăm: {listing.specialty}</p>
             </div>
-          )}
-          <div className="flex items-center text-sm">
-            <Globe className="h-4 w-4 mr-2 text-primary" />
-            <span>{service.languages?.join(", ") || "English, Mandarin"}</span>
+
+            {listing.category && (
+              <Badge variant="outline">{listing.category}</Badge>
+            )}
+
+            {listing.description && (
+              <p className="text-muted-foreground line-clamp-3">{listing.description}</p>
+            )}
+
+            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                <span>{listing.location}</span>
+              </div>
+              {listing.phone && (
+                <div className="flex items-center gap-1">
+                  <Phone className="h-4 w-4" />
+                  <span>{listing.phone}</span>
+                </div>
+              )}
+              {listing.email && (
+                <div className="flex items-center gap-1">
+                  <Mail className="h-4 w-4" />
+                  <span>{listing.email}</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-2 pt-3 border-t border-border">
-          <ServiceContactDialog
-            service={service}
-            triggerButton={
-              <Button size="sm" variant="outline" className="flex-1">
-                Contact
-              </Button>
-            }
-          />
-          <ServiceDetailsDialog
-            service={service}
-            triggerButton={
-              <Button size="sm" variant="outline" className="flex-1">
-                Detalii
-              </Button>
-            }
-          />
-          {service.profiles?.account_type === 'company' && service.profiles?.id && (
-            <Link to={`/company/${service.profiles.id}`} className="flex-1">
-              <Button size="sm" className="w-full bg-primary hover:bg-primary/90">
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Vizitează Pagina
-              </Button>
-            </Link>
-          )}
         </div>
       </CardContent>
     </Card>
@@ -180,71 +214,98 @@ const Services = () => {
     <div className="min-h-screen bg-background pb-16 md:pb-0">
       <Navigation />
       
-      {/* Simplified Header */}
-      <div className="bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Toate Serviciile ({services.length})</h1>
-            </div>
-            <div className="flex gap-2">
-              <ServiceRequestDialog
-                triggerButton={<Button size="sm" variant="outline">Solicită Serviciu</Button>}
-              />
-              <ListBusinessDialog
-                triggerButton={<Button size="sm">Listează Afacerea</Button>}
-              />
-            </div>
-          </div>
-          
+      <main className="container mx-auto px-4 pt-24 pb-16">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-4 text-foreground">Servicii & Angajări</h1>
+          <p className="text-muted-foreground text-lg">
+            Găsește profesioniști sau postează anunțuri de angajare
+          </p>
+        </div>
+
+        <div className="mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search services or location..." 
-              className="pl-10"
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+            <Input
+              type="text"
+              placeholder="Caută după nume, specializare, locație..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
             />
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-          {canViewServiceRequests && (
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="all">Services</TabsTrigger>
-              <TabsTrigger value="requests">Requests</TabsTrigger>
-            </TabsList>
-          )}
-          
-          <TabsContent value="all">
+        <Tabs defaultValue="self-employed" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="self-employed">
+              Caut Muncă ({filterListings(selfEmployedListings).length})
+            </TabsTrigger>
+            <TabsTrigger value="companies">
+              Angajăm ({filterListings(companyJobs).length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="self-employed" className="space-y-6">
+            <div className="flex justify-end mb-4">
+              <SelfEmployedListingDialog
+                triggerButton={
+                  <Button>
+                    Adaugă Anunț - Caut Muncă
+                  </Button>
+                }
+              />
+            </div>
+
             {loading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Se încarcă serviciile...</p>
-              </div>
-            ) : filterServices().length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  {searchTerm ? 'No services match your search criteria.' : 'No services found.'}
-                </p>
-              </div>
+              <div className="text-center py-12">Se încarcă...</div>
+            ) : filterListings(selfEmployedListings).length === 0 ? (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <p className="text-muted-foreground">
+                    Nu există anunțuri de persoane care caută muncă.
+                  </p>
+                </CardContent>
+              </Card>
             ) : (
-              <div className="space-y-4">
-                {filterServices().map((service) => (
-                  <ServiceListItem key={service.id} service={service} />
+              <div className="grid gap-4">
+                {filterListings(selfEmployedListings).map((listing) => (
+                  <SelfEmployedCard key={listing.id} listing={listing} />
                 ))}
               </div>
             )}
           </TabsContent>
-          
-          {canViewServiceRequests && (
-            <TabsContent value="requests">
-              <ServiceRequestsTab searchTerm={searchTerm} />
-            </TabsContent>
-          )}
+
+          <TabsContent value="companies" className="space-y-6">
+            <div className="flex justify-end mb-4">
+              <CompanyJobListingDialog
+                triggerButton={
+                  <Button disabled={profile?.account_type !== 'company'}>
+                    Angajăm
+                  </Button>
+                }
+              />
+            </div>
+
+            {loading ? (
+              <div className="text-center py-12">Se încarcă...</div>
+            ) : filterListings(companyJobs).length === 0 ? (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <p className="text-muted-foreground">
+                    Nu există anunțuri de angajare.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {filterListings(companyJobs).map((listing) => (
+                  <CompanyJobCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
-      </div>
+      </main>
 
       <Footer />
       <MobileNavigation />
