@@ -17,9 +17,12 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* Chinese-inspired red theme */
+    /* Chinese-inspired red theme with gradient */
     --primary: 0 84% 60%;
     --primary-foreground: 0 0% 100%;
+    
+    /* Brand gradient: orange -> red -> blue */
+    --gradient-primary: linear-gradient(45deg, #f8ad00, #e13333, #3992ff);
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -143,6 +146,18 @@ All colors MUST be HSL.
 @layer utilities {
   .hover-scale {
     @apply transition-transform duration-200 hover:scale-105;
+  }
+  
+  /* Gradient utilities */
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .text-gradient-primary {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   
   .line-clamp-1 {
