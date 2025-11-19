@@ -149,7 +149,7 @@ export const AdminCategoriesTable = ({ onDataChange }: AdminCategoriesTableProps
           .eq('name', formData.name)
           .eq('type', formData.type)
           .neq('id', editingCategory.id)
-          .single();
+          .maybeSingle();
 
         if (existingCategory) {
           toast({
@@ -178,7 +178,7 @@ export const AdminCategoriesTable = ({ onDataChange }: AdminCategoriesTableProps
           .select('id')
           .eq('name', formData.name)
           .eq('type', formData.type)
-          .single();
+          .maybeSingle();
 
         if (existingCategory) {
           toast({
