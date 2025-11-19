@@ -21,6 +21,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import CompanyProfile from "./pages/CompanyProfile";
 import Messages from "./pages/Messages";
+import MessageConversation from "./pages/MessageConversation";
 import Notifications from "./pages/Notifications";
 import MyMarketplace from "./pages/MyMarketplace";
 import Banned from "./pages/Banned";
@@ -69,6 +70,7 @@ const App = () => {
               <Route path="/user/:userId" element={<UserProfile />} />
               <Route path="/company/:companyId" element={<CompanyProfile />} />
               <Route path="/messages" element={<Messages />} />
+              <Route path="/messages/conversation/:userId" element={<MessageConversation />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/my-marketplace" element={<MyMarketplace />} />
               <Route path="/banned" element={<Banned />} />
