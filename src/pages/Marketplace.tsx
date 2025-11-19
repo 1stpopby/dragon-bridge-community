@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Filter, MapPin, Grid3X3, List, TrendingUp, Users, Package } from "lucide-react";
+import { Search, Filter, MapPin, Grid3X3, List, TrendingUp, Users, Package, Car, Smartphone, Armchair, Shirt, Book, Wrench, Drama, Utensils, Home, LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MarketplaceDialog } from "@/components/MarketplaceDialog";
 import { MarketplaceCard } from "@/components/MarketplaceCard";
@@ -31,6 +31,24 @@ const Marketplace = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [categories, setCategories] = useState<any[]>([]);
   const { toast } = useToast();
+
+  // Icon mapping for categories
+  const getIconComponent = (iconName: string): LucideIcon => {
+    const iconMap: Record<string, LucideIcon> = {
+      'car': Car,
+      'drama': Drama,
+      'smartphone': Smartphone,
+      'armchair': Armchair,
+      'shirt': Shirt,
+      'book': Book,
+      'wrench': Wrench,
+      'utensils': Utensils,
+      'home': Home,
+      'package': Package,
+    };
+    
+    return iconMap[iconName.toLowerCase()] || Package;
+  };
 
   const conditions = [
     { value: "new", label: "Nou", color: "bg-green-100 text-green-800" },
@@ -260,14 +278,17 @@ const Marketplace = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Toate Categoriile</SelectItem>
-                      {categories.map(category => (
-                        <SelectItem key={category.name || category} value={category.name || category}>
-                          <span className="flex items-center gap-2">
-                            {category.icon && <span>{category.icon}</span>}
-                            {category.name || category}
-                          </span>
-                        </SelectItem>
-                      ))}
+                      {categories.map(category => {
+                        const IconComponent = category.icon ? getIconComponent(category.icon) : null;
+                        return (
+                          <SelectItem key={category.name || category} value={category.name || category}>
+                            <span className="flex items-center gap-2">
+                              {IconComponent && <IconComponent className="h-4 w-4" />}
+                              {category.name || category}
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                   
