@@ -20,6 +20,7 @@ import { AdminFooterPagesTable } from "@/components/admin/AdminFooterPagesTable"
 import { AdminServicesTable } from "@/components/admin/AdminServicesTable";
 import { AdminDataManagement } from "@/components/admin/AdminDataManagement";
 import { AdminReportsTable } from "@/components/admin/AdminReportsTable";
+import { AdminProfileSettings } from "@/components/admin/AdminProfileSettings";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -154,6 +155,8 @@ const Admin = () => {
         return <AdminUserBansTable onDataChange={handleDataChange} />;
       case "reports":
         return <AdminReportsTable onDataChange={handleDataChange} />;
+      case "profile":
+        return <AdminProfileSettings />;
       case "settings":
         return <AdminSettingsTable onDataChange={handleDataChange} />;
       case "footer-pages":

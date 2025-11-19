@@ -170,6 +170,12 @@ const menuGroups = [
     label: "Configuration",
     items: [
       {
+        title: "Profil",
+        value: "profile",
+        icon: UserCog,
+        description: "Setări cont admin"
+      },
+      {
         title: "Settings",
         value: "settings",
         icon: Settings,
