@@ -407,10 +407,18 @@ export function MarketplaceDialog({ item, onItemSaved, mode = 'create' }: Market
             <div className="col-span-2">
               <Label htmlFor="location">Locație</Label>
               <LocationPicker
-                onLocationSelect={(location) => handleInputChange('location', location.address)}
+                onLocationSelect={(location) => {
+                  console.log('[MarketplaceDialog] Location selected:', location.address);
+                  handleInputChange('location', location.address);
+                }}
                 initialLocation={formData.location}
                 placeholder="Introdu locația produsului sau apasă pe hartă"
               />
+              {formData.location && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Locația selectată: {formData.location}
+                </p>
+              )}
             </div>
             <div>
               <Label htmlFor="seller_name">Numele Tău</Label>

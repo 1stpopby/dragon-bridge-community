@@ -39,6 +39,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             const lng = place.geometry.location.lng();
             const formattedAddress = place.formatted_address || address;
             
+            console.log('[LocationPicker] Autocomplete selected:', formattedAddress);
             setAddress(formattedAddress);
             setMapCenter({ lat, lng });
             onLocationSelect({ lat, lng, address: formattedAddress });
@@ -83,6 +84,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   };
 
   const handleManualInput = (value: string) => {
+    console.log('[LocationPicker] Manual input changed:', value);
     setAddress(value);
     // Update parent component with manually typed address
     onLocationSelect({ lat: mapCenter.lat, lng: mapCenter.lng, address: value });
