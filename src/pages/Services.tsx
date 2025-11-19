@@ -24,8 +24,9 @@ const Services = () => {
   const [companyJobs, setCompanyJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [categories, setCategories] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState("self-employed");
   const { toast } = useToast();
   const { user, profile } = useAuth();
 
@@ -95,6 +96,14 @@ const Services = () => {
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
+    }
+  };
+
+  const getFilteredCategories = () => {
+    if (activeTab === 'self-employed') {
+      return categories.filter(cat => cat.type === 'service_self_employed');
+    } else {
+      return categories.filter(cat => cat.type === 'service');
     }
   };
 
@@ -269,7 +278,7 @@ const Services = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toate categoriile</SelectItem>
-                {categories.map((category) => (
+                {getFilteredCategories().map((category) => (
                   <SelectItem key={category.id} value={category.name}>
                     {category.name}
                   </SelectItem>
@@ -279,7 +288,14 @@ const Services = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="self-employed" className="w-full">
+        <Tabs 
+          defaultValue="self-employed" 
+          className="w-full"
+          onValueChange={(value) => {
+            setActiveTab(value);
+            setCategoryFilter("all");
+          }}
+        >
           <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="self-employed">
               Caut Muncă ({filterListings(selfEmployedListings).length})
