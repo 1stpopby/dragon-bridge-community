@@ -80,8 +80,8 @@ ${formData.description}`,
       if (error) throw error;
 
       toast({
-        title: "Service request submitted!",
-        description: "We'll help connect you with suitable service providers.",
+        title: "Cererea de serviciu a fost trimisă!",
+        description: "Te vom ajuta să te conectezi cu furnizori de servicii potriviți.",
       });
 
       setOpen(false);
@@ -100,8 +100,8 @@ ${formData.description}`,
     } catch (error) {
       console.error('Error submitting request:', error);
       toast({
-        title: "Error submitting request",
-        description: "Please try again later.",
+        title: "Eroare la trimiterea cererii",
+        description: "Te rugăm să încerci din nou mai târziu.",
         variant: "destructive",
       });
     } finally {
@@ -133,16 +133,16 @@ ${formData.description}`,
         </DialogTrigger>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Sign in Required</DialogTitle>
+            <DialogTitle>Autentificare Necesară</DialogTitle>
             <DialogDescription>
-              Please sign in to request a service from our community.
+              Te rugăm să te autentifici pentru a solicita un serviciu din comunitatea noastră.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col space-y-4">
             <Button asChild>
               <Link to="/auth" className="flex items-center justify-center gap-2">
                 <Lock className="h-4 w-4" />
-                Sign In
+                Autentifică-te
               </Link>
             </Button>
           </div>
@@ -160,21 +160,21 @@ ${formData.description}`,
       )}
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Request a Service</DialogTitle>
+          <DialogTitle>Solicită un Serviciu</DialogTitle>
           <DialogDescription>
-            Tell us what service you need and we'll help connect you with suitable providers.
+            Spune-ne de ce serviciu ai nevoie și te vom ajuta să te conectezi cu furnizori potriviți.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">Nume</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Your name"
+                placeholder="Numele tău"
                 required
               />
             </div>
@@ -185,7 +185,7 @@ ${formData.description}`,
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="Your email"
+                placeholder="Email-ul tău"
                 required
               />
             </div>
@@ -193,22 +193,22 @@ ${formData.description}`,
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">Telefon</Label>
               <Input
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                placeholder="Your phone number"
+                placeholder="Numărul tău de telefon"
                 required
               />
             </div>
             <div>
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">Locație</Label>
               <Input
                 id="location"
                 value={formData.location}
                 onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="City or area"
+                placeholder="Oraș sau zonă"
                 required
               />
             </div>
@@ -216,30 +216,30 @@ ${formData.description}`,
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="category">Service Category</Label>
+              <Label htmlFor="category">Categorie Serviciu</Label>
               <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Selectează categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="legal">Legal Services</SelectItem>
-                  <SelectItem value="medical">Healthcare</SelectItem>
-                  <SelectItem value="financial">Financial</SelectItem>
-                  <SelectItem value="education">Education</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="legal">Servicii Juridice</SelectItem>
+                  <SelectItem value="medical">Sănătate</SelectItem>
+                  <SelectItem value="financial">Financiar</SelectItem>
+                  <SelectItem value="education">Educație</SelectItem>
+                  <SelectItem value="other">Altele</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label htmlFor="urgency">Urgency</Label>
+              <Label htmlFor="urgency">Urgență</Label>
               <Select value={formData.urgency} onValueChange={(value) => handleInputChange('urgency', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select urgency" />
+                  <SelectValue placeholder="Selectează urgența" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low - Within a month</SelectItem>
-                  <SelectItem value="medium">Medium - Within 2 weeks</SelectItem>
-                  <SelectItem value="high">High - Within a week</SelectItem>
+                  <SelectItem value="low">Scăzută - În o lună</SelectItem>
+                  <SelectItem value="medium">Mediu - În 2 săptămâni</SelectItem>
+                  <SelectItem value="high">Înaltă - În 1 săptămână</SelectItem>
                   <SelectItem value="urgent">Urgent - ASAP</SelectItem>
                 </SelectContent>
               </Select>
@@ -247,33 +247,33 @@ ${formData.description}`,
           </div>
 
           <div>
-            <Label htmlFor="service_type">Specific Service Needed</Label>
+            <Label htmlFor="service_type">Serviciul Specific Necesar</Label>
             <Input
               id="service_type"
               value={formData.service_type}
               onChange={(e) => handleInputChange('service_type', e.target.value)}
-              placeholder="e.g., Immigration lawyer, Family doctor, Tax advisor"
+              placeholder="ex: Avocat imigrație, Medic de familie, Consultant fiscal"
               required
             />
           </div>
 
           <div>
-            <Label htmlFor="budget">Budget Range (Optional)</Label>
+            <Label htmlFor="budget">Interval Buget (Opțional)</Label>
             <Input
               id="budget"
               value={formData.budget}
               onChange={(e) => handleInputChange('budget', e.target.value)}
-              placeholder="e.g., £500-1000, Contact for quote"
+              placeholder="ex: £500-1000, Contactați pentru ofertă"
             />
           </div>
 
           <div>
-            <Label htmlFor="description">Detailed Description</Label>
+            <Label htmlFor="description">Descriere Detaliată</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Describe what you need, any specific requirements, timeline, etc."
+              placeholder="Descrie de ce ai nevoie, cerințe specifice, termen, etc."
               rows={4}
               required
             />
@@ -281,10 +281,10 @@ ${formData.description}`,
 
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              Anulează
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Submitting..." : "Submit Request"}
+              {loading ? "Se trimite..." : "Trimite Cererea"}
             </Button>
           </div>
         </form>

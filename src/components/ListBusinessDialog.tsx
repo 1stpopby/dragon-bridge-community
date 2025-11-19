@@ -43,12 +43,12 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
     email: '',
     website: '',
     contact_person: '',
-    languages: [] as string[]
+    
   });
   const { toast } = useToast();
   const { user, profile } = useAuth();
 
-  const availableLanguages = ['English', 'Mandarin', 'Cantonese', 'Wu', 'Min', 'Hakka'];
+  
 
   // Fetch categories from database
   const fetchCategories = async () => {
@@ -96,7 +96,7 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
           email: formData.email,
           website: formData.website,
           contact_person: formData.contact_person,
-          languages: formData.languages,
+          
           user_id: user?.id,
           verified: false, // Will need manual verification
           featured: false
@@ -105,8 +105,8 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
       if (error) throw error;
 
       toast({
-        title: "Business listing submitted!",
-        description: "Your business will be reviewed and published within 24-48 hours.",
+        title: "Listarea a fost trimisă!",
+        description: "Afacerea ta va fi revizuită și publicată în 24-48 de ore.",
       });
 
       setOpen(false);
@@ -120,13 +120,13 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
         email: '',
         website: '',
         contact_person: '',
-        languages: []
+        
       });
     } catch (error) {
       console.error('Error submitting business listing:', error);
       toast({
-        title: "Error submitting listing",
-        description: "Please try again later.",
+        title: "Eroare la trimiterea listării",
+        description: "Te rugăm să încerci din nou mai târziu.",
         variant: "destructive",
       });
     } finally {
@@ -138,14 +138,6 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleLanguageToggle = (language: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      languages: checked 
-        ? [...prev.languages, language]
-        : prev.languages.filter(lang => lang !== language)
-    }));
-  };
 
   // Pre-fill form if user is logged in
   const handleOpenChange = (newOpen: boolean) => {
@@ -167,16 +159,16 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
         </DialogTrigger>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Sign in Required</DialogTitle>
+            <DialogTitle>Autentificare Necesară</DialogTitle>
             <DialogDescription>
-              Please sign in to list your business in our directory.
+              Te rugăm să te autentifici pentru a-ți lista afacerea în directorul nostru.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col space-y-4">
             <Button asChild>
               <Link to="/auth" className="flex items-center justify-center gap-2">
                 <Lock className="h-4 w-4" />
-                Sign In
+                Autentifică-te
               </Link>
             </Button>
           </div>
@@ -192,30 +184,30 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>List Your Business</DialogTitle>
+          <DialogTitle>Adaugă Afacerea Ta</DialogTitle>
           <DialogDescription>
-            Add your business to our directory to connect with the Chinese community in the UK.
+            Adaugă afacerea ta în directorul nostru pentru a te conecta cu comunitatea română.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="name">Business Name</Label>
+            <Label htmlFor="name">Numele Afacerii</Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="Your business name"
+              placeholder="Numele afacerii tale"
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Categorie</Label>
               <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Selectează categoria" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (
@@ -227,24 +219,24 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
               </Select>
             </div>
             <div>
-              <Label htmlFor="specialty">Specialty</Label>
+              <Label htmlFor="specialty">Specialitate</Label>
               <Input
                 id="specialty"
                 value={formData.specialty}
                 onChange={(e) => handleInputChange('specialty', e.target.value)}
-                placeholder="e.g., Immigration Law, General Practice"
+                placeholder="ex: Drept Imigrație, Practică Generală"
                 required
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Descriere</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Describe your services and what makes your business special"
+              placeholder="Descrie serviciile tale și ce face afacerea ta specială"
               rows={3}
               required
             />
@@ -252,22 +244,22 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">Locație</Label>
               <Input
                 id="location"
                 value={formData.location}
                 onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="City or area"
+                placeholder="Oraș sau zonă"
                 required
               />
             </div>
             <div>
-              <Label htmlFor="contact_person">Contact Person</Label>
+              <Label htmlFor="contact_person">Persoană de Contact</Label>
               <Input
                 id="contact_person"
                 value={formData.contact_person}
                 onChange={(e) => handleInputChange('contact_person', e.target.value)}
-                placeholder="Name of main contact"
+                placeholder="Numele persoanei de contact"
                 required
               />
             </div>
@@ -275,12 +267,12 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">Telefon</Label>
               <Input
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                placeholder="Business phone number"
+                placeholder="Număr de telefon al afacerii"
                 required
               />
             </div>
@@ -291,51 +283,35 @@ export function ListBusinessDialog({ triggerButton }: ListBusinessDialogProps) {
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="Business email"
+                placeholder="Email afacere"
                 required
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="website">Website (Optional)</Label>
+            <Label htmlFor="website">Website (Opțional)</Label>
             <Input
               id="website"
               value={formData.website}
               onChange={(e) => handleInputChange('website', e.target.value)}
-              placeholder="https://your-website.com"
+              placeholder="https://website-ul-tau.ro"
             />
-          </div>
-
-          <div>
-            <Label>Languages Spoken</Label>
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              {availableLanguages.map((language) => (
-                <div key={language} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={language}
-                    checked={formData.languages.includes(language)}
-                    onCheckedChange={(checked) => handleLanguageToggle(language, !!checked)}
-                  />
-                  <Label htmlFor={language} className="text-sm">{language}</Label>
-                </div>
-              ))}
-            </div>
           </div>
 
           <div className="bg-muted/30 rounded-lg p-4">
             <p className="text-sm text-muted-foreground">
-              <strong>Note:</strong> Your listing will be reviewed for accuracy and compliance before being published. 
-              This typically takes 24-48 hours.
+              <strong>Notă:</strong> Listarea ta va fi revizuită pentru acuratețe și conformitate înainte de a fi publicată. 
+              Acest proces durează de obicei 24-48 de ore.
             </p>
           </div>
 
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              Anulează
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Submitting..." : "Submit Listing"}
+              {loading ? "Se trimite..." : "Trimite Listarea"}
             </Button>
           </div>
         </form>
