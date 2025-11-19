@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -18,7 +19,50 @@ const ContactForm = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contactInfo, setContactInfo] = useState({
+    email: '',
+    phone: '',
+    address: '',
+    officeHours: ''
+  });
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchContactSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('app_settings')
+          .select('setting_key, setting_value')
+          .in('setting_key', ['contact_email', 'contact_phone', 'contact_address', 'office_hours']);
+
+        if (error) throw error;
+
+        const settings = data?.reduce((acc, setting) => {
+          let value = setting.setting_value;
+          if (typeof value === 'string') {
+            try {
+              value = JSON.parse(value);
+            } catch {
+              // Keep as string if not JSON
+            }
+          }
+          acc[setting.setting_key] = value;
+          return acc;
+        }, {} as Record<string, any>);
+
+        setContactInfo({
+          email: settings?.contact_email || '',
+          phone: settings?.contact_phone || '',
+          address: settings?.contact_address || '',
+          officeHours: settings?.office_hours || ''
+        });
+      } catch (error) {
+        console.error('Error fetching contact settings:', error);
+      }
+    };
+
+    fetchContactSettings();
+  }, []);
 
   const categories = [
     { value: 'general', label: 'General Inquiry' },
@@ -90,55 +134,59 @@ const ContactForm = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-start space-x-3">
-                <Mail className="h-5 w-5 text-primary mt-0.5" />
-                <div>
-                  <p className="font-medium">Email</p>
-                  <a 
-                    href="mailto:admin@ukchinesecommunity.com" 
-                    className="text-primary hover:underline"
-                  >
-                    admin@ukchinesecommunity.com
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Phone className="h-5 w-5 text-primary mt-0.5" />
-                <div>
-                  <p className="font-medium">Phone</p>
-                  <a 
-                    href="tel:+442012345678" 
-                    className="text-primary hover:underline"
-                  >
-                    +44 20 1234 5678
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <MapPin className="h-5 w-5 text-primary mt-0.5" />
-                <div>
-                  <p className="font-medium">Address</p>
-                  <p className="text-muted-foreground">
-                    123 Community Street<br />
-                    London E1 6AN<br />
-                    United Kingdom
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Clock className="h-5 w-5 text-primary mt-0.5" />
-                <div>
-                  <p className="font-medium">Office Hours</p>
-                  <div className="text-muted-foreground text-sm space-y-1">
-                    <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
-                    <p>Saturday: 10:00 AM - 4:00 PM</p>
-                    <p>Sunday: Closed</p>
+              {contactInfo.email && (
+                <div className="flex items-start space-x-3">
+                  <Mail className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium">Email</p>
+                    <a 
+                      href={`mailto:${contactInfo.email}`}
+                      className="text-primary hover:underline"
+                    >
+                      {contactInfo.email}
+                    </a>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {contactInfo.phone && (
+                <div className="flex items-start space-x-3">
+                  <Phone className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium">Phone</p>
+                    <a 
+                      href={`tel:${contactInfo.phone.replace(/\s/g, '')}`}
+                      className="text-primary hover:underline"
+                    >
+                      {contactInfo.phone}
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {contactInfo.address && (
+                <div className="flex items-start space-x-3">
+                  <MapPin className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium">Address</p>
+                    <p className="text-muted-foreground whitespace-pre-line">
+                      {contactInfo.address}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {contactInfo.officeHours && (
+                <div className="flex items-start space-x-3">
+                  <Clock className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium">Office Hours</p>
+                    <div className="text-muted-foreground text-sm whitespace-pre-line">
+                      {contactInfo.officeHours}
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
