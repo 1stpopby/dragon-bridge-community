@@ -34,20 +34,22 @@ const Services = () => {
     try {
       setLoading(true);
       
-      // Fetch self-employed listings
+      // Fetch self-employed listings (only active ones)
       const { data: selfEmployedData, error: selfError } = await supabase
         .from('services')
         .select('*')
         .eq('listing_type', 'self_employed')
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (selfError) throw selfError;
 
-      // Fetch company job listings
+      // Fetch company job listings (only active ones)
       const { data: companyData, error: companyError } = await supabase
         .from('services')
         .select('*')
         .eq('listing_type', 'company')
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (companyError) throw companyError;

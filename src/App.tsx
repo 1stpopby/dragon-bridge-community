@@ -14,7 +14,7 @@ import GroupForum from "./pages/GroupForum";
 import Marketplace from "./pages/Marketplace";
 import FooterPage from "./pages/FooterPage";
 import Services from "./pages/Services";
-import ServiceManagement from "./pages/ServiceManagement";
+import MyServices from "./pages/MyServices";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -60,7 +60,7 @@ const App = () => {
               <Route path="/marketplace" element={<Marketplace />} />
 
               <Route path="/services" element={<Services />} />
-              <Route path="/service-management" element={<ServiceManagement />} />
+              <Route path="/my-services" element={<MyServices />} />
               <Route path="/admin" element={<AdminProtectedRoute><Admin /></AdminProtectedRoute>} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/auth" element={<Auth />} />
