@@ -49,7 +49,7 @@ const Footer = () => {
               găsește suport și celebrează cultura noastră împreună.
             </p>
             <div className="text-sm text-muted-foreground">
-              © 2024 UK Chinese Community. All rights reserved.
+              © 2025 RoEu Community.
             </div>
           </div>
 
