@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, Building2, Settings, MessageSquare, Bell, Store, Home, ClipboardList } from "lucide-react";
+import { User, LogOut, Building2, Settings, MessageSquare, Bell, Store, Briefcase } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -68,18 +68,6 @@ export const UserButton = () => {
       </div>
       
       <div className="p-2 space-y-1">
-        {/* My Page for company accounts */}
-        {profile.account_type === 'company' && (
-          <Link 
-            to={`/company/${profile.id}`} 
-            className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors w-full"
-            onClick={() => setIsOpen(false)}
-          >
-            <Home className="mr-2 h-4 w-4" />
-            My Page
-          </Link>
-        )}
-        
         {/* Quick Access Links */}
         <Link 
           to="/messages" 
@@ -91,12 +79,12 @@ export const UserButton = () => {
         </Link>
         
         <Link 
-          to="/service-management" 
+          to="/my-services" 
           className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors w-full"
           onClick={() => setIsOpen(false)}
         >
-          <ClipboardList className="mr-2 h-4 w-4" />
-          Service Management
+          <Briefcase className="mr-2 h-4 w-4" />
+          My Services
         </Link>
         
         <Link 
@@ -205,16 +193,6 @@ export const UserButton = () => {
         
         <DropdownMenuSeparator />
         
-        {/* My Page for company accounts */}
-        {profile.account_type === 'company' && (
-          <DropdownMenuItem asChild>
-            <Link to={`/company/${profile.id}`} className="cursor-pointer">
-              <Home className="mr-2 h-4 w-4" />
-              My Page
-            </Link>
-          </DropdownMenuItem>
-        )}
-        
         {/* Quick Access Links */}
         <DropdownMenuItem asChild>
           <Link to="/messages" className="cursor-pointer">
@@ -224,9 +202,9 @@ export const UserButton = () => {
         </DropdownMenuItem>
         
         <DropdownMenuItem asChild>
-          <Link to="/service-management" className="cursor-pointer">
-            <ClipboardList className="mr-2 h-4 w-4" />
-            Service Management
+          <Link to="/my-services" className="cursor-pointer">
+            <Briefcase className="mr-2 h-4 w-4" />
+            My Services
           </Link>
         </DropdownMenuItem>
         
@@ -242,7 +220,7 @@ export const UserButton = () => {
             <Store className="mr-2 h-4 w-4" />
             My Marketplace
           </Link>
-         </DropdownMenuItem>
+        </DropdownMenuItem>
          
          <DropdownMenuSeparator />
         

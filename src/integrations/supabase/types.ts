@@ -1765,6 +1765,7 @@ export type Database = {
           has_cscs: boolean | null
           id: string
           image_url: string | null
+          is_active: boolean | null
           languages: string[] | null
           listing_type: string | null
           location: string
@@ -1794,6 +1795,7 @@ export type Database = {
           has_cscs?: boolean | null
           id?: string
           image_url?: string | null
+          is_active?: boolean | null
           languages?: string[] | null
           listing_type?: string | null
           location: string
@@ -1823,6 +1825,7 @@ export type Database = {
           has_cscs?: boolean | null
           id?: string
           image_url?: string | null
+          is_active?: boolean | null
           languages?: string[] | null
           listing_type?: string | null
           location?: string
