@@ -23,9 +23,9 @@ export const UserButton = () => {
 
   if (!user || !profile) {
     return (
-      <Button asChild variant="default">
-        <Link to="/auth">Autentificare</Link>
-      </Button>
+      <Link to="/auth">
+        <Button variant="default">Autentificare</Button>
+      </Link>
     );
   }
 
