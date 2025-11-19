@@ -24,15 +24,7 @@ const Forum = () => {
     totalMembers: 0
   });
   const [showGuidelinesModal, setShowGuidelinesModal] = useState(true);
-
-  const categories = [
-    { name: "Discuții Generale", posts: 1250, color: "bg-blue-100 text-blue-800" },
-    { name: "Mâncare & Restaurante", posts: 890, color: "bg-orange-100 text-orange-800" },
-    { name: "Sănătate", posts: 654, color: "bg-green-100 text-green-800" },
-    { name: "Educație", posts: 543, color: "bg-purple-100 text-purple-800" },
-    { name: "Locuințe", posts: 432, color: "bg-yellow-100 text-yellow-800" },
-    { name: "Joburi & Cariere", posts: 321, color: "bg-pink-100 text-pink-800" }
-  ];
+  const [categories, setCategories] = useState<any[]>([]);
 
   const fetchStats = async () => {
     try {
@@ -64,6 +56,40 @@ const Forum = () => {
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      // Fetch forum categories from database
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('type', 'forum')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (categoriesError) throw categoriesError;
+
+      // For each category, count the posts
+      const categoriesWithCounts = await Promise.all(
+        (categoriesData || []).map(async (category) => {
+          const { count } = await supabase
+            .from('forum_posts')
+            .select('*', { count: 'exact', head: true })
+            .eq('category', category.name);
+
+          return {
+            name: category.name,
+            posts: count || 0,
+            color: category.color || '#6366f1'
+          };
+        })
+      );
+
+      setCategories(categoriesWithCounts);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
     }
   };
 
@@ -196,6 +222,7 @@ const Forum = () => {
   useEffect(() => {
     fetchPosts();
     fetchStats();
+    fetchCategories();
   }, []);
 
   return (
@@ -311,7 +338,10 @@ const Forum = () => {
                 {categories.map((category, index) => (
                   <div key={index} className="group flex items-center justify-between p-4 rounded-lg border border-slate-100 dark:border-slate-700 hover:border-primary/30 hover:bg-primary/5 cursor-pointer transition-all duration-200">
                     <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-primary to-primary/60"></div>
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: category.color }}
+                      ></div>
                       <div>
                         <div className="font-medium text-sm text-slate-900 dark:text-white group-hover:text-primary transition-colors">
                           {category.name}
