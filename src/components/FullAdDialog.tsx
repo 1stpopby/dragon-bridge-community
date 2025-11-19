@@ -41,8 +41,8 @@ export function FullAdDialog({ item, open, onOpenChange, onItemChanged }: FullAd
   const handleInquiry = async () => {
     if (!inquiryData.inquirer_name.trim() || !inquiryData.inquirer_contact.trim() || !inquiryData.message.trim()) {
       toast({
-        title: "All fields required",
-        description: "Please fill in all fields to send your inquiry.",
+        title: "Toate câmpurile sunt obligatorii",
+        description: "Te rugăm să completezi toate câmpurile pentru a trimite mesajul.",
         variant: "destructive",
       });
       return;
@@ -60,8 +60,8 @@ export function FullAdDialog({ item, open, onOpenChange, onItemChanged }: FullAd
       if (error) throw error;
 
       toast({
-        title: "Inquiry sent successfully!",
-        description: "The seller will be notified of your interest.",
+        title: "Mesaj trimis cu succes!",
+        description: "Vânzătorul va fi notificat de interesul tău.",
       });
 
       setShowContactForm(false);
@@ -73,8 +73,8 @@ export function FullAdDialog({ item, open, onOpenChange, onItemChanged }: FullAd
     } catch (error) {
       console.error('Error sending inquiry:', error);
       toast({
-        title: "Error sending inquiry",
-        description: "Please try again later.",
+        title: "Eroare la trimiterea mesajului",
+        description: "Te rugăm să încerci din nou.",
         variant: "destructive",
       });
     } finally {
@@ -123,7 +123,7 @@ export function FullAdDialog({ item, open, onOpenChange, onItemChanged }: FullAd
         <DialogHeader>
           <DialogTitle className="text-2xl">{item.title}</DialogTitle>
           <DialogDescription>
-            Listed by {item.seller_name} in {item.location}
+            Listat de {item.seller_name} în {item.location}
           </DialogDescription>
         </DialogHeader>
 
@@ -161,7 +161,7 @@ export function FullAdDialog({ item, open, onOpenChange, onItemChanged }: FullAd
           {/* Description */}
           {item.description && (
             <div>
-              <h3 className="text-lg font-semibold mb-2">Description</h3>
+              <h3 className="text-lg font-semibold mb-2">Descriere</h3>
               <p className="text-muted-foreground whitespace-pre-wrap">
                 {item.description}
               </p>
@@ -171,42 +171,38 @@ export function FullAdDialog({ item, open, onOpenChange, onItemChanged }: FullAd
           {/* Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold">Item Details</h3>
+              <h3 className="text-lg font-semibold">Detalii Produs</h3>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <Package className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Category:</span>
+                  <span className="font-medium">Categorie:</span>
                   <span>{item.category}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Location:</span>
+                  <span className="font-medium">Locație:</span>
                   <span>{item.location}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Listed:</span>
+                  <span className="font-medium">Listat:</span>
                   <span>{formatDate(item.created_at)}</span>
                 </div>
               </div>
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold">Seller Information</h3>
+              <h3 className="text-lg font-semibold">Informații Vânzător</h3>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Name:</span>
+                  <span className="font-medium">Nume:</span>
                   <span>{item.seller_name}</span>
                 </div>
-                {item.seller_contact && (
+                {item.seller_contact && !item.seller_contact.includes('@') && (
                   <div className="flex items-center gap-2 text-sm">
-                    {item.seller_contact.includes('@') ? (
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span className="font-medium">Contact:</span>
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">Telefon:</span>
                     <span className="break-all">{item.seller_contact}</span>
                   </div>
                 )}
@@ -235,47 +231,47 @@ export function FullAdDialog({ item, open, onOpenChange, onItemChanged }: FullAd
                         className="w-full sm:w-auto"
                       >
                         <MessageCircle className="h-4 w-4 mr-2" />
-                        Contact Seller
+                        Contactează Vânzătorul
                       </Button>
                     ) : (
                       <div className="space-y-4">
-                        <h3 className="text-lg font-semibold">Send Message to Seller</h3>
+                        <h3 className="text-lg font-semibold">Trimite Mesaj către Vânzător</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <Label htmlFor="inquirer_name">Your Name</Label>
+                            <Label htmlFor="inquirer_name">Numele Tău</Label>
                             <Input
                               id="inquirer_name"
                               value={inquiryData.inquirer_name}
                               onChange={(e) => setInquiryData(prev => ({ ...prev, inquirer_name: e.target.value }))}
-                              placeholder="Enter your name"
+                              placeholder="Introdu numele tău"
                             />
                           </div>
                           <div>
-                            <Label htmlFor="inquirer_contact">Your Contact Info</Label>
+                            <Label htmlFor="inquirer_contact">Informații Contact</Label>
                             <Input
                               id="inquirer_contact"
                               value={inquiryData.inquirer_contact}
                               onChange={(e) => setInquiryData(prev => ({ ...prev, inquirer_contact: e.target.value }))}
-                              placeholder="Email or phone number"
+                              placeholder="Email sau telefon"
                             />
                           </div>
                         </div>
                         <div>
-                          <Label htmlFor="message">Message</Label>
+                          <Label htmlFor="message">Mesaj</Label>
                           <Textarea
                             id="message"
                             value={inquiryData.message}
                             onChange={(e) => setInquiryData(prev => ({ ...prev, message: e.target.value }))}
-                            placeholder="Hi, I'm interested in this item. Is it still available?"
+                            placeholder="Salut, sunt interesat de acest produs. Este încă disponibil?"
                             rows={4}
                           />
                         </div>
                         <div className="flex justify-end space-x-2">
                           <Button variant="outline" onClick={() => setShowContactForm(false)}>
-                            Cancel
+                            Anulează
                           </Button>
                           <Button onClick={handleInquiry} disabled={loading}>
-                            {loading ? 'Sending...' : 'Send Message'}
+                            {loading ? 'Se trimite...' : 'Trimite Mesaj'}
                           </Button>
                         </div>
                       </div>
