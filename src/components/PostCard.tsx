@@ -542,19 +542,6 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-              
-              {/* Report button for other users */}
-              {user && user.id !== post.user_id && (
-                <ReportDialog
-                  contentType="post"
-                  contentId={post.id}
-                  trigger={
-                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Flag className="h-4 w-4" />
-                    </Button>
-                  }
-                />
-              )}
             </div>
           </div>
         </div>
@@ -636,6 +623,23 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
                 <Share2 className="h-4 w-4" />
                 <span className="font-medium">Share</span>
               </Button>
+
+              {user && user.id !== post.user_id && (
+                <ReportDialog
+                  contentType="post"
+                  contentId={post.id}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-2 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <Flag className="h-4 w-4" />
+                      <span className="font-medium">Raportează</span>
+                    </Button>
+                  }
+                />
+              )}
             </div>
 
             <Button
