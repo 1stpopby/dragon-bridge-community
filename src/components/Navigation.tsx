@@ -66,24 +66,18 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center">
               {appSettings.app_logo_url ? (
                 <img 
                   src={appSettings.app_logo_url} 
                   alt="Logo" 
-                  className="w-8 h-8 object-contain rounded"
+                  className="h-10 w-auto object-contain"
                 />
               ) : (
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-sm">中</span>
+                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-lg">中</span>
                 </div>
               )}
-              <span className="font-bold text-lg sm:text-xl text-foreground hidden xs:block">
-                {appSettings.app_name}
-              </span>
-              <span className="font-bold text-base text-foreground xs:hidden">
-                {appSettings.app_name}
-              </span>
             </Link>
           </div>
 
