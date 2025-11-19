@@ -179,7 +179,7 @@ const Marketplace = () => {
               {item.title}
             </h3>
             <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-              {item.description || "No description provided"}
+              {item.description || "Fără descriere"}
             </p>
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center text-muted-foreground">
@@ -187,7 +187,7 @@ const Marketplace = () => {
                 <span className="truncate">{item.location.split(',').slice(-2, -1)[0]?.trim() || item.location}</span>
               </div>
               <span className="text-xs text-muted-foreground">
-                by {item.seller_name}
+                de {item.seller_name}
               </span>
             </div>
           </CardContent>
@@ -211,15 +211,15 @@ const Marketplace = () => {
         <div className="max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-6">
             <TrendingUp className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Community Marketplace</span>
+            <span className="text-sm font-medium text-primary">Piața Comunității</span>
           </div>
           
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent animate-fade-in">
-            Discover Amazing Deals
+            Descoperă Oferte Uimitoare
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8 animate-fade-in">
-            Buy and sell items within our vibrant community. Find unique treasures, 
-            great bargains, and connect with fellow members.
+            Cumpără și vinde produse în cadrul comunității noastre vibrante. Găsește comori unice, 
+            oferte excelente și conectează-te cu membri comunității.
           </p>
 
           {/* Search Section */}
@@ -229,7 +229,7 @@ const Marketplace = () => {
                 <div className="relative flex-1">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input 
-                    placeholder="Search by title, description, seller..." 
+                    placeholder="Caută după titlu, descriere, vânzător..." 
                     className="pl-12 h-12 border-0 bg-muted/50 focus:bg-background transition-colors"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -238,7 +238,7 @@ const Marketplace = () => {
                 <div className="relative lg:w-64">
                   <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input 
-                    placeholder="Location, city, postcode..." 
+                    placeholder="Locație, oraș, cod poștal..." 
                     className="pl-12 h-12 border-0 bg-muted/50 focus:bg-background transition-colors"
                     value={locationFilter}
                     onChange={(e) => setLocationFilter(e.target.value)}
@@ -251,15 +251,15 @@ const Marketplace = () => {
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <Filter className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Filters:</span>
+                    <span className="text-sm font-medium">Filtre:</span>
                   </div>
                   
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger className="w-40 border-0 bg-muted/50">
-                      <SelectValue placeholder="Category" />
+                      <SelectValue placeholder="Categorie" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="all">Toate Categoriile</SelectItem>
                       {categories.map(category => (
                         <SelectItem key={category.name || category} value={category.name || category}>
                           <span className="flex items-center gap-2">
@@ -273,10 +273,10 @@ const Marketplace = () => {
                   
                   <Select value={conditionFilter} onValueChange={setConditionFilter}>
                     <SelectTrigger className="w-40 border-0 bg-muted/50">
-                      <SelectValue placeholder="Condition" />
+                      <SelectValue placeholder="Stare" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Conditions</SelectItem>
+                      <SelectItem value="all">Toate Stările</SelectItem>
                       {conditions.map(condition => (
                         <SelectItem key={condition.value} value={condition.value}>
                           <span className="flex items-center gap-2">
@@ -290,7 +290,7 @@ const Marketplace = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">View:</span>
+                  <span className="text-sm text-muted-foreground">Vedere:</span>
                   <div className="flex border rounded-lg p-1 bg-muted/50">
                     <Button
                       variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -323,7 +323,7 @@ const Marketplace = () => {
           <div className="text-center py-20">
             <div className="inline-flex items-center gap-3 text-muted-foreground">
               <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
-              <span className="text-lg">Loading amazing deals...</span>
+              <span className="text-lg">Se încarcă ofertele...</span>
             </div>
           </div>
         ) : filteredItems.length === 0 ? (
@@ -331,11 +331,11 @@ const Marketplace = () => {
             <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
               <Package className="h-12 w-12 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">No items found</h3>
+            <h3 className="text-xl font-semibold mb-2">Niciun produs găsit</h3>
             <p className="text-muted-foreground mb-6">
               {searchTerm || locationFilter || categoryFilter !== "all" || conditionFilter !== "all" 
-                ? 'Try adjusting your filters to see more results.' 
-                : 'Be the first to list an item and start trading!'
+                ? 'Încearcă să ajustezi filtrele pentru mai multe rezultate.' 
+                : 'Fii primul care listează un produs și începe să tranzacționezi!'
               }
             </p>
             <MarketplaceDialog onItemSaved={fetchItems} />
@@ -345,10 +345,10 @@ const Marketplace = () => {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-2xl font-bold mb-2">
-                  {filteredItems.length} Item{filteredItems.length !== 1 ? 's' : ''} Available
+                  {filteredItems.length} Produs{filteredItems.length !== 1 ? 'e' : ''} Disponibil{filteredItems.length !== 1 ? 'e' : ''}
                 </h2>
                 <p className="text-muted-foreground">
-                  Showing {filteredItems.length} of {totalItems} total items
+                  Se afișează {filteredItems.length} din {totalItems} produse totale
                 </p>
               </div>
             </div>
