@@ -77,11 +77,11 @@ interface AdminCategoriesTableProps {
 
 const categoryTypes = [
   { value: 'marketplace', label: 'Marketplace', icon: Package },
-  { value: 'events', label: 'Events', icon: Calendar },
-  { value: 'groups', label: 'Groups', icon: Users },
-  
+  { value: 'events', label: 'Evenimente', icon: Calendar },
+  { value: 'groups', label: 'Grupuri', icon: Users },
   { value: 'forum', label: 'Forum', icon: MessageSquare },
-  { value: 'services', label: 'Services', icon: Wrench },
+  { value: 'service', label: 'Servicii - Angajăm', icon: Wrench },
+  { value: 'service_self_employed', label: 'Servicii - Caut Muncă', icon: FileText },
 ];
 
 const iconOptions = [
