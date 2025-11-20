@@ -170,6 +170,97 @@ export type Database = {
         }
         Relationships: []
       }
+      bot_activity_log: {
+        Row: {
+          activity_type: string
+          bot_user_id: string | null
+          content_id: string | null
+          created_at: string | null
+          id: string
+          template_id: string | null
+        }
+        Insert: {
+          activity_type: string
+          bot_user_id?: string | null
+          content_id?: string | null
+          created_at?: string | null
+          id?: string
+          template_id?: string | null
+        }
+        Update: {
+          activity_type?: string
+          bot_user_id?: string | null
+          content_id?: string | null
+          created_at?: string | null
+          id?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_activity_log_bot_user_id_fkey"
+            columns: ["bot_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_activity_log_bot_user_id_fkey"
+            columns: ["bot_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_activity_log_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "bot_content_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_content_templates: {
+        Row: {
+          category: string | null
+          content_type: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          language: string | null
+          tags: string[] | null
+          template_text: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          content_type: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          language?: string | null
+          tags?: string[] | null
+          template_text: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          content_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          language?: string | null
+          tags?: string[] | null
+          template_text?: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
@@ -1306,6 +1397,7 @@ export type Database = {
           account_type: string
           avatar_url: string | null
           bio: string | null
+          bot_metadata: Json | null
           company_address: string | null
           company_cover_image: string | null
           company_description: string | null
@@ -1319,6 +1411,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          is_bot: boolean | null
           is_verified: boolean | null
           location: string | null
           phone: string | null
@@ -1333,6 +1426,7 @@ export type Database = {
           account_type: string
           avatar_url?: string | null
           bio?: string | null
+          bot_metadata?: Json | null
           company_address?: string | null
           company_cover_image?: string | null
           company_description?: string | null
@@ -1346,6 +1440,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id?: string
+          is_bot?: boolean | null
           is_verified?: boolean | null
           location?: string | null
           phone?: string | null
@@ -1360,6 +1455,7 @@ export type Database = {
           account_type?: string
           avatar_url?: string | null
           bio?: string | null
+          bot_metadata?: Json | null
           company_address?: string | null
           company_cover_image?: string | null
           company_description?: string | null
@@ -1373,6 +1469,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          is_bot?: boolean | null
           is_verified?: boolean | null
           location?: string | null
           phone?: string | null
