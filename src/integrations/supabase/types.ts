@@ -2195,8 +2195,8 @@ export type Database = {
           contact_person: string | null
           created_at: string | null
           description: string | null
+          email: string | null
           featured: boolean | null
-          has_cscs: boolean | null
           id: string | null
           image_url: string | null
           is_active: boolean | null
@@ -2204,13 +2204,12 @@ export type Database = {
           listing_type: string | null
           location: string | null
           name: string | null
+          phone: string | null
           rating: number | null
           reviews_count: number | null
-          right_to_work: boolean | null
           specialty: string | null
           updated_at: string | null
           user_id: string | null
-          valid_from: string | null
           verified: boolean | null
           website: string | null
           years_experience: number | null
@@ -2221,8 +2220,8 @@ export type Database = {
           contact_person?: string | null
           created_at?: string | null
           description?: string | null
+          email?: string | null
           featured?: boolean | null
-          has_cscs?: boolean | null
           id?: string | null
           image_url?: string | null
           is_active?: boolean | null
@@ -2230,13 +2229,12 @@ export type Database = {
           listing_type?: string | null
           location?: string | null
           name?: string | null
+          phone?: string | null
           rating?: number | null
           reviews_count?: number | null
-          right_to_work?: boolean | null
           specialty?: string | null
           updated_at?: string | null
           user_id?: string | null
-          valid_from?: string | null
           verified?: boolean | null
           website?: string | null
           years_experience?: number | null
@@ -2247,8 +2245,8 @@ export type Database = {
           contact_person?: string | null
           created_at?: string | null
           description?: string | null
+          email?: string | null
           featured?: boolean | null
-          has_cscs?: boolean | null
           id?: string | null
           image_url?: string | null
           is_active?: boolean | null
@@ -2256,13 +2254,12 @@ export type Database = {
           listing_type?: string | null
           location?: string | null
           name?: string | null
+          phone?: string | null
           rating?: number | null
           reviews_count?: number | null
-          right_to_work?: boolean | null
           specialty?: string | null
           updated_at?: string | null
           user_id?: string | null
-          valid_from?: string | null
           verified?: boolean | null
           website?: string | null
           years_experience?: number | null
