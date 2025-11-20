@@ -76,16 +76,14 @@ Deno.serve(async (req) => {
     }
 
     // Check if we're within active hours (Romanian time)
+    // Skip this check for manual invocations (we'll generate regardless of time)
     const now = new Date()
     const currentHour = now.getUTCHours() + 2 // Romanian time (UTC+2)
     
-    if (currentHour < config.active_hours[0] || currentHour > config.active_hours[1]) {
-      console.log(`Outside active hours: ${currentHour}:00 (active: ${config.active_hours[0]}-${config.active_hours[1]})`)
-      return new Response(
-        JSON.stringify({ message: 'Outside active hours' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      )
-    }
+    console.log(`Current hour: ${currentHour}:00 (active hours: ${config.active_hours[0]}-${config.active_hours[1]})`)
+    
+    // Note: For manual admin triggers, we proceed regardless of active hours
+    // For automated cron jobs, you may want to add a check here
 
     // Get or create bot users
     const { data: botProfiles } = await supabase

@@ -93,11 +93,25 @@ export const AdminBotsTable = ({ onDataChange }: AdminBotsTableProps) => {
 
       if (error) throw error;
 
-      toast({
-        title: "Succes",
-        description: `Roboții au creat conținut: ${data.results.posts_created} postări, ${data.results.forum_topics_created} subiecte forum, ${data.results.replies_created} răspunsuri`,
-      });
-      onDataChange();
+      // Check if we got a message instead of results (e.g., outside active hours)
+      if (data?.message) {
+        toast({
+          title: "Informare",
+          description: data.message,
+        });
+        return;
+      }
+
+      // Check if we got results
+      if (data?.results) {
+        toast({
+          title: "Succes",
+          description: `Roboții au creat conținut: ${data.results.posts_created} postări, ${data.results.forum_topics_created} subiecte forum, ${data.results.replies_created} răspunsuri`,
+        });
+        onDataChange();
+      } else {
+        throw new Error('Răspuns invalid de la server');
+      }
     } catch (error) {
       console.error('Error generating content:', error);
       toast({
