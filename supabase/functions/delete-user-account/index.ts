@@ -64,7 +64,14 @@ serve(async (req) => {
     const { userId } = await req.json()
     const targetUserId = userId || adminUser.id
 
-    console.log(`Account deletion requested by admin ${adminUser.id} for user: ${targetUserId}`)
+    // Enhanced audit logging
+    console.log(`[AUDIT] User deletion initiated`, {
+      admin_id: adminUser.id,
+      admin_email: adminUser.email,
+      target_user_id: targetUserId,
+      timestamp: new Date().toISOString(),
+      ip: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+    })
 
     // Start deletion process
     // Delete user data from public schema tables (in order due to foreign key constraints)
@@ -148,7 +155,12 @@ serve(async (req) => {
     const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(targetUserId)
     
     if (deleteError) {
-      console.error('Error deleting auth user:', deleteError)
+      console.error('[AUDIT] User deletion failed', {
+        admin_id: adminUser.id,
+        target_user_id: targetUserId,
+        error: deleteError.message,
+        timestamp: new Date().toISOString()
+      })
       return new Response(
         JSON.stringify({ error: 'Failed to delete user account' }),
         { 
@@ -158,7 +170,12 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Account deletion completed for user: ${targetUserId}`)
+    console.log(`[AUDIT] User deletion completed successfully`, {
+      admin_id: adminUser.id,
+      admin_email: adminUser.email,
+      deleted_user_id: targetUserId,
+      timestamp: new Date().toISOString()
+    })
 
     return new Response(
       JSON.stringify({ message: 'Account deleted successfully' }),

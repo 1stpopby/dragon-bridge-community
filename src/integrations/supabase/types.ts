@@ -80,6 +80,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "advertisements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       announcements: {
@@ -305,6 +312,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "company_feedback_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "company_feedback_service_inquiry_id_fkey"
             columns: ["service_inquiry_id"]
             isOneToOne: false
@@ -369,6 +383,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "company_gallery_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "company_gallery_service_response_id_fkey"
             columns: ["service_response_id"]
             isOneToOne: false
@@ -429,6 +450,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "company_reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       company_services: {
@@ -477,10 +505,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "company_services_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "company_services_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -525,6 +567,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_verification_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1481,6 +1530,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "saved_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       service_feedback: {
@@ -1541,6 +1597,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_feedback_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1617,6 +1680,13 @@ export type Database = {
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "service_inquiries_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       service_inquiry_conversations: {
@@ -1691,6 +1761,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_inquiry_responses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1784,6 +1861,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_request_responses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1958,10 +2042,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "user_follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_follows_following_id_fkey"
             columns: ["following_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -2015,6 +2113,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "service_request_responses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "service_request_responses_request_id_fkey"
             columns: ["request_id"]
             isOneToOne: false
@@ -2022,6 +2127,147 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles_safe: {
+        Row: {
+          account_type: string | null
+          avatar_url: string | null
+          bio: string | null
+          company_description: string | null
+          company_founded: string | null
+          company_name: string | null
+          company_services: string[] | null
+          company_size: string | null
+          company_website: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string | null
+          is_verified: boolean | null
+          location: string | null
+          rating: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_type?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          company_description?: string | null
+          company_founded?: string | null
+          company_name?: string | null
+          company_services?: string[] | null
+          company_size?: string | null
+          company_website?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          location?: string | null
+          rating?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_type?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          company_description?: string | null
+          company_founded?: string | null
+          company_name?: string | null
+          company_services?: string[] | null
+          company_size?: string | null
+          company_website?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          location?: string | null
+          rating?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      services_safe: {
+        Row: {
+          business_hours: Json | null
+          category: string | null
+          contact_person: string | null
+          created_at: string | null
+          description: string | null
+          featured: boolean | null
+          has_cscs: boolean | null
+          id: string | null
+          image_url: string | null
+          is_active: boolean | null
+          languages: string[] | null
+          listing_type: string | null
+          location: string | null
+          name: string | null
+          rating: number | null
+          reviews_count: number | null
+          right_to_work: boolean | null
+          specialty: string | null
+          updated_at: string | null
+          user_id: string | null
+          valid_from: string | null
+          verified: boolean | null
+          website: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          business_hours?: Json | null
+          category?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          description?: string | null
+          featured?: boolean | null
+          has_cscs?: boolean | null
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          languages?: string[] | null
+          listing_type?: string | null
+          location?: string | null
+          name?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+          right_to_work?: boolean | null
+          specialty?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          valid_from?: string | null
+          verified?: boolean | null
+          website?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          business_hours?: Json | null
+          category?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          description?: string | null
+          featured?: boolean | null
+          has_cscs?: boolean | null
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          languages?: string[] | null
+          listing_type?: string | null
+          location?: string | null
+          name?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+          right_to_work?: boolean | null
+          specialty?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          valid_from?: string | null
+          verified?: boolean | null
+          website?: string | null
+          years_experience?: number | null
+        }
+        Relationships: []
       }
     }
     Functions: {
