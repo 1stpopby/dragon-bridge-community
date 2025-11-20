@@ -8,6 +8,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+// Contact form validation schema
+const contactSchema = z.object({
+  name: z.string()
+    .trim()
+    .min(2, "Numele trebuie să aibă cel puțin 2 caractere")
+    .max(100, "Numele nu poate depăși 100 de caractere"),
+  email: z.string()
+    .trim()
+    .email("Adresa de email invalidă")
+    .max(255, "Email-ul nu poate depăși 255 de caractere"),
+  subject: z.string()
+    .trim()
+    .min(3, "Subiectul trebuie să aibă cel puțin 3 caractere")
+    .max(200, "Subiectul nu poate depăși 200 de caractere"),
+  message: z.string()
+    .trim()
+    .min(10, "Mesajul trebuie să aibă cel puțin 10 caractere")
+    .max(2000, "Mesajul nu poate depăși 2000 de caractere"),
+});
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -78,14 +99,22 @@ const ContactForm = () => {
     setIsSubmitting(true);
 
     try {
+      // Validate form data
+      const validatedData = contactSchema.parse({
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+      });
+
       // Save message to database
       const { error } = await supabase
         .from('contact_messages')
         .insert({
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
+          name: validatedData.name,
+          email: validatedData.email,
+          subject: validatedData.subject,
+          message: validatedData.message,
           status: 'unread'
         });
 
@@ -106,12 +135,21 @@ const ContactForm = () => {
         message: ''
       });
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Eroare la trimiterea mesajului",
-        description: "Te rugăm să încerci din nou mai târziu.",
-        variant: "destructive",
-      });
+      if (error instanceof z.ZodError) {
+        // Show first validation error
+        toast({
+          title: "Eroare de validare",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        console.error('Error sending message:', error);
+        toast({
+          title: "Eroare la trimiterea mesajului",
+          description: "Te rugăm să încerci din nou mai târziu.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
