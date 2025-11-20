@@ -106,7 +106,7 @@ export const AdminBotsTable = ({ onDataChange }: AdminBotsTableProps) => {
       if (data?.results) {
         toast({
           title: "Succes",
-          description: `Roboții au creat conținut: ${data.results.posts_created} postări, ${data.results.forum_topics_created} subiecte forum, ${data.results.replies_created} răspunsuri`,
+          description: `Roboții AI au creat: ${data.results.posts_created} postări, ${data.results.forum_topics_created} subiecte forum, ${data.results.replies_created} răspunsuri forum, ${data.results.comments_created} comentarii`,
         });
         onDataChange();
       } else {

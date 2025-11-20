@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
+
 // Romanian names for bot profiles
 const romanianFirstNames = {
   male: ['Andrei', 'Alexandru', 'Mihai', 'Ion', 'Vasile', 'Constantin', 'Gabriel', 'Florin', 'Cristian', 'Dan', 'Adrian', 'Marius', 'Ionuț', 'George', 'Bogdan'],
@@ -124,7 +126,8 @@ Deno.serve(async (req) => {
     const results = {
       posts_created: 0,
       forum_topics_created: 0,
-      replies_created: 0
+      replies_created: 0,
+      comments_created: 0
     }
 
     // Determine how many of each type to create (hourly rate)
@@ -132,39 +135,39 @@ Deno.serve(async (req) => {
     const topicsToCreate = Math.ceil(config.forum_topics_per_day / 24)
     const repliesToCreate = Math.ceil(config.replies_per_day / 24)
 
-    // Create feed posts
-    const postTemplates = templates.filter(t => t.content_type === 'post')
-    for (let i = 0; i < postsToCreate && i < postTemplates.length; i++) {
+    // Add feed comments to the mix
+    const commentsToCreate = Math.ceil(config.replies_per_day / 24)
+    results.comments_created = 0
+
+    // Create feed posts with AI
+    for (let i = 0; i < postsToCreate; i++) {
       const bot = bots[Math.floor(Math.random() * bots.length)]
-      const template = postTemplates[Math.floor(Math.random() * postTemplates.length)]
-      
-      const success = await createFeedPost(supabase, bot, template)
+      const success = await createFeedPost(supabase, bot)
       if (success) results.posts_created++
-      
       await randomDelay(config.min_delay_minutes, config.max_delay_minutes)
     }
 
-    // Create forum topics
-    const topicTemplates = templates.filter(t => t.content_type === 'forum_topic')
-    for (let i = 0; i < topicsToCreate && i < topicTemplates.length; i++) {
+    // Create forum topics with AI
+    for (let i = 0; i < topicsToCreate; i++) {
       const bot = bots[Math.floor(Math.random() * bots.length)]
-      const template = topicTemplates[Math.floor(Math.random() * topicTemplates.length)]
-      
-      const success = await createForumTopic(supabase, bot, template)
+      const success = await createForumTopic(supabase, bot)
       if (success) results.forum_topics_created++
-      
       await randomDelay(config.min_delay_minutes, config.max_delay_minutes)
     }
 
-    // Create forum replies
-    const replyTemplates = templates.filter(t => t.content_type === 'forum_reply')
-    for (let i = 0; i < repliesToCreate && i < replyTemplates.length; i++) {
+    // Create forum replies with AI
+    for (let i = 0; i < repliesToCreate; i++) {
       const bot = bots[Math.floor(Math.random() * bots.length)]
-      const template = replyTemplates[Math.floor(Math.random() * replyTemplates.length)]
-      
-      const success = await createForumReply(supabase, bot, template)
+      const success = await createForumReply(supabase, bot)
       if (success) results.replies_created++
-      
+      await randomDelay(config.min_delay_minutes, config.max_delay_minutes)
+    }
+
+    // Create feed comments with AI
+    for (let i = 0; i < commentsToCreate; i++) {
+      const bot = bots[Math.floor(Math.random() * bots.length)]
+      const success = await createFeedComment(supabase, bot)
+      if (success) results.comments_created++
       await randomDelay(config.min_delay_minutes, config.max_delay_minutes)
     }
 
@@ -240,9 +243,51 @@ async function createBotUser(supabase: any) {
   }
 }
 
-async function createFeedPost(supabase: any, bot: any, template: any) {
+async function generateAIContent(prompt: string): Promise<string> {
   try {
-    const content = fillTemplate(template.template_text, bot)
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: 'Ești un român care locuiește în UK și participi activ la comunitatea RoEu. Răspunzile tale sunt naturale, autentice, și reflectă experiența unui român în Marea Britanie. Folosește limba română corect, fii prietenos și util.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 300,
+        temperature: 0.8
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('AI API error:', response.status, errorText)
+      return ''
+    }
+
+    const data = await response.json()
+    return data.choices?.[0]?.message?.content || ''
+  } catch (error) {
+    console.error('Error generating AI content:', error)
+    return ''
+  }
+}
+
+async function createFeedPost(supabase: any, bot: any) {
+  try {
+    const prompt = `Creează o postare scurtă pentru feed-ul comunității RoEu (români în UK) despre ${bot.display_name} din ${bot.location}. Alege un subiect relevant pentru români în UK: experiențe la muncă, găsirea unui serviciu, adaptare, evenimente locale, sau recomandări. Fii natural, ca și cum ai scrie pe Facebook. Maxim 2-3 propoziții.`
+    
+    const content = await generateAIContent(prompt)
+    if (!content) return false
     
     const { error } = await supabase
       .from('posts')
@@ -262,16 +307,10 @@ async function createFeedPost(supabase: any, bot: any, template: any) {
     await supabase.from('bot_activity_log').insert({
       bot_user_id: bot.id,
       activity_type: 'post_created',
-      template_id: template.id
+      template_id: null
     })
 
-    // Increment template usage
-    await supabase
-      .from('bot_content_templates')
-      .update({ usage_count: template.usage_count + 1 })
-      .eq('id', template.id)
-
-    console.log(`Feed post created by ${bot.display_name}`)
+    console.log(`AI feed post created by ${bot.display_name}`)
     return true
 
   } catch (error) {
@@ -280,20 +319,57 @@ async function createFeedPost(supabase: any, bot: any, template: any) {
   }
 }
 
-async function createForumTopic(supabase: any, bot: any, template: any) {
+async function createForumTopic(supabase: any, bot: any) {
   try {
-    const [title, ...contentParts] = template.template_text.split('|')
-    const content = fillTemplate(contentParts.join('|') || title, bot)
-    const filledTitle = fillTemplate(title, bot)
+    // Get categories
+    const { data: categories } = await supabase
+      .from('categories')
+      .select('name')
+      .eq('type', 'forum')
+      .eq('is_active', true)
+    
+    const categoryList = categories?.map((c: any) => c.name).join(', ') || 'Discuții Generale, Locuri de Muncă, Cazare, Evenimente'
+
+    const prompt = `Creează un subiect nou pentru forumul comunității RoEu (români în UK). ${bot.display_name} din ${bot.location} dorește să întrebe ceva sau să discute despre: locuri de muncă, cazare, școli, transport, servicii, sau adaptare în UK. 
+
+Format:
+Titlu: [întrebare sau subiect captivant]
+Conținut: [2-3 propoziții cu detalii]
+
+Alege o categorie potrivită din: ${categoryList}
+
+Răspunde în format JSON:
+{
+  "title": "titlul aici",
+  "content": "conținutul aici",
+  "category": "categoria aici"
+}`
+
+    const aiResponse = await generateAIContent(prompt)
+    if (!aiResponse) return false
+
+    let parsed
+    try {
+      parsed = JSON.parse(aiResponse)
+    } catch {
+      // Try to extract JSON from markdown code blocks
+      const jsonMatch = aiResponse.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/)
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[1])
+      } else {
+        console.error('Failed to parse AI response as JSON')
+        return false
+      }
+    }
 
     const { error } = await supabase
       .from('forum_posts')
       .insert({
         user_id: bot.user_id,
         author_name: bot.display_name,
-        title: filledTitle,
-        content,
-        category: template.category || 'Discuții Generale'
+        title: parsed.title,
+        content: parsed.content,
+        category: parsed.category
       })
 
     if (error) {
@@ -305,16 +381,10 @@ async function createForumTopic(supabase: any, bot: any, template: any) {
     await supabase.from('bot_activity_log').insert({
       bot_user_id: bot.id,
       activity_type: 'forum_topic',
-      template_id: template.id
+      template_id: null
     })
 
-    // Increment template usage
-    await supabase
-      .from('bot_content_templates')
-      .update({ usage_count: template.usage_count + 1 })
-      .eq('id', template.id)
-
-    console.log(`Forum topic created by ${bot.display_name}: ${filledTitle}`)
+    console.log(`AI forum topic created by ${bot.display_name}: ${parsed.title}`)
     return true
 
   } catch (error) {
@@ -323,12 +393,12 @@ async function createForumTopic(supabase: any, bot: any, template: any) {
   }
 }
 
-async function createForumReply(supabase: any, bot: any, template: any) {
+async function createForumReply(supabase: any, bot: any) {
   try {
     // Get a random recent forum post to reply to
     const { data: forumPosts } = await supabase
       .from('forum_posts')
-      .select('id')
+      .select('id, title, content, author_name')
       .order('created_at', { ascending: false })
       .limit(20)
 
@@ -338,7 +408,16 @@ async function createForumReply(supabase: any, bot: any, template: any) {
     }
 
     const randomPost = forumPosts[Math.floor(Math.random() * forumPosts.length)]
-    const content = fillTemplate(template.template_text, bot)
+    
+    const prompt = `${bot.display_name} din ${bot.location} citește o postare de la ${randomPost.author_name}:
+
+Titlu: ${randomPost.title}
+Conținut: ${randomPost.content}
+
+Scrie un răspuns natural, util și prietenos (2-3 propoziții). Dacă este o întrebare, oferă sfaturi sau experiența ta ca român în UK. Dacă este o discuție, adaugă părerea ta. Fii empatic și folosește experiența ta de român în UK.`
+
+    const content = await generateAIContent(prompt)
+    if (!content) return false
 
     const { error } = await supabase
       .from('forum_replies')
@@ -358,20 +437,70 @@ async function createForumReply(supabase: any, bot: any, template: any) {
     await supabase.from('bot_activity_log').insert({
       bot_user_id: bot.id,
       activity_type: 'forum_reply',
-      template_id: template.id
+      template_id: null
     })
 
-    // Increment template usage
-    await supabase
-      .from('bot_content_templates')
-      .update({ usage_count: template.usage_count + 1 })
-      .eq('id', template.id)
-
-    console.log(`Forum reply created by ${bot.display_name}`)
+    console.log(`AI forum reply created by ${bot.display_name}`)
     return true
 
   } catch (error) {
     console.error('Error in createForumReply:', error)
+    return false
+  }
+}
+
+async function createFeedComment(supabase: any, bot: any) {
+  try {
+    // Get a random recent feed post to comment on
+    const { data: feedPosts } = await supabase
+      .from('posts')
+      .select('id, content, author_name')
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (!feedPosts || feedPosts.length === 0) {
+      console.log('No feed posts to comment on')
+      return false
+    }
+
+    const randomPost = feedPosts[Math.floor(Math.random() * feedPosts.length)]
+    
+    const prompt = `${bot.display_name} din ${bot.location} vede o postare de la ${randomPost.author_name}:
+
+"${randomPost.content}"
+
+Scrie un comentariu scurt și natural (1-2 propoziții). Poate fi: un răspuns util, o întrebare de clarificare, o experiență similară, sau un mesaj de încurajare. Fii prietenos și autentic.`
+
+    const content = await generateAIContent(prompt)
+    if (!content) return false
+
+    const { error } = await supabase
+      .from('post_comments')
+      .insert({
+        post_id: randomPost.id,
+        user_id: bot.user_id,
+        author_name: bot.display_name,
+        author_avatar: bot.avatar_url,
+        content
+      })
+
+    if (error) {
+      console.error('Error creating feed comment:', error)
+      return false
+    }
+
+    // Log activity
+    await supabase.from('bot_activity_log').insert({
+      bot_user_id: bot.id,
+      activity_type: 'feed_comment',
+      template_id: null
+    })
+
+    console.log(`AI feed comment created by ${bot.display_name}`)
+    return true
+
+  } catch (error) {
+    console.error('Error in createFeedComment:', error)
     return false
   }
 }
