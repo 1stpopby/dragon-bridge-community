@@ -256,15 +256,15 @@ async function generateAIContent(prompt: string): Promise<string> {
         messages: [
           {
             role: 'system',
-            content: 'Ești un român care locuiește în UK și participi activ la comunitatea RoEu. Răspunzile tale sunt naturale, autentice, și reflectă experiența unui român în Marea Britanie. Folosește limba română corect, fii prietenos și util.'
+            content: 'Ești un român obișnuit care stă în UK și scrie pe Facebook. Vorbești natural, simplu, ca în viața de zi cu zi. Fără formalism, fără să sune ca un CV sau o compunere. Scrii exact cum ai vorbi cu un prieten - scurt, la obiect, cu umor sau emoție când e cazul.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        max_tokens: 300,
-        temperature: 0.8
+        max_tokens: 150,
+        temperature: 0.9
       }),
     })
 
@@ -284,7 +284,21 @@ async function generateAIContent(prompt: string): Promise<string> {
 
 async function createFeedPost(supabase: any, bot: any) {
   try {
-    const prompt = `Creează o postare scurtă pentru feed-ul comunității RoEu (români în UK) despre ${bot.display_name} din ${bot.location}. Alege un subiect relevant pentru români în UK: experiențe la muncă, găsirea unui serviciu, adaptare, evenimente locale, sau recomandări. Fii natural, ca și cum ai scrie pe Facebook. Maxim 2-3 propoziții.`
+    const topics = [
+      `Zi cum a fost ziua ta la muncă în ${bot.location}. Ceva simplu, fără prea multe detalii.`,
+      `Ai găsit ceva service bun recent în ${bot.location}? Recomandă-l.`,
+      `Ce te-a surprins azi pozitiv în UK? Ceva mic, cotidian.`,
+      `Plângi-te puțin de ceva din UK sau spune ce îți lipsește din România.`,
+      `Weekend-ul ăsta ce faci în ${bot.location}?`,
+      `Recomandă un magazin sau un loc din ${bot.location} unde mergi des.`,
+      `Zi rapid cum merge cu engleza, adaptarea, sau munca.`,
+      `Ce sfat ai pentru cineva nou venit în ${bot.location}?`,
+      `Compară ceva din UK cu România - simplu, fără filozofii.`,
+      `Ai văzut ceva tare azi în ${bot.location}? Zi-ne.`
+    ]
+    
+    const randomTopic = topics[Math.floor(Math.random() * topics.length)]
+    const prompt = `Scrie o postare de Facebook foarte scurtă (1-2 propoziții, maxim 25 cuvinte). Tu ești cel care postează, vorbești la persoana I (eu, am, mă, mi-). ${randomTopic} Fii natural și concret. Fără hashtag-uri.`
     
     const content = await generateAIContent(prompt)
     if (!content) return false
@@ -330,15 +344,16 @@ async function createForumTopic(supabase: any, bot: any) {
     
     const categoryList = categories?.map((c: any) => c.name).join(', ') || 'Discuții Generale, Locuri de Muncă, Cazare, Evenimente'
 
-    const prompt = `Creează un subiect nou pentru forumul comunității RoEu (români în UK). ${bot.display_name} din ${bot.location} dorește să întrebe ceva sau să discute despre: locuri de muncă, cazare, școli, transport, servicii, sau adaptare în UK. 
+    const prompt = `Scrie o întrebare sau subiect pentru forum. Tu ești cel care întreabă (eu, am, mă). Alege ceva despre: muncă, cazare, transport, servicii, sau viață în ${bot.location}. 
 
-Format:
-Titlu: [întrebare sau subiect captivant]
-Conținut: [2-3 propoziții cu detalii]
+FOARTE IMPORTANT: 
+- Titlu: 5-8 cuvinte, natural
+- Conținut: 1-2 propoziții, maxim 30 cuvinte, scris simplu
+- Vorbește la persoana I (eu caut, am nevoie, mă interesează)
 
-Alege o categorie potrivită din: ${categoryList}
+Alege categorie din: ${categoryList}
 
-Răspunde în format JSON:
+JSON format:
 {
   "title": "titlul aici",
   "content": "conținutul aici",
@@ -409,12 +424,11 @@ async function createForumReply(supabase: any, bot: any) {
 
     const randomPost = forumPosts[Math.floor(Math.random() * forumPosts.length)]
     
-    const prompt = `${bot.display_name} din ${bot.location} citește o postare de la ${randomPost.author_name}:
+    const prompt = `Cineva a întrebat pe forum:
+"${randomPost.title}"
+"${randomPost.content}"
 
-Titlu: ${randomPost.title}
-Conținut: ${randomPost.content}
-
-Scrie un răspuns natural, util și prietenos (2-3 propoziții). Dacă este o întrebare, oferă sfaturi sau experiența ta ca român în UK. Dacă este o discuție, adaugă părerea ta. Fii empatic și folosește experiența ta de român în UK.`
+Răspunde scurt și natural (1-2 propoziții, maxim 25 cuvinte). Vorbești la persoana I (eu am, mi s-a întâmplat, știu eu). Dă un sfat rapid sau experiența ta.`
 
     const content = await generateAIContent(prompt)
     if (!content) return false
@@ -465,11 +479,10 @@ async function createFeedComment(supabase: any, bot: any) {
 
     const randomPost = feedPosts[Math.floor(Math.random() * feedPosts.length)]
     
-    const prompt = `${bot.display_name} din ${bot.location} vede o postare de la ${randomPost.author_name}:
-
+    const prompt = `Cineva a scris pe feed:
 "${randomPost.content}"
 
-Scrie un comentariu scurt și natural (1-2 propoziții). Poate fi: un răspuns util, o întrebare de clarificare, o experiență similară, sau un mesaj de încurajare. Fii prietenos și autentic.`
+Scrie un comentariu foarte scurt (1 propoziție, maxim 15 cuvinte). Poate fi: un răspuns rapid, o întrebare, sau "și eu la fel", sau încurajare. Natural, ca pe WhatsApp.`
 
     const content = await generateAIContent(prompt)
     if (!content) return false
