@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -40,7 +40,8 @@ import {
   Database,
   Flag,
   Bot,
-  FileCode
+  FileCode,
+  Eye
 } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -228,6 +229,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   const { signOut, user } = useAdminAuth();
   const { toast } = useToast();
   const { counts } = useAdminNotifications();
+  const navigate = useNavigate();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(
     menuGroups.map(group => group.label)
   );
@@ -366,6 +368,16 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
               <p className="truncate">{user?.email}</p>
             </div>
           )}
+          
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={() => navigate('/feed')}
+            className="w-full justify-start gap-2"
+          >
+            <Eye className="h-4 w-4" />
+            {!collapsed && <span>Vezi Site</span>}
+          </Button>
           
           <Button 
             variant="outline" 
