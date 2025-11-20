@@ -642,12 +642,12 @@ const Feed = () => {
                   trendingTopics.map((topic, index) => (
                     <div key={topic.hashtag} className="group">
                       <div className="flex items-center justify-between p-3 rounded-xl hover:bg-accent/50 transition-all duration-200 cursor-pointer border border-transparent hover:border-border/50">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary font-bold text-sm group-hover:bg-primary/20 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary font-bold text-sm group-hover:bg-primary/20 transition-colors flex-shrink-0">
                             #{index + 1}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-sm text-primary group-hover:text-primary/80 transition-colors truncate">{topic.hashtag}</p>
+                          <div className="min-w-0 flex-1 max-w-[140px]">
+                            <p className="font-semibold text-sm text-primary group-hover:text-primary/80 transition-colors truncate break-all">{topic.hashtag}</p>
                             <p className="text-xs text-muted-foreground">{topic.count} postări</p>
                           </div>
                         </div>
