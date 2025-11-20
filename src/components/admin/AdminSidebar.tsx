@@ -184,10 +184,10 @@ const menuGroups = [
         description: "Gestionează roboți"
       },
       {
-        title: "Șabloane Conținut",
-        value: "bot-templates",
-        icon: FileCode,
-        description: "Template-uri pentru roboți"
+        title: "Postări",
+        value: "posts-generator",
+        icon: Zap,
+        description: "Generează postări AI"
       }
     ]
   },

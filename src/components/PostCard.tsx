@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,6 +54,7 @@ interface PostCardProps {
 
 const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow }: PostCardProps) => {
   const { user, profile } = useAuth();
+  const { isAdmin } = useAdminAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(post.user_liked || false);
@@ -523,8 +525,8 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
                 </Button>
               )}
               
-              {/* Edit/Delete dropdown - only show for post owner */}
-              {user?.id === post.user_id && (
+              {/* Edit/Delete dropdown - show for post owner or admin */}
+              {(user?.id === post.user_id || isAdmin) && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -534,11 +536,11 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
                   <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50">
                     <DropdownMenuItem onClick={() => setIsEditing(true)}>
                       <Edit3 className="h-4 w-4 mr-2" />
-                      Edit
+                      Editează
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleDelete} className="text-destructive">
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
+                      Șterge
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
