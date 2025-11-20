@@ -284,6 +284,12 @@ async function generateAIContent(prompt: string): Promise<string> {
 
 async function createFeedPost(supabase: any, bot: any) {
   try {
+    // Determine gender from bot metadata
+    const isMale = bot.bot_metadata?.persona?.includes('male')
+    const genderNote = isMale 
+      ? "IMPORTANT: Folosește forme masculine (sunt mulțumit, am fost ocupat, sunt obosit, m-am bucurat)"
+      : "IMPORTANT: Folosește forme feminine (sunt mulțumită, am fost ocupată, sunt obosită, m-am bucurat)"
+    
     const topics = [
       `Zi cum a fost ziua ta la muncă în ${bot.location}. Ceva simplu, fără prea multe detalii.`,
       `Ai găsit ceva service bun recent în ${bot.location}? Recomandă-l.`,
@@ -298,7 +304,9 @@ async function createFeedPost(supabase: any, bot: any) {
     ]
     
     const randomTopic = topics[Math.floor(Math.random() * topics.length)]
-    const prompt = `Scrie o postare de Facebook foarte scurtă (1-2 propoziții, maxim 25 cuvinte). Tu ești cel care postează, vorbești la persoana I (eu, am, mă, mi-). ${randomTopic} Fii natural și concret. Fără hashtag-uri.`
+    const prompt = `Scrie o postare de Facebook foarte scurtă (1-2 propoziții, maxim 25 cuvinte). Tu ești cel care postează, vorbești la persoana I (eu, am, mă, mi-). ${randomTopic} Fii natural și concret. Fără hashtag-uri.
+
+${genderNote}`
     
     const content = await generateAIContent(prompt)
     if (!content) return false
@@ -335,6 +343,12 @@ async function createFeedPost(supabase: any, bot: any) {
 
 async function createForumTopic(supabase: any, bot: any) {
   try {
+    // Determine gender from bot metadata
+    const isMale = bot.bot_metadata?.persona?.includes('male')
+    const genderNote = isMale 
+      ? "IMPORTANT: Folosește forme masculine (sunt interesat, sunt ocupat, m-am mutat)"
+      : "IMPORTANT: Folosește forme feminine (sunt interesată, sunt ocupată, m-am mutat)"
+    
     // Get categories
     const { data: categories } = await supabase
       .from('categories')
@@ -350,6 +364,7 @@ FOARTE IMPORTANT:
 - Titlu: 5-8 cuvinte, natural
 - Conținut: 1-2 propoziții, maxim 30 cuvinte, scris simplu
 - Vorbește la persoana I (eu caut, am nevoie, mă interesează)
+${genderNote}
 
 Alege categorie din: ${categoryList}
 
@@ -410,6 +425,12 @@ JSON format:
 
 async function createForumReply(supabase: any, bot: any) {
   try {
+    // Determine gender from bot metadata
+    const isMale = bot.bot_metadata?.persona?.includes('male')
+    const genderNote = isMale 
+      ? "IMPORTANT: Folosește forme masculine (am fost mulțumit, sunt interesat, m-am descurcat)"
+      : "IMPORTANT: Folosește forme feminine (am fost mulțumită, sunt interesată, m-am descurcat)"
+    
     // Get a random recent forum post to reply to
     const { data: forumPosts } = await supabase
       .from('forum_posts')
@@ -428,7 +449,9 @@ async function createForumReply(supabase: any, bot: any) {
 "${randomPost.title}"
 "${randomPost.content}"
 
-Răspunde scurt și natural (1-2 propoziții, maxim 25 cuvinte). Vorbești la persoana I (eu am, mi s-a întâmplat, știu eu). Dă un sfat rapid sau experiența ta.`
+Răspunde scurt și natural (1-2 propoziții, maxim 25 cuvinte). Vorbești la persoana I (eu am, mi s-a întâmplat, știu eu). Dă un sfat rapid sau experiența ta.
+
+${genderNote}`
 
     const content = await generateAIContent(prompt)
     if (!content) return false
