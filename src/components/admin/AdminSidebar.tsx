@@ -38,7 +38,9 @@ import {
   FileText as FileTextIcon,
   Zap,
   Database,
-  Flag
+  Flag,
+  Bot,
+  FileCode
 } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -169,6 +171,23 @@ const menuGroups = [
         value: "contact-messages",
         icon: MessageSquare,
         description: "Mesaje formular contact"
+      }
+    ]
+  },
+  {
+    label: "Automation",
+    items: [
+      {
+        title: "Roboți",
+        value: "bots",
+        icon: Bot,
+        description: "Gestionează roboți"
+      },
+      {
+        title: "Șabloane Conținut",
+        value: "bot-templates",
+        icon: FileCode,
+        description: "Template-uri pentru roboți"
       }
     ]
   },
