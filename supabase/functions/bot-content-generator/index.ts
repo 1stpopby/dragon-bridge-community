@@ -42,7 +42,11 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    console.log('Bot Content Generator: Starting...')
+    // Parse request body to get contentType and customPrompt
+    const body = await req.json().catch(() => ({}))
+    const { contentType, customPrompt } = body
+
+    console.log('Bot Content Generator: Starting...', { contentType, customPrompt })
 
     // Check if bot system is enabled
     const { data: systemEnabled } = await supabase
@@ -130,45 +134,59 @@ Deno.serve(async (req) => {
       comments_created: 0
     }
 
-    // Determine how many of each type to create (hourly rate)
-    const postsToCreate = Math.ceil(config.posts_per_day / 24)
-    const topicsToCreate = Math.ceil(config.forum_topics_per_day / 24)
-    const repliesToCreate = Math.ceil(config.replies_per_day / 24)
-
-    // Add feed comments to the mix
-    const commentsToCreate = Math.ceil(config.replies_per_day / 24)
-    results.comments_created = 0
-
-    // Create feed posts with AI
-    for (let i = 0; i < postsToCreate; i++) {
+    // If specific content type is requested, create only that type
+    if (contentType === 'feed') {
+      // Create 1 feed post
       const bot = bots[Math.floor(Math.random() * bots.length)]
-      const success = await createFeedPost(supabase, bot)
+      const success = await createFeedPost(supabase, bot, customPrompt)
       if (success) results.posts_created++
-      await randomDelay(config.min_delay_minutes, config.max_delay_minutes)
-    }
-
-    // Create forum topics with AI
-    for (let i = 0; i < topicsToCreate; i++) {
+    } else if (contentType === 'forum') {
+      // Create 1 forum topic
       const bot = bots[Math.floor(Math.random() * bots.length)]
-      const success = await createForumTopic(supabase, bot)
+      const success = await createForumTopic(supabase, bot, customPrompt)
       if (success) results.forum_topics_created++
-      await randomDelay(config.min_delay_minutes, config.max_delay_minutes)
-    }
+    } else {
+      // Default behavior: create content based on config
+      // Determine how many of each type to create (hourly rate)
+      const postsToCreate = Math.ceil(config.posts_per_day / 24)
+      const topicsToCreate = Math.ceil(config.forum_topics_per_day / 24)
+      const repliesToCreate = Math.ceil(config.replies_per_day / 24)
 
-    // Create forum replies with AI
-    for (let i = 0; i < repliesToCreate; i++) {
-      const bot = bots[Math.floor(Math.random() * bots.length)]
-      const success = await createForumReply(supabase, bot)
-      if (success) results.replies_created++
-      await randomDelay(config.min_delay_minutes, config.max_delay_minutes)
-    }
+      // Add feed comments to the mix
+      const commentsToCreate = Math.ceil(config.replies_per_day / 24)
+      results.comments_created = 0
 
-    // Create feed comments with AI
-    for (let i = 0; i < commentsToCreate; i++) {
-      const bot = bots[Math.floor(Math.random() * bots.length)]
-      const success = await createFeedComment(supabase, bot)
-      if (success) results.comments_created++
-      await randomDelay(config.min_delay_minutes, config.max_delay_minutes)
+      // Create feed posts with AI
+      for (let i = 0; i < postsToCreate; i++) {
+        const bot = bots[Math.floor(Math.random() * bots.length)]
+        const success = await createFeedPost(supabase, bot)
+        if (success) results.posts_created++
+        await randomDelay(config.min_delay_minutes, config.max_delay_minutes)
+      }
+
+      // Create forum topics with AI
+      for (let i = 0; i < topicsToCreate; i++) {
+        const bot = bots[Math.floor(Math.random() * bots.length)]
+        const success = await createForumTopic(supabase, bot)
+        if (success) results.forum_topics_created++
+        await randomDelay(config.min_delay_minutes, config.max_delay_minutes)
+      }
+
+      // Create forum replies with AI
+      for (let i = 0; i < repliesToCreate; i++) {
+        const bot = bots[Math.floor(Math.random() * bots.length)]
+        const success = await createForumReply(supabase, bot)
+        if (success) results.replies_created++
+        await randomDelay(config.min_delay_minutes, config.max_delay_minutes)
+      }
+
+      // Create feed comments with AI
+      for (let i = 0; i < commentsToCreate; i++) {
+        const bot = bots[Math.floor(Math.random() * bots.length)]
+        const success = await createFeedComment(supabase, bot)
+        if (success) results.comments_created++
+        await randomDelay(config.min_delay_minutes, config.max_delay_minutes)
+      }
     }
 
     console.log('Bot generation completed:', results)
@@ -282,7 +300,7 @@ async function generateAIContent(prompt: string): Promise<string> {
   }
 }
 
-async function createFeedPost(supabase: any, bot: any) {
+async function createFeedPost(supabase: any, bot: any, customPrompt?: string) {
   try {
     // Determine gender from bot metadata
     const isMale = bot.bot_metadata?.persona?.includes('male')
@@ -290,23 +308,33 @@ async function createFeedPost(supabase: any, bot: any) {
       ? "IMPORTANT: Folosește forme masculine (sunt mulțumit, am fost ocupat, sunt obosit, m-am bucurat)"
       : "IMPORTANT: Folosește forme feminine (sunt mulțumită, am fost ocupată, sunt obosită, m-am bucurat)"
     
-    const topics = [
-      `Zi cum a fost ziua ta la muncă în ${bot.location}. Ceva simplu, fără prea multe detalii.`,
-      `Ai găsit ceva service bun recent în ${bot.location}? Recomandă-l.`,
-      `Ce te-a surprins azi pozitiv în UK? Ceva mic, cotidian.`,
-      `Plângi-te puțin de ceva din UK sau spune ce îți lipsește din România.`,
-      `Weekend-ul ăsta ce faci în ${bot.location}?`,
-      `Recomandă un magazin sau un loc din ${bot.location} unde mergi des.`,
-      `Zi rapid cum merge cu engleza, adaptarea, sau munca.`,
-      `Ce sfat ai pentru cineva nou venit în ${bot.location}?`,
-      `Compară ceva din UK cu România - simplu, fără filozofii.`,
-      `Ai văzut ceva tare azi în ${bot.location}? Zi-ne.`
-    ]
+    let prompt: string
     
-    const randomTopic = topics[Math.floor(Math.random() * topics.length)]
-    const prompt = `Scrie o postare de Facebook foarte scurtă (1-2 propoziții, maxim 25 cuvinte). Tu ești cel care postează, vorbești la persoana I (eu, am, mă, mi-). ${randomTopic} Fii natural și concret. Fără hashtag-uri.
+    if (customPrompt) {
+      // Use custom prompt if provided
+      prompt = `Scrie o postare de Facebook foarte scurtă (1-2 propoziții, maxim 25 cuvinte). Tu ești cel care postează, vorbești la persoana I (eu, am, mă, mi-). Subiect: ${customPrompt}. Fii natural și concret. Fără hashtag-uri.
 
 ${genderNote}`
+    } else {
+      // Use random topic
+      const topics = [
+        `Zi cum a fost ziua ta la muncă în ${bot.location}. Ceva simplu, fără prea multe detalii.`,
+        `Ai găsit ceva service bun recent în ${bot.location}? Recomandă-l.`,
+        `Ce te-a surprins azi pozitiv în UK? Ceva mic, cotidian.`,
+        `Plângi-te puțin de ceva din UK sau spune ce îți lipsește din România.`,
+        `Weekend-ul ăsta ce faci în ${bot.location}?`,
+        `Recomandă un magazin sau un loc din ${bot.location} unde mergi des.`,
+        `Zi rapid cum merge cu engleza, adaptarea, sau munca.`,
+        `Ce sfat ai pentru cineva nou venit în ${bot.location}?`,
+        `Compară ceva din UK cu România - simplu, fără filozofii.`,
+        `Ai văzut ceva tare azi în ${bot.location}? Zi-ne.`
+      ]
+      
+      const randomTopic = topics[Math.floor(Math.random() * topics.length)]
+      prompt = `Scrie o postare de Facebook foarte scurtă (1-2 propoziții, maxim 25 cuvinte). Tu ești cel care postează, vorbești la persoana I (eu, am, mă, mi-). ${randomTopic} Fii natural și concret. Fără hashtag-uri.
+
+${genderNote}`
+    }
     
     const content = await generateAIContent(prompt)
     if (!content) return false
@@ -341,7 +369,7 @@ ${genderNote}`
   }
 }
 
-async function createForumTopic(supabase: any, bot: any) {
+async function createForumTopic(supabase: any, bot: any, customPrompt?: string) {
   try {
     // Determine gender from bot metadata
     const isMale = bot.bot_metadata?.persona?.includes('male')
@@ -358,7 +386,11 @@ async function createForumTopic(supabase: any, bot: any) {
     
     const categoryList = categories?.map((c: any) => c.name).join(', ') || 'Discuții Generale, Locuri de Muncă, Cazare, Evenimente'
 
-    const prompt = `Scrie o întrebare sau subiect pentru forum. Tu ești cel care întreabă (eu, am, mă). Alege ceva despre: muncă, cazare, transport, servicii, sau viață în ${bot.location}. 
+    let prompt: string
+    
+    if (customPrompt) {
+      // Use custom prompt if provided
+      prompt = `Scrie o întrebare sau subiect pentru forum. Tu ești cel care întreabă (eu, am, mă). Subiect: ${customPrompt}. 
 
 FOARTE IMPORTANT: 
 - Titlu: 5-8 cuvinte, natural
@@ -374,6 +406,25 @@ JSON format:
   "content": "conținutul aici",
   "category": "categoria aici"
 }`
+    } else {
+      // Use default prompt
+      prompt = `Scrie o întrebare sau subiect pentru forum. Tu ești cel care întreabă (eu, am, mă). Alege ceva despre: muncă, cazare, transport, servicii, sau viață în ${bot.location}. 
+
+FOARTE IMPORTANT: 
+- Titlu: 5-8 cuvinte, natural
+- Conținut: 1-2 propoziții, maxim 30 cuvinte, scris simplu
+- Vorbește la persoana I (eu caut, am nevoie, mă interesează)
+${genderNote}
+
+Alege categorie din: ${categoryList}
+
+JSON format:
+{
+  "title": "titlul aici",
+  "content": "conținutul aici",
+  "category": "categoria aici"
+}`
+    }
 
     const aiResponse = await generateAIContent(prompt)
     if (!aiResponse) return false
