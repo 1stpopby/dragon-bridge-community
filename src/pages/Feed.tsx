@@ -646,8 +646,8 @@ const Feed = () => {
                           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary font-bold text-sm group-hover:bg-primary/20 transition-colors">
                             #{index + 1}
                           </div>
-                          <div>
-                            <p className="font-semibold text-sm text-primary group-hover:text-primary/80 transition-colors">{topic.hashtag}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-sm text-primary group-hover:text-primary/80 transition-colors truncate">{topic.hashtag}</p>
                             <p className="text-xs text-muted-foreground">{topic.count} postări</p>
                           </div>
                         </div>
