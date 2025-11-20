@@ -14,6 +14,7 @@ interface AdminPostsGeneratorProps {
 
 export const AdminPostsGenerator = ({ onDataChange }: AdminPostsGeneratorProps) => {
   const [generating, setGenerating] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [contentType, setContentType] = useState<"feed" | "forum">("feed");
   const [customPrompt, setCustomPrompt] = useState("");
   const { toast } = useToast();
@@ -70,6 +71,56 @@ export const AdminPostsGenerator = ({ onDataChange }: AdminPostsGeneratorProps) 
     }
   };
 
+  const handleRegenerateExisting = async () => {
+    setRegenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('bot-content-generator', {
+        body: { 
+          regenerateExisting: true,
+          contentType
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.message) {
+        toast({
+          title: "Informare",
+          description: data.message,
+        });
+        return;
+      }
+
+      if (data?.results) {
+        const { posts_regenerated, forum_topics_regenerated } = data.results;
+        
+        let description = "Conținut regenerat cu succes: ";
+        const parts = [];
+        if (posts_regenerated > 0) parts.push(`${posts_regenerated} postări feed`);
+        if (forum_topics_regenerated > 0) parts.push(`${forum_topics_regenerated} subiecte forum`);
+        
+        description += parts.join(", ");
+
+        toast({
+          title: "Succes",
+          description,
+        });
+        onDataChange();
+      } else {
+        throw new Error('Răspuns invalid de la server');
+      }
+    } catch (error) {
+      console.error('Error regenerating content:', error);
+      toast({
+        title: "Eroare",
+        description: "Nu am putut regenera conținutul",
+        variant: "destructive",
+      });
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -116,7 +167,7 @@ export const AdminPostsGenerator = ({ onDataChange }: AdminPostsGeneratorProps) 
 
           <Button
             onClick={handleGenerate}
-            disabled={generating}
+            disabled={generating || regenerating}
             className="w-full gap-2"
             size="lg"
           >
@@ -129,6 +180,26 @@ export const AdminPostsGenerator = ({ onDataChange }: AdminPostsGeneratorProps) 
               <>
                 <Sparkles className="h-5 w-5" />
                 Generează Conținut
+              </>
+            )}
+          </Button>
+          
+          <Button
+            onClick={handleRegenerateExisting}
+            disabled={generating || regenerating}
+            variant="outline"
+            className="w-full gap-2"
+            size="lg"
+          >
+            {regenerating ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Regenerare în curs...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-5 w-5" />
+                Regenerează Postări Existente
               </>
             )}
           </Button>

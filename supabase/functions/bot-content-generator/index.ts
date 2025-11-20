@@ -44,9 +44,14 @@ Deno.serve(async (req) => {
 
     // Parse request body to get contentType and customPrompt
     const body = await req.json().catch(() => ({}))
-    const { contentType, customPrompt } = body
+    const { contentType, customPrompt, regenerateExisting } = body
 
-    console.log('Bot Content Generator: Starting...', { contentType, customPrompt })
+    console.log('Bot Content Generator: Starting...', { contentType, customPrompt, regenerateExisting })
+
+    // If regenerating existing content
+    if (regenerateExisting) {
+      return await regenerateExistingContent(supabase, contentType)
+    }
 
     // Check if bot system is enabled
     const { data: systemEnabled } = await supabase
@@ -612,4 +617,183 @@ function fillTemplate(template: string, bot: any): string {
 function randomDelay(minMinutes: number, maxMinutes: number): Promise<void> {
   const delayMs = (minMinutes + Math.random() * (maxMinutes - minMinutes)) * 60 * 1000
   return new Promise(resolve => setTimeout(resolve, delayMs))
+}
+
+async function regenerateExistingContent(supabase: any, contentType: 'feed' | 'forum') {
+  try {
+    const results = {
+      posts_regenerated: 0,
+      forum_topics_regenerated: 0
+    }
+
+    // Get all bot profiles
+    const { data: botProfiles } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('is_bot', true)
+
+    if (!botProfiles || botProfiles.length === 0) {
+      return new Response(
+        JSON.stringify({ message: 'Nu există boți în sistem' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      )
+    }
+
+    // Create a map of bot profiles by user_id for quick lookup
+    const botMap = new Map(botProfiles.map(bot => [bot.user_id, bot]))
+
+    if (contentType === 'feed') {
+      // Get all feed posts from bots
+      const { data: posts } = await supabase
+        .from('posts')
+        .select('id, user_id, content')
+        .in('user_id', botProfiles.map(b => b.user_id))
+        .limit(50) // Limit to avoid timeout
+
+      if (posts && posts.length > 0) {
+        console.log(`Regenerating ${posts.length} feed posts...`)
+        
+        for (const post of posts) {
+          const bot = botMap.get(post.user_id)
+          if (!bot) continue
+
+          // Determine gender from bot metadata
+          const isMale = bot.bot_metadata?.persona?.includes('male')
+          const genderNote = isMale 
+            ? "IMPORTANT: Folosește forme masculine (sunt mulțumit, am fost ocupat, sunt obosit, m-am bucurat)"
+            : "IMPORTANT: Folosește forme feminine (sunt mulțumită, am fost ocupată, sunt obosită, m-am bucurat)"
+          
+          const topics = [
+            `Zi cum a fost ziua ta la muncă în ${bot.location}. Ceva simplu, fără prea multe detalii.`,
+            `Ai găsit ceva service bun recent în ${bot.location}? Recomandă-l.`,
+            `Ce te-a surprins azi pozitiv în UK? Ceva mic, cotidian.`,
+            `Plângi-te puțin de ceva din UK sau spune ce îți lipsește din România.`,
+            `Weekend-ul ăsta ce faci în ${bot.location}?`,
+            `Recomandă un magazin sau un loc din ${bot.location} unde mergi des.`,
+            `Zi rapid cum merge cu engleza, adaptarea, sau munca.`,
+            `Ce sfat ai pentru cineva nou venit în ${bot.location}?`,
+            `Compară ceva din UK cu România - simplu, fără filozofii.`,
+            `Ai văzut ceva tare azi în ${bot.location}? Zi-ne.`
+          ]
+          
+          const randomTopic = topics[Math.floor(Math.random() * topics.length)]
+          const prompt = `Scrie o postare de Facebook foarte scurtă (1-2 propoziții, maxim 25 cuvinte). Tu ești cel care postează, vorbești la persoana I (eu, am, mă, mi-). ${randomTopic} Fii natural și concret. Fără hashtag-uri.
+
+${genderNote}`
+
+          const newContent = await generateAIContent(prompt)
+          if (newContent) {
+            const { error } = await supabase
+              .from('posts')
+              .update({ content: newContent })
+              .eq('id', post.id)
+
+            if (!error) {
+              results.posts_regenerated++
+              console.log(`Regenerated post ${post.id}`)
+            }
+          }
+
+          // Small delay to avoid rate limits
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+      }
+    } else if (contentType === 'forum') {
+      // Get all forum topics from bots
+      const { data: topics } = await supabase
+        .from('forum_posts')
+        .select('id, user_id, title, content')
+        .in('user_id', botProfiles.map(b => b.user_id))
+        .limit(50)
+
+      if (topics && topics.length > 0) {
+        console.log(`Regenerating ${topics.length} forum topics...`)
+        
+        // Get categories
+        const { data: categories } = await supabase
+          .from('categories')
+          .select('name')
+          .eq('type', 'forum')
+          .eq('is_active', true)
+        
+        const categoryList = categories?.map((c: any) => c.name).join(', ') || 'Discuții Generale, Locuri de Muncă, Cazare, Evenimente'
+
+        for (const topic of topics) {
+          const bot = botMap.get(topic.user_id)
+          if (!bot) continue
+
+          const isMale = bot.bot_metadata?.persona?.includes('male')
+          const genderNote = isMale 
+            ? "IMPORTANT: Folosește forme masculine (sunt interesat, sunt ocupat, m-am mutat)"
+            : "IMPORTANT: Folosește forme feminine (sunt interesată, sunt ocupată, m-am mutat)"
+
+          const prompt = `Scrie o întrebare sau subiect pentru forum. Tu ești cel care întreabă (eu, am, mă). Alege ceva despre: muncă, cazare, transport, servicii, sau viață în ${bot.location}. 
+
+FOARTE IMPORTANT: 
+- Titlu: 5-8 cuvinte, natural
+- Conținut: 1-2 propoziții, maxim 30 cuvinte, scris simplu
+- Vorbește la persoana I (eu caut, am nevoie, mă interesează)
+${genderNote}
+
+Alege categorie din: ${categoryList}
+
+JSON format:
+{
+  "title": "titlul aici",
+  "content": "conținutul aici",
+  "category": "categoria aici"
+}`
+
+          const aiResponse = await generateAIContent(prompt)
+          if (aiResponse) {
+            try {
+              let parsed
+              try {
+                parsed = JSON.parse(aiResponse)
+              } catch {
+                const jsonMatch = aiResponse.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/)
+                if (jsonMatch) {
+                  parsed = JSON.parse(jsonMatch[1])
+                }
+              }
+
+              if (parsed) {
+                const { error } = await supabase
+                  .from('forum_posts')
+                  .update({ 
+                    title: parsed.title,
+                    content: parsed.content,
+                    category: parsed.category
+                  })
+                  .eq('id', topic.id)
+
+                if (!error) {
+                  results.forum_topics_regenerated++
+                  console.log(`Regenerated forum topic ${topic.id}`)
+                }
+              }
+            } catch (e) {
+              console.error('Error parsing forum topic:', e)
+            }
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+      }
+    }
+
+    console.log('Regeneration completed:', results)
+
+    return new Response(
+      JSON.stringify({ success: true, results }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    )
+
+  } catch (error) {
+    console.error('Error in regenerateExistingContent:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    )
+  }
 }
