@@ -109,10 +109,10 @@ const Feed = () => {
     try {
       console.log('fetchPosts called, user:', user?.id);
       
-      // Fetch posts first
+      // Fetch posts first with explicit fields
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select('*')
+        .select('id, user_id, author_name, author_avatar, content, image_url, created_at, likes_count, comments_count')
         .order('created_at', { ascending: false });
 
       console.log('Posts query result:', { postsData, postsError });
@@ -278,10 +278,10 @@ const Feed = () => {
         return;
       }
 
-      // Fetch posts from followed users
+      // Fetch posts from followed users with explicit fields
       const { data: postsData, error } = await supabase
         .from('posts')
-        .select('*')
+        .select('id, user_id, author_name, author_avatar, content, image_url, created_at, likes_count, comments_count')
         .in('user_id', followedUserIds)
         .order('created_at', { ascending: false });
 
@@ -360,7 +360,17 @@ const Feed = () => {
         .from('saved_posts')
         .select(`
           post_id,
-          posts (*)
+          posts (
+            id,
+            user_id,
+            author_name,
+            author_avatar,
+            content,
+            image_url,
+            created_at,
+            likes_count,
+            comments_count
+          )
         `)
         .eq('user_id', profile?.id); // Use profile.id instead of user.id
 
