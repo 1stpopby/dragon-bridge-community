@@ -58,8 +58,8 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(post.user_liked || false);
-  const [likesCount, setLikesCount] = useState(post.likes_count || 0);
-  const [commentsCount, setCommentsCount] = useState(post.comments_count || 0);
+  const [likesCount, setLikesCount] = useState(post.likes_count ?? 0);
+  const [commentsCount, setCommentsCount] = useState(post.comments_count ?? 0);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -73,8 +73,8 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
   // Sync state when post prop changes
   useEffect(() => {
     setIsLiked(post.user_liked || false);
-    setLikesCount(post.likes_count || 0);
-    setCommentsCount(post.comments_count || 0);
+    setLikesCount(post.likes_count ?? 0);
+    setCommentsCount(post.comments_count ?? 0);
   }, [post.user_liked, post.likes_count, post.comments_count]);
 
   const fetchComments = async () => {
@@ -281,11 +281,11 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
             .single();
 
           if (!fetchError && updatedPost) {
-            setLikesCount(updatedPost.likes_count);
+            setLikesCount(updatedPost.likes_count ?? 0);
             // Update parent component with new data
             onUpdate({
               ...post,
-              likes_count: updatedPost.likes_count,
+              likes_count: updatedPost.likes_count ?? 0,
               user_liked: !wasLiked
             });
           }
@@ -345,11 +345,11 @@ const PostCard = ({ post, onUpdate, onDelete, onSave, isSaved = false, onFollow 
             .single();
 
           if (!fetchError && updatedPost) {
-            setCommentsCount(updatedPost.comments_count);
+            setCommentsCount(updatedPost.comments_count ?? 0);
             // Update parent component with new data
             onUpdate({
               ...post,
-              comments_count: updatedPost.comments_count
+              comments_count: updatedPost.comments_count ?? 0
             });
           }
         } catch (syncError) {
